@@ -4,10 +4,22 @@ import { mockEvents, mockBookings, mockCommunities, Event, UserBehaviorType } fr
 import { demoAccounts, sarahAccount, ahmedAccount, laylaAccount, User, mockOrganizerRequests, OrganizerRequest } from '../data/users';
 import { getNotificationsForUser, Notification } from '../data/notifications';
 
+export type RegisterInput = {
+  name: string;
+  email: string;
+  password: string;
+  role: 'attendee' | 'organizer' | 'admin';
+  location: string;
+  interests: string[];
+  registrationNote?: string;
+};
+
 interface AppState {
   // Auth
   currentUser: User | null;
   isAuthenticated: boolean;
+  /** Locally registered accounts (persisted); merged with built-in demo accounts for login. */
+  registeredAccounts: User[];
 
   // Events
   events: Event[];
@@ -40,7 +52,8 @@ interface AppState {
   theme: 'light' | 'dark';
 
   // Actions
-  login: (email: string, password: string) => boolean;
+  login: (email: string, password: string) => User | null;
+  register: (input: RegisterInput) => { ok: true } | { ok: false; error: string };
   logout: () => void;
   requestOrganizerStatus: (eventId: string, reason: string) => void;
   approveOrganizerRequest: (requestId: string, adminNotes: string) => void;
@@ -64,6 +77,7 @@ export const useAppStore = create<AppState>()(
       // Initial state
       currentUser: null,
       isAuthenticated: false,
+      registeredAccounts: [],
       events: mockEvents,
       bookmarkedEvents: [],
       rsvpedEvents: [],
@@ -79,11 +93,54 @@ export const useAppStore = create<AppState>()(
       browseCount: 0,
       discussionCount: 0,
 
-      // Login with demo accounts
+      register: (input) => {
+        const email = input.email.trim().toLowerCase();
+        if (input.password.length < 8) {
+          return { ok: false, error: 'Password must be at least 8 characters.' };
+        }
+        const pool = [...demoAccounts, ...get().registeredAccounts];
+        if (pool.some((u) => u.email.toLowerCase() === email)) {
+          return { ok: false, error: 'An account with this email already exists.' };
+        }
+
+        const id = `user-reg-${Date.now()}`;
+        const avatar = `https://i.pravatar.cc/150?u=${encodeURIComponent(email)}`;
+        const note = input.registrationNote?.trim();
+        const newUser: User = {
+          id,
+          name: input.name.trim(),
+          email,
+          password: input.password,
+          avatar,
+          role: input.role,
+          interests: input.interests.length > 0 ? input.interests : ['Community'],
+          location: input.location.trim(),
+          radius: input.role === 'admin' ? 25 : input.role === 'organizer' ? 20 : 15,
+          joinDate: new Date().toISOString(),
+          level: 1,
+          xp: 0,
+          badges: [],
+          rsvpedEvents: [],
+          bookmarkedEvents: [],
+          ...(note ? { registrationNote: note.slice(0, 2000) } : {}),
+          ...(input.role === 'organizer' ? { organizerStatus: 'approved' as const } : {}),
+        };
+
+        set((state) => ({
+          registeredAccounts: [...state.registeredAccounts, newUser],
+        }));
+        return { ok: true };
+      },
+
+      // Login: built-in demo accounts + locally registered accounts
       login: (email, password) => {
-        const user = demoAccounts.find(
-          (u) => u.email === email && u.password === password
-        );
+        const normalized = email.trim().toLowerCase();
+        const pool = [...demoAccounts, ...get().registeredAccounts];
+        let user =
+          pool.find((u) => u.email.toLowerCase() === normalized && u.password === password) ?? null;
+        if (!user && normalized === 'layla@demo.com' && laylaAccount.password === password) {
+          user = laylaAccount;
+        }
 
         if (user) {
           const base = getNotificationsForUser(user.id);
@@ -100,9 +157,9 @@ export const useAppStore = create<AppState>()(
             rsvpedEvents: user.rsvpedEvents,
             notifications
           });
-          return true;
+          return user;
         }
-        return false;
+        return null;
       },
 
       logout: () => {
@@ -461,6 +518,7 @@ export const useAppStore = create<AppState>()(
         discussionCount: state.discussionCount,
         notifications: state.notifications,
         organizerRequests: state.organizerRequests,
+        registeredAccounts: state.registeredAccounts,
       })
     }
   )

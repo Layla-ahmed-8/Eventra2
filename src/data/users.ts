@@ -18,6 +18,8 @@ export interface User {
   bookmarkedEvents: string[];
   organizerStatus?: 'pending' | 'approved' | 'rejected';
   organizerRequestEventId?: string;
+  /** Optional text captured at sign-up (e.g. organizer experience, admin access request). */
+  registrationNote?: string;
 }
 
 // Demo Account 1: Attendee (Sarah)

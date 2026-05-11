@@ -1,17 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Mail, Lock, User, Briefcase, MapPin, ArrowRight, ArrowLeft, Sparkles, Check, Shield } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Briefcase, MapPin, ArrowRight, ArrowLeft, Check, Shield } from 'lucide-react';
 import Logo from '../../components/Logo';
+import { useAppStore } from '../../store/useAppStore';
 
-type AccountType = 'attendee' | 'organizer' | null;
+type AccountType = 'attendee' | 'organizer' | 'admin' | null;
 
 const interestOptions = ['Music', 'Art', 'Technology', 'Food & Drink', 'Sports', 'Business', 'Science', 'Gaming', 'Film', 'Fashion'];
 const eventTypeOptions = ['Conferences', 'Workshops', 'Concerts', 'Meetups', 'Festivals', 'Exhibitions', 'Networking', 'Sports'];
+const adminFocusOptions = ['Moderation', 'Users & roles', 'Analytics', 'Security', 'Billing', 'Support'];
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { register, login } = useAppStore();
   const [step, setStep] = useState<'select' | 'form'>('select');
   const [accountType, setAccountType] = useState<AccountType>(null);
+  const [formError, setFormError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,15 +26,84 @@ export default function Signup() {
     organization: '',
     experience: '',
     eventTypes: [] as string[],
+    adminFocus: [] as string[],
+    adminJustification: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Route to the correct onboarding based on role
-    if (accountType === 'organizer') {
-      navigate('/organizer/onboarding');
+    setFormError('');
+    if (!accountType) return;
+
+    if (formData.password !== formData.confirmPassword) {
+      setFormError('Passwords do not match.');
+      return;
+    }
+    if (formData.password.length < 8) {
+      setFormError('Password must be at least 8 characters.');
+      return;
+    }
+
+    if (accountType === 'attendee' && formData.interests.length < 3) {
+      setFormError('Select at least three interests.');
+      return;
+    }
+    if (accountType === 'organizer' && !formData.experience.trim()) {
+      setFormError('Please describe your organizing experience.');
+      return;
+    }
+    if (accountType === 'admin') {
+      if (formData.adminFocus.length < 2) {
+        setFormError('Select at least two platform areas you will oversee.');
+        return;
+      }
+      if (formData.adminJustification.trim().length < 24) {
+        setFormError('Please add a short justification for admin access (at least 24 characters).');
+        return;
+      }
+    }
+
+    const interests =
+      accountType === 'organizer'
+        ? (formData.eventTypes.length > 0 ? formData.eventTypes : ['Business'])
+        : accountType === 'admin'
+        ? formData.adminFocus
+        : formData.interests;
+
+    const registrationNote =
+      accountType === 'organizer'
+        ? formData.experience.trim()
+        : accountType === 'admin'
+        ? formData.adminJustification.trim()
+        : undefined;
+
+    const reg = register({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: accountType,
+      location: formData.location,
+      interests,
+      registrationNote,
+    });
+
+    if (!reg.ok) {
+      setFormError(reg.error);
+      return;
+    }
+
+    const user = login(formData.email.trim(), formData.password);
+    if (!user) {
+      setFormError('Account was created but sign-in failed. Try logging in manually.');
+      return;
+    }
+
+    if (user.role === 'organizer') {
+      navigate('/organizer/dashboard');
+    } else if (user.role === 'admin') {
+      navigate('/admin/dashboard');
     } else {
-      navigate('/onboarding');
+      navigate('/app/discover');
     }
   };
 
@@ -48,6 +121,14 @@ export default function Signup() {
       eventTypes: prev.eventTypes.includes(type)
         ? prev.eventTypes.filter(t => t !== type)
         : [...prev.eventTypes, type],
+    }));
+
+  const toggleAdminFocus = (label: string) =>
+    setFormData(prev => ({
+      ...prev,
+      adminFocus: prev.adminFocus.includes(label)
+        ? prev.adminFocus.filter((x) => x !== label)
+        : [...prev.adminFocus, label],
     }));
 
   // ── Account type selection ──────────────────────────────────────────────────
@@ -71,9 +152,10 @@ export default function Signup() {
             <p className="text-body text-muted-foreground">Choose how you want to use Eventra</p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-5 mb-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
             {/* Attendee */}
             <button
+              type="button"
               onClick={() => { setAccountType('attendee'); setStep('form'); }}
               className="surface-panel p-6 sm:p-8 text-left group hover:-translate-y-1 hover:border-primary/40 transition-all duration-300"
             >
@@ -101,6 +183,7 @@ export default function Signup() {
 
             {/* Organizer */}
             <button
+              type="button"
               onClick={() => { setAccountType('organizer'); setStep('form'); }}
               className="surface-panel p-6 sm:p-8 text-left group hover:-translate-y-1 hover:border-[#00D4FF]/40 transition-all duration-300"
             >
@@ -125,15 +208,39 @@ export default function Signup() {
                 Get Started <ArrowRight className="w-4 h-4" />
               </div>
             </button>
+
+            {/* Admin */}
+            <button
+              type="button"
+              onClick={() => { setAccountType('admin'); setStep('form'); }}
+              className="surface-panel p-6 sm:p-8 text-left group hover:-translate-y-1 hover:border-red-400/50 transition-all duration-300 sm:col-span-2 lg:col-span-1"
+            >
+              <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg shadow-red-500/20">
+                <Shield className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-h3 font-bold text-foreground mb-2">Join as Administrator</h3>
+              <p className="text-body-sm text-muted-foreground mb-5 leading-relaxed">
+                Demo-only: create a local admin account for this browser. Use a strong password; credentials stay on this device.
+              </p>
+              <ul className="space-y-2 mb-5">
+                {['Moderation & safety tools', 'User and organizer oversight', 'Platform analytics'].map(f => (
+                  <li key={f} className="flex items-center gap-2 text-body-sm text-muted-foreground">
+                    <div className="w-4 h-4 rounded-full bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-2.5 h-2.5 text-red-600 dark:text-red-400" />
+                    </div>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-center gap-2 text-body-sm font-bold text-red-600 dark:text-red-400 group-hover:gap-3 transition-all">
+                Get Started <ArrowRight className="w-4 h-4" />
+              </div>
+            </button>
           </div>
 
-          {/* Admin note */}
-          <div className="surface-panel p-4 flex items-center gap-3 mb-6">
-            <Shield className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-            <p className="text-caption text-muted-foreground">
-              Admin accounts are created internally. Contact <span className="text-primary font-semibold">support@eventra.com</span> to request admin access.
-            </p>
-          </div>
+          <p className="text-center text-caption text-muted-foreground mb-4">
+            Accounts you create are stored in this browser (local persistence) alongside the built-in demo logins.
+          </p>
 
           <p className="text-center text-body-sm text-muted-foreground">
             Already have an account?{' '}
@@ -149,8 +256,19 @@ export default function Signup() {
 
   // ── Registration form ───────────────────────────────────────────────────────
   const isOrganizer = accountType === 'organizer';
-  const accentClass = isOrganizer ? 'from-[#00D4FF] to-[#4ADEFF]' : 'from-[#7C5CFF] to-[#9B8CFF]';
-  const accentText = isOrganizer ? 'text-cyan-600 dark:text-cyan-400' : 'text-primary';
+  const isAdmin = accountType === 'admin';
+  const isAttendee = accountType === 'attendee';
+  const accentClass = isAdmin
+    ? 'from-red-500 to-orange-600'
+    : isOrganizer
+    ? 'from-[#00D4FF] to-[#4ADEFF]'
+    : 'from-[#7C5CFF] to-[#9B8CFF]';
+  const roleTitle = isAdmin ? 'Administrator' : isOrganizer ? 'Organizer' : 'Attendee';
+  const roleSubtitle = isAdmin
+    ? 'Platform access is for this demo build only — pick focus areas and justify your request.'
+    : isOrganizer
+    ? 'Share your details to start creating events'
+    : 'Tell us about yourself to get personalized recommendations';
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -161,7 +279,8 @@ export default function Signup() {
 
       <div className="relative z-10 w-full max-w-xl">
         <button
-          onClick={() => setStep('select')}
+          type="button"
+          onClick={() => { setStep('select'); setFormError(''); }}
           className="mb-5 flex items-center gap-2 text-body-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -174,18 +293,23 @@ export default function Signup() {
 
         <div className="text-center mb-6">
           <div className={`w-12 h-12 bg-gradient-to-br ${accentClass} rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg`}>
-            {isOrganizer ? <Briefcase className="w-6 h-6 text-white" /> : <User className="w-6 h-6 text-white" />}
+            {isAdmin ? <Shield className="w-6 h-6 text-white" /> : isOrganizer ? <Briefcase className="w-6 h-6 text-white" /> : <User className="w-6 h-6 text-white" />}
           </div>
           <h1 className="text-h2 font-bold text-foreground mb-1">
-            {isOrganizer ? 'Create Organizer Account' : 'Create Attendee Account'}
+            Create {roleTitle} Account
           </h1>
           <p className="text-body-sm text-muted-foreground">
-            {isOrganizer ? 'Share your details to start creating events' : 'Tell us about yourself to get personalized recommendations'}
+            {roleSubtitle}
           </p>
         </div>
 
         <div className="surface-panel p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
+            {formError && (
+              <div className="p-3 rounded-xl border border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-900 text-red-700 dark:text-red-300 text-body-sm">
+                {formError}
+              </div>
+            )}
             {/* Name */}
             <div>
               <label className="block text-body-sm font-semibold text-foreground mb-2">Full Name</label>
@@ -267,7 +391,7 @@ export default function Signup() {
             </div>
 
             {/* Attendee interests */}
-            {!isOrganizer && (
+            {isAttendee && (
               <div>
                 <label className="block text-body-sm font-semibold text-foreground mb-3">
                   Your interests <span className="text-muted-foreground font-normal">(select at least 3)</span>
@@ -288,6 +412,41 @@ export default function Signup() {
                   <p className="text-caption text-amber-500 mt-2">{3 - formData.interests.length} more to continue</p>
                 )}
               </div>
+            )}
+
+            {/* Admin: focus + justification */}
+            {isAdmin && (
+              <>
+                <div>
+                  <label className="block text-body-sm font-semibold text-foreground mb-3">
+                    Platform focus <span className="text-muted-foreground font-normal">(select at least 2)</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {adminFocusOptions.map((label) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => toggleAdminFocus(label)}
+                        className={`filter-chip ${formData.adminFocus.includes(label) ? 'active' : 'inactive'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-body-sm font-semibold text-foreground mb-2">
+                    Access justification <span className="text-muted-foreground font-normal">(min. 24 characters)</span>
+                  </label>
+                  <textarea
+                    value={formData.adminJustification}
+                    onChange={(e) => setFormData({ ...formData, adminJustification: e.target.value })}
+                    className="w-full px-4 py-3 input-base min-h-[100px] resize-none"
+                    placeholder="Describe why you need administrator access in this demo environment…"
+                    required
+                  />
+                </div>
+              </>
             )}
 
             {/* Organizer fields */}
@@ -339,11 +498,15 @@ export default function Signup() {
 
             <button
               type="submit"
-              disabled={!isOrganizer && formData.interests.length < 3}
-              className="btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={isAttendee && formData.interests.length < 3}
+              className={`w-full disabled:opacity-40 disabled:cursor-not-allowed font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all ${
+                isAdmin
+                  ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:opacity-95'
+                  : 'btn-primary'
+              }`}
             >
               <UserPlus className="w-4 h-4" />
-              Create {isOrganizer ? 'Organizer' : 'Attendee'} Account
+              Create {roleTitle} Account
             </button>
           </form>
 

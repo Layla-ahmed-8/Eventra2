@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { LogIn, Mail, Lock, Users, Briefcase, Shield, Moon, Sun } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { demoAccounts } from '../../data/users';
 import Logo from '../../components/Logo';
 
 export default function Login() {
@@ -15,41 +14,38 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(email, password);
+    const user = login(email, password);
 
-    if (success) {
+    if (user) {
       searchParams.delete('afterOnboarding');
       searchParams.delete('afterOrganizerOnboarding');
       searchParams.delete('afterAdminOnboarding');
       setSearchParams(searchParams, { replace: true });
-      const user = demoAccounts.find(u => u.email === email);
-      // Redirect based on role
-      if (user?.role === 'organizer') {
+      if (user.role === 'organizer') {
         navigate('/organizer/dashboard');
-      } else if (user?.role === 'admin') {
+      } else if (user.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/app/discover');
       }
     } else {
-      setError('Invalid email or password');
+      setError('Invalid email or password. Demo admin uses admin@demo.com (layla@demo.com also works).');
     }
   };
 
   const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
     setEmail(demoEmail);
     setPassword(demoPassword);
-    const success = login(demoEmail, demoPassword);
+    const user = login(demoEmail, demoPassword);
 
-    if (success) {
+    if (user) {
       searchParams.delete('afterOnboarding');
       searchParams.delete('afterOrganizerOnboarding');
       searchParams.delete('afterAdminOnboarding');
       setSearchParams(searchParams, { replace: true });
-      const user = demoAccounts.find(u => u.email === demoEmail);
-      if (user?.role === 'organizer') {
+      if (user.role === 'organizer') {
         navigate('/organizer/dashboard');
-      } else if (user?.role === 'admin') {
+      } else if (user.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/app/discover');
@@ -222,8 +218,12 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-border bg-input-background rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
                   placeholder="you@example.com"
+                  autoComplete="email"
                 />
               </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Sign-ups are saved in this browser. Demo admin: <span className="font-mono">admin@demo.com</span> or <span className="font-mono">layla@demo.com</span> — password <span className="font-mono">demo123</span>.
+              </p>
             </div>
 
             <div>
