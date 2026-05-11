@@ -6,7 +6,7 @@ import { categories } from '../../data/mockData';
 import AISearchModal from '../../components/AISearchModal';
 
 export default function Discover() {
-  const { events, bookmarkedEvents, toggleBookmark } = useAppStore();
+  const { events, bookmarkedEvents, toggleBookmark, recordBrowse } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showAISearch, setShowAISearch] = useState(false);
@@ -41,54 +41,54 @@ export default function Discover() {
       <AISearchModal isOpen={showAISearch} onClose={() => setShowAISearch(false)} />
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
         {/* Hero Search Section */}
-        <div className="hero-surface rounded-3xl p-8 md:p-12 shadow-2xl animate-fade-up">
-          <div className="flex items-center justify-between mb-6">
+        <div className="hero-surface rounded-3xl p-5 sm:p-8 md:p-10 shadow-2xl animate-fade-up">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowAISearch(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg transition-all hover:scale-105"
+                className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:shadow-lg transition-all hover:scale-105 text-body-sm"
               >
                 <Sparkles className="w-4 h-4" />
                 AI Search
               </button>
             </div>
           </div>
-          <div className="grid gap-8 lg:grid-cols-[1.3fr_0.9fr] items-center">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-purple-100/60 to-cyan-100/60 dark:from-purple-900/40 dark:to-cyan-900/40 border border-purple-200/30 dark:border-purple-800/30 text-purple-700 dark:text-purple-300 text-sm font-semibold">
-                <Sparkles className="w-4 h-4" />
+          <div className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr] items-center">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-gradient-to-r from-purple-100/60 to-cyan-100/60 dark:from-purple-900/40 dark:to-cyan-900/40 border border-purple-200/30 dark:border-purple-800/30 text-purple-700 dark:text-purple-300 text-body-sm font-semibold">
+                <Sparkles className="w-3.5 h-3.5" />
                 AI powered discovery
               </div>
-              <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 dark:text-white max-w-3xl leading-tight">
-                Find your next experience with <span className="bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">smarter</span> event recommendations.
+              <h1 className="text-h1 font-bold text-slate-900 dark:text-white leading-tight">
+                Find your next experience with <span className="bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">smarter</span> recommendations.
               </h1>
-              <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
+              <p className="text-body text-slate-600 dark:text-slate-300 leading-relaxed">
                 Discover events tailored to your interests, powered by intelligent search, filters, and AI.
               </p>
-              <div className="flex flex-wrap gap-4">
-                <button onClick={() => setShowAISearch(true)} className="btn-primary text-lg px-6 py-3">
-                  <Sparkles className="w-5 h-5" />
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => setShowAISearch(true)} className="btn-primary">
+                  <Sparkles className="w-4 h-4" />
                   AI Search
                 </button>
-                <button className="btn-secondary text-lg px-6 py-3">
+                <button className="btn-secondary">
                   Browse Events
                 </button>
               </div>
             </div>
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-purple-200/20 dark:border-purple-800/20 p-6 shadow-xl">
+            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-purple-200/20 dark:border-purple-800/20 p-4 sm:p-6 shadow-xl">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-600 dark:text-purple-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search events by name or category..."
-                  className="input-base w-full pl-12 pr-4 text-lg"
+                  placeholder="Search events..."
+                  className="input-base w-full pl-10 pr-4"
                 />
               </div>
-              <div className="mt-4 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+              <div className="mt-3 flex items-center justify-between text-caption text-slate-500 dark:text-slate-400">
                 <span>Search anytime</span>
-                <span className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">⌘K</span>
+                <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">⌘K</span>
               </div>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function Discover() {
                 </div>
                 <div>
                   <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Recommended for You</h2>
-                  <p className="text-slate-600 dark:text-slate-400">Based on your interests and past attendance</p>
+                  <p className="text-slate-600 dark:text-slate-400">Easy events to start with — popular among first-time attendees</p>
                 </div>
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function Discover() {
               </div>
               <div>
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Trending Events</h2>
-                <p className="text-slate-600 dark:text-slate-400">Most popular events this week</p>
+                <p className="text-slate-600 dark:text-slate-400">Most discussed today — high activity this evening</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -303,8 +303,9 @@ function EventCard({ event, bookmarkedEvents, toggleBookmark }: any) {
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm font-semibold">
-              {event.rsvpCount} going
+            <span className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm font-semibold flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              {event.engagement?.momentumLabel || 'Active event'}
             </span>
             {event.isRecommended && (
               <span className="badge-ai">
@@ -315,6 +316,20 @@ function EventCard({ event, bookmarkedEvents, toggleBookmark }: any) {
           </div>
           <span className="text-lg font-bold text-slate-900 dark:text-white">{event.price === 0 ? 'Free' : `EGP ${event.price}`}</span>
         </div>
+
+        {/* Avatar cluster social proof */}
+        {event.engagement?.recentAttendees && (
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex -space-x-1.5">
+              {event.engagement.recentAttendees.slice(0, 4).map((a, idx) => (
+                <img key={idx} src={a.avatar} alt={a.name} className="w-6 h-6 rounded-full ring-1 ring-white dark:ring-slate-800" />
+              ))}
+            </div>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {event.engagement.atmosphereLabel}
+            </span>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2">
           {event.tags?.slice(0, 3).map((tag: string, idx: number) => (

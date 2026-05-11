@@ -128,10 +128,10 @@ export default function AdminSettings() {
                       <p className="font-semibold text-foreground">{integration.name}</p>
                     </div>
                     <button
-                      className={`px-4 py-2 rounded-lg font-semibold ${
+                      className={`px-4 py-2 rounded-xl font-semibold text-body-sm transition-all ${
                         integration.status === 'connected'
-                          ? 'border-2 border-gray-300 text-gray-700 hover:border-gray-400'
-                          : 'bg-[#6C4CF1] hover:bg-[#5a3dd1] text-white'
+                          ? 'btn-secondary'
+                          : 'btn-primary'
                       }`}
                     >
                       {integration.status === 'connected' ? 'Configure' : 'Connect'}
@@ -153,47 +153,24 @@ export default function AdminSettings() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Platform Name
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue="Eventra"
-                    className="w-full px-4 py-2 input-base"
-                  />
+                  <label className="block text-body-sm font-semibold text-foreground mb-2">Platform Name</label>
+                  <input type="text" defaultValue="Eventra" className="w-full px-4 py-2 input-base" />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Support Email
-                  </label>
-                  <input
-                    type="email"
-                    defaultValue="support@eventra.com"
-                    className="w-full px-4 py-2 input-base"
-                  />
+                  <label className="block text-body-sm font-semibold text-foreground mb-2">Support Email</label>
+                  <input type="email" defaultValue="support@eventra.com" className="w-full px-4 py-2 input-base" />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Default Currency
-                  </label>
+                  <label className="block text-body-sm font-semibold text-foreground mb-2">Default Currency</label>
                   <select className="w-full px-4 py-2 input-base">
                     <option>EGP - Egyptian Pound</option>
                     <option>USD - US Dollar</option>
                     <option>EUR - Euro</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Fee (%)
-                  </label>
-                  <input
-                    type="number"
-                    defaultValue="3"
-                    className="w-full px-4 py-2 input-base"
-                  />
+                  <label className="block text-body-sm font-semibold text-foreground mb-2">Service Fee (%)</label>
+                  <input type="number" defaultValue="3" className="w-full px-4 py-2 input-base" />
                 </div>
               </div>
             </div>

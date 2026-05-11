@@ -51,27 +51,28 @@ export default function Calendar() {
         </div>
 
         {/* Calendar Header */}
-        <div className="bg-card border border-border rounded-xl shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-foreground">May 2026</h2>
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-secondary rounded-lg">
+        <div className="surface-panel p-4 sm:p-6 mb-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-h3 font-bold text-foreground">May 2026</h2>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <button className="p-2 hover:bg-muted rounded-lg transition-colors">
                 <ChevronLeft className="w-5 h-5 text-muted-foreground" />
               </button>
-              <button className="px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary rounded-lg">
+              <button className="px-3 py-1.5 text-body-sm font-medium text-muted-foreground hover:bg-muted rounded-lg transition-colors">
                 Today
               </button>
-              <button className="p-2 hover:bg-secondary rounded-lg">
+              <button className="p-2 hover:bg-muted rounded-lg transition-colors">
                 <ChevronRight className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-center text-sm font-semibold text-muted-foreground py-2">
-                {day}
+              <div key={day} className="text-center text-caption font-semibold text-muted-foreground py-2">
+                <span className="hidden sm:inline">{day}</span>
+                <span className="sm:hidden">{day.charAt(0)}</span>
               </div>
             ))}
             {Array.from({ length: 35 }, (_, i) => {
@@ -81,23 +82,21 @@ export default function Calendar() {
               return (
                 <div
                   key={i}
-                  className={`aspect-square p-2 border rounded-lg ${
+                  className={`h-10 sm:h-14 p-1 sm:p-2 border rounded-lg flex flex-col items-start justify-start ${
                     day < 1 || day > 31
-                      ? 'bg-background text-muted-foreground/50'
+                      ? 'bg-background text-muted-foreground/30 border-transparent'
                       : isToday
-                      ? 'bg-[#6C4CF1] text-white font-bold'
+                      ? 'bg-primary text-primary-foreground font-bold border-primary'
                       : hasEvent
-                      ? 'bg-purple-50 border-[#6C4CF1]'
-                      : 'hover:bg-background'
+                      ? 'bg-primary/8 border-primary/30'
+                      : 'border-border hover:bg-secondary/50 transition-colors'
                   }`}
                 >
                   {day > 0 && day <= 31 && (
                     <>
-                      <div className="text-sm">{day}</div>
+                      <div className="text-caption sm:text-body-sm">{day}</div>
                       {hasEvent && !isToday && (
-                        <div className="mt-1">
-                          <div className="w-2 h-2 bg-[#6C4CF1] rounded-full"></div>
-                        </div>
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full mt-0.5" />
                       )}
                     </>
                   )}
@@ -108,8 +107,8 @@ export default function Calendar() {
         </div>
 
         {/* Upcoming Events List */}
-        <div className="bg-card border border-border rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-foreground mb-4">Upcoming Events</h2>
+        <div className="surface-panel p-4 sm:p-6">
+          <h2 className="text-h3 font-bold text-foreground mb-4">Upcoming Events</h2>
           <div className="space-y-4">
             {userEvents.length === 0 ? (
               <div className="text-center py-8">
@@ -129,18 +128,18 @@ export default function Calendar() {
                   <Link
                     key={event.id}
                     to={`/app/events/${event.id}`}
-                    className="flex gap-4 p-4 border-2 border-border rounded-lg hover:border-[#6C4CF1] transition-colors"
+                    className="flex flex-col sm:flex-row gap-4 p-4 border-2 border-border rounded-xl hover:border-primary transition-colors"
                   >
                     <img
                       src={event.image}
                       alt={event.title}
-                      className="w-24 h-24 object-cover rounded-lg"
+                      className="w-full sm:w-20 h-32 sm:h-20 object-cover rounded-xl flex-shrink-0"
                     />
-                    <div className="flex-1">
-                      <h3 className="font-bold text-foreground mb-2">{event.title}</h3>
-                      <div className="space-y-1 text-sm text-muted-foreground">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-body font-bold text-foreground mb-2 line-clamp-2">{event.title}</h3>
+                      <div className="space-y-1 text-body-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-4 h-4" />
+                          <CalendarIcon className="w-4 h-4 flex-shrink-0" />
                           <span>
                             {new Date(event.date).toLocaleDateString('en-US', {
                               month: 'short',
@@ -151,13 +150,13 @@ export default function Calendar() {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          <span>{event.location.venue}</span>
+                          <MapPin className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">{event.location.venue}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center">
-                      <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                    <div className="flex sm:items-center">
+                      <span className="status-pill bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 self-start sm:self-auto">
                         Confirmed
                       </span>
                     </div>

@@ -1,23 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Minus, Plus, CreditCard, Calendar, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, CreditCard, Calendar, MapPin, AlertTriangle, CheckCircle2, Zap } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
 export default function RSVP() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { events, rsvpEvent } = useAppStore();
-  const event = events.find((e) => e.id === id);
+  const { events, rsvpEvent, rsvpedEvents } = useAppStore();
+  const event = id ? events.find((e) => e.id === id) : undefined;
 
-  const [quantities, setQuantities] = useState<Record<string, number>>(
-    event?.ticketTypes.reduce((acc, ticket) => ({ ...acc, [ticket.name]: 0 }), {}) || {}
-  );
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [paymentState, setPaymentState] = useState<'idle' | 'processing' | 'error' | 'success'>('idle');
   const [paymentError, setPaymentError] = useState('');
 
-  if (!event) {
-    return <div>Event not found</div>;
+  useEffect(() => {
+    if (event) {
+      setQuantities(event.ticketTypes.reduce((acc, ticket) => ({ ...acc, [ticket.name]: 0 }), {}));
+    }
+  }, [event?.id]);
+
+  if (!id) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="surface-panel p-8 text-center max-w-md">
+          <p className="text-foreground font-semibold mb-2">Missing event</p>
+          <Link to="/app/discover" className="btn-primary">Back to Discover</Link>
+        </div>
+      </div>
+    );
   }
+
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="surface-panel p-8 text-center max-w-md">
+          <p className="text-foreground font-semibold mb-2">Event not found</p>
+          <Link to="/app/discover" className="btn-primary">Back to Discover</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const alreadyRsvped = rsvpedEvents.includes(event.id);
 
   const updateQuantity = (ticketName: string, delta: number) => {
     setQuantities((prev) => ({
@@ -36,22 +60,26 @@ export default function RSVP() {
   const totalTickets = Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
 
   const handleCheckout = () => {
+    if (alreadyRsvped) return;
     setPaymentState('processing');
     setPaymentError('');
 
     setTimeout(() => {
-      // Simulated gateway reliability edge case for retry UX
-      const failed = total > 0 && Math.floor(total) % 2 === 1;
-      if (failed) {
-        setPaymentState('error');
-        setPaymentError('Payment gateway timeout. Your card was not charged. Please retry.');
-        return;
-      }
-
       rsvpEvent(event.id);
       setPaymentState('success');
-      setTimeout(() => navigate('/app/my-events'), 900);
-    }, 900);
+
+      // Confetti celebration
+      import('canvas-confetti').then((confetti) => {
+        confetti.default({
+          particleCount: 150,
+          spread: 90,
+          origin: { y: 0.5 },
+          colors: ['#7C5CFF', '#00D4FF', '#FF4FD8', '#FF9B3D'],
+        });
+      });
+
+      setTimeout(() => navigate(`/app/orders/${event.id}`), 1200);
+    }, 700);
   };
 
   return (
@@ -69,11 +97,31 @@ export default function RSVP() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+        {alreadyRsvped && (
+          <div className="mb-6 p-4 rounded-2xl border border-green-500/30 bg-green-500/5 text-body-sm text-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">You already have a booking for this event.</p>
+                <p className="text-muted-foreground">Open your ticket or event details anytime.</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link to={`/app/orders/${event.id}`} className="btn-primary text-center">
+                View ticket
+              </Link>
+              <Link to={`/app/events/${event.id}`} className="btn-secondary text-center">
+                Event details
+              </Link>
+            </div>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-3 gap-6">
           {/* Left Column - Ticket Selection */}
-          <div className="md:col-span-2 space-y-6">
-            <div className="bg-card border border-border rounded-2xl shadow-lg p-6">
+          <div className="md:col-span-2 space-y-6 order-2 md:order-1">
+            <div className={`bg-card border border-border rounded-2xl shadow-lg p-6 ${alreadyRsvped ? 'opacity-60 pointer-events-none' : ''}`}>
               <h1 className="text-2xl font-bold text-foreground mb-6">Select Tickets</h1>
 
               <div className="space-y-4">
@@ -101,7 +149,7 @@ export default function RSVP() {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => updateQuantity(ticket.name, -1)}
-                          disabled={!quantities[ticket.name]}
+                          disabled={!quantities[ticket.name] || alreadyRsvped}
                           className="w-8 h-8 flex items-center justify-center border-2 border-border rounded-lg hover:border-[#6C4CF1] disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                           <Minus className="w-4 h-4" />
@@ -111,7 +159,7 @@ export default function RSVP() {
                         </span>
                         <button
                           onClick={() => updateQuantity(ticket.name, 1)}
-                          disabled={quantities[ticket.name] >= 10}
+                          disabled={quantities[ticket.name] >= 10 || alreadyRsvped}
                           className="w-8 h-8 flex items-center justify-center border-2 border-border rounded-lg hover:border-[#6C4CF1] disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                           <Plus className="w-4 h-4" />
@@ -124,7 +172,7 @@ export default function RSVP() {
             </div>
 
             {/* Payment Information */}
-            {totalTickets > 0 && (
+            {!alreadyRsvped && totalTickets > 0 && subtotal > 0 && (
               <div className="bg-card border border-border rounded-2xl shadow-lg p-6">
                 <h2 className="text-xl font-bold text-foreground mb-4">Payment Details</h2>
                 {paymentState === 'error' && (
@@ -136,7 +184,7 @@ export default function RSVP() {
                 {paymentState === 'success' && (
                   <div className="mb-4 p-3 rounded-xl border border-green-300 bg-green-50 dark:bg-green-950/30 dark:border-green-900 text-green-700 dark:text-green-300 text-sm flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 mt-0.5" />
-                    <span>Booking confirmed. Redirecting to My Events...</span>
+                    <span>Booking confirmed. Redirecting to your ticket…</span>
                   </div>
                 )}
                 <div className="space-y-4">
@@ -178,7 +226,7 @@ export default function RSVP() {
           </div>
 
           {/* Right Column - Order Summary */}
-          <div className="md:col-span-1">
+          <div className="md:col-span-1 order-1 md:order-2">
             <div className="bg-card border border-border rounded-2xl shadow-lg p-6 sticky top-24">
               <h2 className="text-xl font-bold text-foreground mb-4">Order Summary</h2>
 
@@ -225,7 +273,7 @@ export default function RSVP() {
                     </div>
                   );
                 })}
-                {subtotal > 0 && (
+                {subtotal > 0 ? (
                   <>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Service Fee (3%)</span>
@@ -238,26 +286,57 @@ export default function RSVP() {
                       </span>
                     </div>
                   </>
+                ) : (
+                  totalTickets > 0 && (
+                    <div className="pt-3 border-t border-border flex justify-between">
+                      <span className="font-bold text-foreground">Total</span>
+                      <span className="text-xl font-bold text-[#6C4CF1]">Free</span>
+                    </div>
+                  )
                 )}
               </div>
 
               {/* Checkout Button */}
               <button
                 onClick={handleCheckout}
-                disabled={totalTickets === 0 || paymentState === 'processing' || paymentState === 'success'}
+                disabled={
+                  alreadyRsvped ||
+                  totalTickets === 0 ||
+                  paymentState === 'processing' ||
+                  paymentState === 'success'
+                }
                 className="w-full bg-gradient-to-r from-[#6C4CF1] to-[#5739D4] hover:shadow-xl text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 <CreditCard className="w-5 h-5" />
-                {totalTickets === 0
+                {alreadyRsvped
+                  ? 'Already booked'
+                  : totalTickets === 0
                   ? 'Select Tickets'
                   : paymentState === 'processing'
-                  ? 'Processing Payment...'
+                  ? total <= 0
+                    ? 'Confirming…'
+                    : 'Processing Payment...'
                   : paymentState === 'success'
-                  ? 'Booked'
+                  ? '🎉 Booking Confirmed!'
                   : paymentState === 'error'
                   ? 'Retry Payment'
+                  : total <= 0
+                  ? 'Confirm free booking'
                   : `Pay EGP ${total.toFixed(2)}`}
               </button>
+
+              {/* XP Preview */}
+              {event.engagement && totalTickets > 0 && paymentState !== 'success' && (
+                <div className="mt-4 p-3 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border border-orange-200 dark:border-orange-800 rounded-xl flex items-center gap-3">
+                  <Zap className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-orange-700 dark:text-orange-300">+{event.engagement.xpReward} XP on confirmation</p>
+                    {event.engagement.badgeUnlock && (
+                      <p className="text-xs text-muted-foreground">Unlocks "{event.engagement.badgeUnlock}" badge</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <p className="mt-4 text-xs text-center text-muted-foreground">
                 Your booking is protected by Eventra's secure payment system
