@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import AttendeeProfile from './AttendeeProfile';
 import OrganizerProfile from '../organizer/OrganizerProfile';
@@ -11,12 +11,10 @@ import AdminProfile from '../admin/AdminProfile';
  * distinct experience.
  */
 export default function Profile() {
-  const navigate = useNavigate();
   const { currentUser } = useAppStore();
 
   if (!currentUser) {
-    navigate('/login');
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   if (currentUser.role === 'organizer') return <OrganizerProfile />;

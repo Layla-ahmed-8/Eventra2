@@ -119,36 +119,37 @@ export default function Messages() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {filteredThreads.length === 0 ? (
-          <div className="bg-card border border-border rounded-2xl shadow-lg p-12 text-center">
+          <div className="surface-panel p-12 text-center">
             <Mail className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-foreground mb-2">No conversations found</h3>
+            <h3 className="text-h3 font-bold text-foreground mb-2">No conversations found</h3>
             <p className="text-muted-foreground">Try clearing filters or searching for another thread.</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="md:col-span-1">
-              <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden">
+            {/* Thread list — hidden on mobile when a thread is active */}
+            <div className={`md:col-span-1 ${activeThreadId ? 'hidden md:block' : 'block'}`}>
+              <div className="surface-panel overflow-hidden">
                 {filteredThreads.map((thread) => (
                   <button
                     key={thread.id}
                     onClick={() => setActiveThreadId(thread.id)}
-                    className={`w-full p-4 text-left border-b border-border hover:bg-background transition-colors ${
-                      activeThread?.id === thread.id ? 'bg-primary/10' : ''
+                    className={`w-full p-4 text-left border-b border-border hover:bg-secondary/50 transition-colors ${
+                      activeThread?.id === thread.id ? 'bg-primary/8' : ''
                     }`}
                   >
                     <div className="flex items-start justify-between mb-1">
-                      <h3 className="font-semibold text-foreground">{thread.title}</h3>
-                      {thread.unread && <div className="w-2 h-2 bg-[#6C4CF1] rounded-full mt-1" />}
+                      <h3 className="text-body-sm font-semibold text-foreground truncate pr-2">{thread.title}</h3>
+                      {thread.unread && <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1" />}
                     </div>
-                    <p className="text-xs text-muted-foreground mb-1">{thread.from}</p>
-                    <p className="text-sm text-muted-foreground line-clamp-1 mb-2">{thread.preview}</p>
+                    <p className="text-caption text-muted-foreground mb-1">{thread.from}</p>
+                    <p className="text-caption text-muted-foreground line-clamp-1 mb-2">{thread.preview}</p>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
+                      <div className="flex items-center gap-1 text-caption text-muted-foreground/70">
                         <Clock className="w-3 h-3" />
                         <span>{thread.time}</span>
                       </div>
                       {thread.priority && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
+                        <span className="text-caption px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
                           Priority
                         </span>
                       )}
@@ -158,13 +159,23 @@ export default function Messages() {
               </div>
             </div>
 
-            <div className="md:col-span-2">
-              <div className="bg-card border border-border rounded-2xl shadow-lg p-6 md:p-8">
+            {/* Conversation view — full width on mobile */}
+            <div className={`md:col-span-2 ${activeThreadId ? 'block' : 'hidden md:block'}`}>
+              <div className="surface-panel p-4 sm:p-6">
                 {activeThread ? (
-                  <div className="space-y-5">
+                  <div className="space-y-4">
+                    {/* Mobile back button */}
+                    <button
+                      onClick={() => setActiveThreadId('')}
+                      className="md:hidden flex items-center gap-2 text-body-sm text-muted-foreground hover:text-foreground mb-2"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back to messages
+                    </button>
+
                     <div className="pb-4 border-b border-border">
-                      <h3 className="text-xl font-bold text-foreground">{activeThread.title}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <h3 className="text-h3 font-bold text-foreground">{activeThread.title}</h3>
+                      <p className="text-caption text-muted-foreground">
                         {activeThread.type === 'event-room' && activeThread.phase
                           ? `Event room (${activeThread.phase})`
                           : activeThread.type === 'broadcast'
@@ -175,17 +186,17 @@ export default function Messages() {
                       </p>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="p-3 rounded-xl bg-secondary text-foreground max-w-[80%]">
+                    <div className="space-y-3 min-h-[120px]">
+                      <div className="p-3 rounded-xl bg-secondary text-foreground max-w-[85%] text-body-sm">
                         {activeThread.preview}
                       </div>
-                      <div className="p-3 rounded-xl bg-primary text-primary-foreground max-w-[80%] ml-auto">
+                      <div className="p-3 rounded-xl bg-primary text-primary-foreground max-w-[85%] ml-auto text-body-sm">
                         Got it. I will be there 15 minutes early.
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground flex items-center gap-2">
-                      <ShieldAlert className="w-4 h-4" />
+                    <div className="rounded-xl border border-dashed border-border p-3 text-caption text-muted-foreground flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 flex-shrink-0" />
                       Safety tools: report, block, and AI toxicity filtering are active in this chat.
                     </div>
 
@@ -195,10 +206,10 @@ export default function Messages() {
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                         placeholder="Type your message..."
-                        className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+                        className="flex-1 input-base"
                       />
                       <button
-                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground disabled:opacity-60"
+                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground disabled:opacity-60 flex-shrink-0"
                         disabled={!draft.trim()}
                       >
                         <Send className="w-4 h-4" />
@@ -208,8 +219,8 @@ export default function Messages() {
                 ) : (
                   <div className="text-center py-12">
                     <Mail className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-foreground mb-2">Select a conversation</h3>
-                    <p className="text-muted-foreground">Choose any thread from the left panel.</p>
+                    <h3 className="text-h3 font-bold text-foreground mb-2">Select a conversation</h3>
+                    <p className="text-body text-muted-foreground">Choose any thread from the left panel.</p>
                   </div>
                 )}
               </div>

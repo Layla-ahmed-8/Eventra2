@@ -46,59 +46,39 @@ export default function ManageEvent() {
       <div>
         {activeTab === 'attendees' && (
           <div className="surface-panel p-5">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
               <h2 className="text-h2 font-semibold text-foreground">Attendees (142)</h2>
-              <button className="btn-secondary flex items-center gap-2">
+              <button className="btn-secondary flex items-center gap-2 self-start sm:self-auto">
                 <Download className="w-4 h-4" />
                 Export List
               </button>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="table-surface w-full">
-                <thead className="bg-[#F8F5FF] border-b border-[#E9E4FF]">
+              <table className="table-surface w-full min-w-[560px]">
+                <thead className="bg-secondary border-b border-border">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Email
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Ticket Type
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Booked
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
+                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Name</th>
+                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Email</th>
+                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Ticket Type</th>
+                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Booked</th>
+                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-border">
                   {Array.from({ length: 10 }, (_, i) => (
-                    <tr key={i} className="hover:bg-gray-50">
+                    <tr key={i} className="hover:bg-secondary/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={`https://i.pravatar.cc/40?img=${i + 1}`}
-                            alt=""
-                            className="w-10 h-10 rounded-full"
-                          />
-                          <span className="font-medium text-gray-900">
-                            Attendee {i + 1}
-                          </span>
+                          <img src={`https://i.pravatar.cc/40?img=${i + 1}`} alt="" className="w-9 h-9 rounded-full flex-shrink-0" />
+                          <span className="text-body-sm font-medium text-foreground">Attendee {i + 1}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        attendee{i + 1}@example.com
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {i % 3 === 0 ? 'VIP Table' : 'General Admission'}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">May {i + 1}, 2026</td>
+                      <td className="px-4 py-3 text-body-sm text-muted-foreground">attendee{i + 1}@example.com</td>
+                      <td className="px-4 py-3 text-body-sm text-muted-foreground">{i % 3 === 0 ? 'VIP Table' : 'General Admission'}</td>
+                      <td className="px-4 py-3 text-body-sm text-muted-foreground whitespace-nowrap">May {i + 1}, 2026</td>
                       <td className="px-4 py-3">
-                        <span className="status-pill bg-green-100 text-green-700">Confirmed</span>
+                        <span className="status-pill bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Confirmed</span>
                       </td>
                     </tr>
                   ))}
