@@ -70,15 +70,12 @@ export default function Discover() {
                   <Sparkles className="w-5 h-5" />
                   AI Search
                 </button>
-<<<<<<< Updated upstream
-                <button className="btn-secondary text-lg px-6 py-3">
-=======
+
                 <button
                   type="button"
                   className="btn-secondary"
                   onClick={() => document.getElementById('discover-event-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 >
->>>>>>> Stashed changes
                   Browse Events
                 </button>
               </div>
@@ -335,3 +332,4 @@ function EventCard({ event, bookmarkedEvents, toggleBookmark }: any) {
     </div>
   );
 }
+

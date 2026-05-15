@@ -35,13 +35,6 @@ export default function OrderSummary() {
               <span>Back to My Events</span>
             </Link>
             <div className="flex items-center gap-2">
-<<<<<<< Updated upstream
-              <button className="p-2 hover:bg-gray-100 rounded-lg">
-                <Share2 className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg">
-                <Download className="w-5 h-5 text-gray-600" />
-=======
               <button
                 type="button"
                 className="p-2 hover:bg-muted rounded-lg transition-colors"
@@ -69,7 +62,6 @@ export default function OrderSummary() {
                 }}
               >
                 <Download className="w-5 h-5 text-muted-foreground" />
->>>>>>> Stashed changes
               </button>
             </div>
           </div>
@@ -108,10 +100,6 @@ export default function OrderSummary() {
                 </p>
               </div>
 
-<<<<<<< Updated upstream
-              <button className="w-full px-4 py-3 bg-[#6C4CF1] hover:bg-[#5a3dd1] text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2">
-                <Download className="w-5 h-5" />
-=======
               <button
                 type="button"
                 className="btn-primary w-full"
@@ -120,7 +108,6 @@ export default function OrderSummary() {
                 }}
               >
                 <Download className="w-4 h-4" />
->>>>>>> Stashed changes
                 Download Ticket
               </button>
             </div>
@@ -449,15 +436,11 @@ export default function OrderSummary() {
                 >
                   Message Organizer
                 </Link>
-<<<<<<< Updated upstream
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
-=======
                 <button
                   type="button"
                   className="btn-primary text-body-sm"
                   onClick={() => demoToast('Support', 'Demo: email support@eventra.com or use in-app messages.')}
                 >
->>>>>>> Stashed changes
                   Contact Support
                 </button>
               </div>

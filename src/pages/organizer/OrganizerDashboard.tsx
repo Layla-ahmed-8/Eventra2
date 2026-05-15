@@ -1,9 +1,3 @@
-<<<<<<< Updated upstream
-import { Link } from 'react-router-dom';
-import { Users, Calendar, DollarSign, TrendingUp, Eye, Plus, BarChart3, Sparkles } from 'lucide-react';
-
-export default function OrganizerDashboard() {
-=======
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -101,16 +95,11 @@ export default function OrganizerDashboard() {
     return 'Good evening';
   };
 
->>>>>>> Stashed changes
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-<<<<<<< Updated upstream
-          <h1 className="text-h1 font-bold text-foreground">Organizer Dashboard</h1>
-          <p className="text-body text-muted-foreground mt-1">Overview of your events and performance</p>
-=======
           <p className="text-caption text-muted-foreground mb-0.5">{greeting()},</p>
           <h1 className="text-h1 font-bold text-foreground">{currentUser?.name ?? 'Organizer'} 👋</h1>
           <p className="text-body-sm text-muted-foreground mt-1">Here's what's happening with your events today.</p>
@@ -128,21 +117,8 @@ export default function OrganizerDashboard() {
             <Plus className="w-4 h-4" />
             Create Event
           </Link>
->>>>>>> Stashed changes
         </div>
-        <Link
-          to="/organizer/events/create"
-          className="px-4 py-3 bg-gradient-to-r from-[#6C4CF1] to-[#5739D4] hover:shadow-xl text-white rounded-xl font-bold flex items-center gap-2 transform hover:scale-105 transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          Create Event
-        </Link>
       </div>
-<<<<<<< Updated upstream
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-=======
-
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="surface-panel p-4 border border-border/80">
           <p className="text-caption text-muted-foreground">Events in catalog</p>
@@ -405,7 +381,6 @@ export default function OrganizerDashboard() {
         <div className="space-y-4">
 
           {/* Fill rate radial */}
->>>>>>> Stashed changes
           <div className="surface-panel p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">

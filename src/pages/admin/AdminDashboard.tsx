@@ -1,9 +1,5 @@
 import { Link } from 'react-router-dom';
-<<<<<<< Updated upstream
-import { Users, Calendar, TrendingUp, AlertCircle, Activity, DollarSign } from 'lucide-react';
 
-export default function AdminDashboard() {
-=======
 import { demoToast } from '../../lib/demoFeedback';
 import {
   Users, Calendar, TrendingUp, AlertCircle, Activity, DollarSign,
@@ -106,7 +102,6 @@ export default function AdminDashboard() {
     return 'Good evening';
   };
 
->>>>>>> Stashed changes
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -122,9 +117,7 @@ export default function AdminDashboard() {
               <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
                 <Users className="w-5 h-5 text-[#6C4CF1]" />
               </div>
-<<<<<<< Updated upstream
-              <span className="status-pill text-green-700 bg-green-100">+15%</span>
-=======
+
               <span className={`flex items-center gap-0.5 text-caption font-bold ${kpi.up ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
                 {kpi.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                 {kpi.change}
@@ -173,7 +166,6 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <span className="text-caption text-green-600 dark:text-green-400 font-semibold">Live</span>
->>>>>>> Stashed changes
             </div>
             <p className="text-display font-semibold text-foreground mb-1">12.4K</p>
             <p className="text-caption text-muted-foreground">Total Users</p>
@@ -274,8 +266,7 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
-<<<<<<< Updated upstream
-=======
+
               <button
                 type="button"
                 className="p-1.5 hover:bg-muted rounded-lg transition-colors"
@@ -287,7 +278,6 @@ export default function AdminDashboard() {
               >
                 <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
->>>>>>> Stashed changes
             </div>
 
             {/* Platform Growth Chart */}
@@ -401,3 +391,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

@@ -199,12 +199,9 @@ export default function Messages() {
                         className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground"
                       />
                       <button
-<<<<<<< Updated upstream
-                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground disabled:opacity-60"
-=======
+
                         type="button"
                         className="px-4 py-2 rounded-xl bg-primary text-primary-foreground disabled:opacity-60 flex-shrink-0"
->>>>>>> Stashed changes
                         disabled={!draft.trim()}
                         onClick={() => {
                           demoToast('Message sent', `“${draft.trim().slice(0, 80)}${draft.length > 80 ? '…' : ''}”`);
@@ -230,3 +227,4 @@ export default function Messages() {
     </div>
   );
 }
+

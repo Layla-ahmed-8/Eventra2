@@ -1,10 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
-<<<<<<< Updated upstream
-import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Ticket, BadgeCheck, Sparkles, TrendingUp, Clock } from 'lucide-react';
-=======
+
 import { shareOrCopyLink } from '../../lib/demoFeedback';
 import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Ticket, BadgeCheck, Sparkles, TrendingUp, Clock, MessageSquare, Bookmark, Zap, Award, Activity } from 'lucide-react';
->>>>>>> Stashed changes
 import { useAppStore } from '../../store/useAppStore';
 
 export default function EventDetail() {
@@ -58,10 +55,7 @@ export default function EventDetail() {
                   }`}
                 />
               </button>
-<<<<<<< Updated upstream
-              <button className="w-12 h-12 rounded-2xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 flex items-center justify-center transition-all hover:scale-110 shadow-lg">
-                <Share2 className="w-6 h-6 text-slate-600 dark:text-slate-300" />
-=======
+
               <button
                 type="button"
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 flex items-center justify-center transition-all hover:scale-110 shadow-lg"
@@ -71,7 +65,6 @@ export default function EventDetail() {
                 }
               >
                 <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 dark:text-slate-300" />
->>>>>>> Stashed changes
               </button>
             </div>
           </div>
@@ -323,3 +316,4 @@ export default function EventDetail() {
     </div>
   );
 }
+
