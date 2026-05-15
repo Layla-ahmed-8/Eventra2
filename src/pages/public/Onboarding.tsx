@@ -379,14 +379,14 @@ export default function Onboarding() {
                 </button>
               )}
               <button
-                onClick={() => navigate('/app/discover')}
+                onClick={() => navigate('/login?afterOnboarding=1')}
                 className="text-body-sm text-muted-foreground hover:text-foreground transition px-3 py-2"
               >
                 Skip
               </button>
             </div>
             <button
-              onClick={() => step < TOTAL_STEPS ? setStep(s => s + 1) : navigate('/app/discover')}
+              onClick={() => step < TOTAL_STEPS ? setStep(s => s + 1) : navigate('/login?afterOnboarding=1')}
               disabled={!canContinue()}
               className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
             >

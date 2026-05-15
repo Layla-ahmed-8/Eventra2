@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { LogIn, Mail, Lock, Users, Briefcase, Shield, Moon, Sun } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { demoAccounts } from '../../data/users';
@@ -7,6 +7,7 @@ import Logo from '../../components/Logo';
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { login, theme, toggleTheme } = useAppStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +18,10 @@ export default function Login() {
     const success = login(email, password);
 
     if (success) {
+      searchParams.delete('afterOnboarding');
+      searchParams.delete('afterOrganizerOnboarding');
+      searchParams.delete('afterAdminOnboarding');
+      setSearchParams(searchParams, { replace: true });
       const user = demoAccounts.find(u => u.email === email);
       // Redirect based on role
       if (user?.role === 'organizer') {
@@ -37,6 +42,10 @@ export default function Login() {
     const success = login(demoEmail, demoPassword);
 
     if (success) {
+      searchParams.delete('afterOnboarding');
+      searchParams.delete('afterOrganizerOnboarding');
+      searchParams.delete('afterAdminOnboarding');
+      setSearchParams(searchParams, { replace: true });
       const user = demoAccounts.find(u => u.email === demoEmail);
       if (user?.role === 'organizer') {
         navigate('/organizer/dashboard');
@@ -48,8 +57,36 @@ export default function Login() {
     }
   };
 
+  const onboardingHint =
+    searchParams.get('afterOnboarding') === '1'
+      ? 'Attendee setup is complete. Sign in with a demo attendee account (Sarah) to open the app.'
+      : searchParams.get('afterOrganizerOnboarding') === '1'
+      ? 'Organizer setup is complete. Sign in with ahmed@demo.com to manage events.'
+      : searchParams.get('afterAdminOnboarding') === '1'
+      ? 'Admin orientation is complete. Sign in with admin@demo.com to open the admin console.'
+      : null;
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+      {onboardingHint && (
+        <div className="absolute top-20 left-4 right-4 max-w-4xl mx-auto z-10">
+          <div className="rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <p>{onboardingHint}</p>
+            <button
+              type="button"
+              onClick={() => {
+                searchParams.delete('afterOnboarding');
+                searchParams.delete('afterOrganizerOnboarding');
+                searchParams.delete('afterAdminOnboarding');
+                setSearchParams(searchParams, { replace: true });
+              }}
+              className="text-primary font-semibold whitespace-nowrap self-end sm:self-auto"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
       <button
         onClick={toggleTheme}
         className="absolute top-4 right-4 p-3 rounded-xl bg-card border border-border hover:bg-secondary transition"

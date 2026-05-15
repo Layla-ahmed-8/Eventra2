@@ -48,6 +48,29 @@ import AdminSettings from '../pages/admin/AdminSettings';
 import AdminModeration from '../pages/admin/AdminModeration';
 import AdminOnboarding from '../pages/admin/AdminOnboarding';
 
+// ── Auth guard: redirect to login if not authenticated, or wrong role ────────
+function RequireAuth({ children, role }: { children: React.ReactNode; role?: 'attendee' | 'organizer' | 'admin' }) {
+  const { isAuthenticated, currentUser } = useAppStore();
+  if (!isAuthenticated || !currentUser) return <Navigate to="/login" replace />;
+  if (role && currentUser.role !== role) {
+    if (currentUser.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+    if (currentUser.role === 'organizer') return <Navigate to="/organizer/dashboard" replace />;
+    return <Navigate to="/app/discover" replace />;
+  }
+  return <>{children}</>;
+}
+
+// ── Redirect already-authenticated users away from public pages ──────────────
+function RedirectIfAuth({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, currentUser } = useAppStore();
+  if (isAuthenticated && currentUser) {
+    if (currentUser.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+    if (currentUser.role === 'organizer') return <Navigate to="/organizer/dashboard" replace />;
+    return <Navigate to="/app/discover" replace />;
+  }
+  return <>{children}</>;
+}
+
 export default function App() {
   const { theme } = useAppStore();
 
@@ -61,67 +84,62 @@ export default function App() {
         <Toaster richColors position="top-center" theme={theme === 'dark' ? 'dark' : 'light'} />
         <BrowserRouter>
           <Routes>
-            {/* ── Public Routes ── */}
+            {/* ── Public ── */}
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/login"      element={<RedirectIfAuth><Login /></RedirectIfAuth>} />
+            <Route path="/signup"     element={<RedirectIfAuth><Signup /></RedirectIfAuth>} />
             <Route path="/onboarding" element={<Onboarding />} />
 
-            {/* ── Attendee Routes ── */}
-            <Route path="/app" element={<AttendeeLayout><Discover /></AttendeeLayout>}>
-              <Route index element={<Navigate to="/app/discover" />} />
-            </Route>
-            <Route path="/app/discover"                    element={<AttendeeLayout><Discover /></AttendeeLayout>} />
-            <Route path="/app/search"                      element={<AttendeeLayout><Discover /></AttendeeLayout>} />
-            <Route path="/app/events/:id"                  element={<AttendeeLayout><EventDetail /></AttendeeLayout>} />
-            <Route path="/app/events/:id/rsvp"             element={<AttendeeLayout><RSVP /></AttendeeLayout>} />
-            <Route path="/app/checkout"                    element={<AttendeeLayout><RSVP /></AttendeeLayout>} />
-            <Route path="/app/calendar"                    element={<AttendeeLayout><Calendar /></AttendeeLayout>} />
-            <Route path="/app/my-events"                   element={<AttendeeLayout><MyEvents /></AttendeeLayout>} />
-            <Route path="/app/my-events/:bookingId/summary" element={<AttendeeLayout><OrderSummary /></AttendeeLayout>} />
-            <Route path="/app/orders/:id"                  element={<AttendeeLayout><OrderSummary /></AttendeeLayout>} />
-            <Route path="/app/community"                   element={<AttendeeLayout><Community /></AttendeeLayout>} />
-            <Route path="/app/community/:id"               element={<AttendeeLayout><CommunityDetail /></AttendeeLayout>} />
-            <Route path="/app/rewards"                     element={<AttendeeLayout><Achievements /></AttendeeLayout>} />
-            {/* Profile — smart router renders role-specific UI */}
-            <Route path="/app/profile"                     element={<AttendeeLayout><Profile /></AttendeeLayout>} />
-            <Route path="/app/settings"                    element={<AttendeeLayout><Profile /></AttendeeLayout>} />
-            <Route path="/app/profile/achievements"        element={<AttendeeLayout><Achievements /></AttendeeLayout>} />
-            <Route path="/app/notifications"               element={<AttendeeLayout><Notifications /></AttendeeLayout>} />
-            <Route path="/app/messages"                    element={<AttendeeLayout><Messages /></AttendeeLayout>} />
-            <Route path="/app/rewards/store"               element={<AttendeeLayout><RewardStore /></AttendeeLayout>} />
+            {/* ── Attendee ── */}
+            <Route path="/app" element={<Navigate to="/app/discover" replace />} />
+            <Route path="/app/discover"                     element={<RequireAuth role="attendee"><AttendeeLayout><Discover /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/search"                       element={<RequireAuth role="attendee"><AttendeeLayout><Discover /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/events/:id"                   element={<RequireAuth role="attendee"><AttendeeLayout><EventDetail /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/events/:id/rsvp"              element={<RequireAuth role="attendee"><AttendeeLayout><RSVP /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/checkout/:id"                 element={<RequireAuth role="attendee"><AttendeeLayout><RSVP /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/calendar"                     element={<RequireAuth role="attendee"><AttendeeLayout><Calendar /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/my-events"                    element={<RequireAuth role="attendee"><AttendeeLayout><MyEvents /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/my-events/:bookingId/summary" element={<RequireAuth role="attendee"><AttendeeLayout><OrderSummary /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/orders/:id"                   element={<RequireAuth role="attendee"><AttendeeLayout><OrderSummary /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/community"                    element={<RequireAuth role="attendee"><AttendeeLayout><Community /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/community/:id"                element={<RequireAuth role="attendee"><AttendeeLayout><CommunityDetail /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/rewards"                      element={<RequireAuth role="attendee"><AttendeeLayout><Achievements /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/profile"                      element={<RequireAuth role="attendee"><AttendeeLayout><Profile /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/settings"                     element={<RequireAuth role="attendee"><AttendeeLayout><Profile /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/profile/achievements"         element={<RequireAuth role="attendee"><AttendeeLayout><Achievements /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/notifications"                element={<RequireAuth role="attendee"><AttendeeLayout><Notifications /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/messages"                     element={<RequireAuth role="attendee"><AttendeeLayout><Messages /></AttendeeLayout></RequireAuth>} />
+            <Route path="/app/rewards/store"                element={<RequireAuth role="attendee"><AttendeeLayout><RewardStore /></AttendeeLayout></RequireAuth>} />
 
-            {/* ── Organizer Routes ── */}
-            <Route path="/organizer"                       element={<Navigate to="/organizer/dashboard" />} />
-            <Route path="/organizer/onboarding"            element={<OrganizerLayout><OrganizerOnboarding /></OrganizerLayout>} />
-            <Route path="/organizer/dashboard"             element={<OrganizerLayout><OrganizerDashboard /></OrganizerLayout>} />
-            <Route path="/organizer/events"                element={<OrganizerLayout><OrganizerEvents /></OrganizerLayout>} />
-            <Route path="/organizer/events/create"         element={<OrganizerLayout><CreateEvent /></OrganizerLayout>} />
-            <Route path="/organizer/events/:id/manage"     element={<OrganizerLayout><ManageEvent /></OrganizerLayout>} />
-            <Route path="/organizer/analytics"             element={<OrganizerLayout><OrganizerAnalytics /></OrganizerLayout>} />
-            <Route path="/organizer/messages"              element={<OrganizerLayout><OrganizerMessages /></OrganizerLayout>} />
-            <Route path="/organizer/reports"               element={<OrganizerLayout><OrganizerAnalytics /></OrganizerLayout>} />
-            {/* Organizer profile via shared /app/profile route */}
-            <Route path="/organizer/profile"               element={<OrganizerLayout><Profile /></OrganizerLayout>} />
+            {/* ── Organizer ── */}
+            <Route path="/organizer"                        element={<Navigate to="/organizer/dashboard" replace />} />
+            <Route path="/organizer/onboarding"             element={<OrganizerLayout><OrganizerOnboarding /></OrganizerLayout>} />
+            <Route path="/organizer/dashboard"              element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerDashboard /></OrganizerLayout></RequireAuth>} />
+            <Route path="/organizer/events"                 element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerEvents /></OrganizerLayout></RequireAuth>} />
+            <Route path="/organizer/events/create"          element={<RequireAuth role="organizer"><OrganizerLayout><CreateEvent /></OrganizerLayout></RequireAuth>} />
+            <Route path="/organizer/events/:id/manage"      element={<RequireAuth role="organizer"><OrganizerLayout><ManageEvent /></OrganizerLayout></RequireAuth>} />
+            <Route path="/organizer/analytics"              element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerAnalytics /></OrganizerLayout></RequireAuth>} />
+            <Route path="/organizer/messages"               element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerMessages /></OrganizerLayout></RequireAuth>} />
+            <Route path="/organizer/reports"                element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerAnalytics /></OrganizerLayout></RequireAuth>} />
+            <Route path="/organizer/profile"                element={<RequireAuth role="organizer"><OrganizerLayout><Profile /></OrganizerLayout></RequireAuth>} />
 
-            {/* ── Admin Routes ── */}
-            <Route path="/admin"                           element={<Navigate to="/admin/dashboard" />} />
-            <Route path="/admin/onboarding"                element={<AdminLayout><AdminOnboarding /></AdminLayout>} />
-            <Route path="/admin/dashboard"                 element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-            <Route path="/admin/events"                    element={<AdminLayout><AdminEvents /></AdminLayout>} />
-            <Route path="/admin/users"                     element={<AdminLayout><AdminUsers /></AdminLayout>} />
-            <Route path="/admin/community"                 element={<AdminLayout><AdminCommunity /></AdminLayout>} />
-            <Route path="/admin/moderation"                element={<AdminLayout><AdminModeration /></AdminLayout>} />
-            <Route path="/admin/fraud"                     element={<AdminLayout><AdminUsers /></AdminLayout>} />
-            <Route path="/admin/ai-health"                 element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
-            <Route path="/admin/analytics"                 element={<AdminLayout><AdminAnalytics /></AdminLayout>} />
-            <Route path="/admin/audit-log"                 element={<AdminLayout><AdminSettings /></AdminLayout>} />
-            <Route path="/admin/settings"                  element={<AdminLayout><AdminSettings /></AdminLayout>} />
-            {/* Admin profile via shared /app/profile route */}
-            <Route path="/admin/profile"                   element={<AdminLayout><Profile /></AdminLayout>} />
+            {/* ── Admin ── */}
+            <Route path="/admin"                            element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/onboarding"                 element={<AdminLayout><AdminOnboarding /></AdminLayout>} />
+            <Route path="/admin/dashboard"                  element={<RequireAuth role="admin"><AdminLayout><AdminDashboard /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/events"                     element={<RequireAuth role="admin"><AdminLayout><AdminEvents /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/users"                      element={<RequireAuth role="admin"><AdminLayout><AdminUsers /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/community"                  element={<RequireAuth role="admin"><AdminLayout><AdminCommunity /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/moderation"                 element={<RequireAuth role="admin"><AdminLayout><AdminModeration /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/fraud"                      element={<RequireAuth role="admin"><AdminLayout><AdminUsers /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/ai-health"                  element={<RequireAuth role="admin"><AdminLayout><AdminAnalytics /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/analytics"                  element={<RequireAuth role="admin"><AdminLayout><AdminAnalytics /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/audit-log"                  element={<RequireAuth role="admin"><AdminLayout><AdminSettings /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/settings"                   element={<RequireAuth role="admin"><AdminLayout><AdminSettings /></AdminLayout></RequireAuth>} />
+            <Route path="/admin/profile"                    element={<RequireAuth role="admin"><AdminLayout><Profile /></AdminLayout></RequireAuth>} />
 
             {/* ── Catch all ── */}
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </div>

@@ -5,6 +5,72 @@ export const categories = [
   'Health & Wellness', 'Gaming', 'Film', 'Fashion', 'Science', 'Community'
 ];
 
+// Engagement UX types
+export type UserBehaviorType = 'passive' | 'fomo' | 'community' | 'gamified';
+
+export type MomentumLabel =
+  | 'People are joining right now'
+  | 'Growing community'
+  | 'Active discussion'
+  | 'Trending among tech enthusiasts'
+  | 'Popular this weekend'
+  | 'Early interest building'
+  | 'Attendees from your communities'
+  | 'Recently gaining traction'
+  | 'Trending now'
+  | 'Most discussed today'
+  | 'High activity this evening';
+
+export type AtmosphereLabel =
+  | 'Small intimate event'
+  | 'Limited group experience'
+  | 'High-energy crowd expected'
+  | 'Curated community event'
+  | 'Private-style atmosphere'
+  | 'Welcoming community'
+  | 'Friendly for solo attendees';
+
+export type VibeTag =
+  | 'Creative crowd'
+  | 'Networking-friendly'
+  | 'Chill atmosphere'
+  | 'High-energy'
+  | 'Tech-forward'
+  | 'Artistic vibes'
+  | 'Foodie paradise'
+  | 'Adventure seekers'
+  | 'Music lovers'
+  | 'Community builders';
+
+export interface ActivitySignal {
+  text: string;
+  icon: string;
+  timestamp: string; // relative like "2 min ago"
+}
+
+export interface SocialAttendee {
+  avatar: string;
+  name: string;
+  interest?: string;
+}
+
+export interface EngagementData {
+  momentumLabel: MomentumLabel;
+  atmosphereLabel: AtmosphereLabel;
+  vibeTags: VibeTag[];
+  activitySignals: ActivitySignal[];
+  recentAttendees: SocialAttendee[];
+  sharedInterests: string[];
+  discussionCount: number;
+  bookmarkCount: number;
+  reactionCount: number;
+  xpReward: number; // XP earned for attending
+  badgeUnlock?: string; // badge name if attending unlocks one
+  identityLabel?: string; // "Tech Explorer", "Creative Insider" etc.
+  aiMatchReason?: string; // "You may connect well with attendees interested in AI + startups"
+  softActivityFeedback: string; // "New conversations happening"
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -43,6 +109,7 @@ export interface Event {
   relevanceScore: number;
   communityId: string;
   attendees: any[];
+  engagement: EngagementData;
 }
 
 export const mockEvents: Event[] = [
@@ -82,7 +149,33 @@ export const mockEvents: Event[] = [
     isRecommended: true,
     relevanceScore: 0.95,
     communityId: 'comm-001',
-    attendees: []
+    attendees: [],
+    engagement: {
+      momentumLabel: 'People are joining right now',
+      atmosphereLabel: 'High-energy crowd expected',
+      vibeTags: ['Music lovers', 'Chill atmosphere', 'Networking-friendly'],
+      activitySignals: [
+        { text: '5 people bookmarked in the last hour', icon: '🔖', timestamp: '1 hr ago' },
+        { text: 'New discussion activity in Cairo Music Lovers', icon: '💬', timestamp: '20 min ago' },
+        { text: 'Attendees are sharing their playlists', icon: '🎵', timestamp: '45 min ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=11', name: 'Nour', interest: 'Jazz' },
+        { avatar: 'https://i.pravatar.cc/40?img=12', name: 'Karim', interest: 'Live Music' },
+        { avatar: 'https://i.pravatar.cc/40?img=13', name: 'Dina', interest: 'Nightlife' },
+        { avatar: 'https://i.pravatar.cc/40?img=14', name: 'Tarek', interest: 'Music' },
+        { avatar: 'https://i.pravatar.cc/40?img=15', name: 'Salma', interest: 'Jazz' },
+      ],
+      sharedInterests: ['Jazz', 'Live Music', 'Cocktails', 'Nightlife'],
+      discussionCount: 24,
+      bookmarkCount: 38,
+      reactionCount: 91,
+      xpReward: 120,
+      badgeUnlock: 'Music Lover',
+      identityLabel: 'Music Lover',
+      aiMatchReason: 'You may connect well with attendees who love jazz and live music experiences',
+      softActivityFeedback: 'People are planning their evening together',
+    }
   },
   {
     id: 'event-002',
@@ -117,7 +210,33 @@ export const mockEvents: Event[] = [
     isRecommended: true,
     relevanceScore: 0.92,
     communityId: 'comm-002',
-    attendees: []
+    attendees: [],
+    engagement: {
+      momentumLabel: 'Trending among tech enthusiasts',
+      atmosphereLabel: 'High-energy crowd expected',
+      vibeTags: ['Tech-forward', 'Networking-friendly', 'Community builders'],
+      activitySignals: [
+        { text: 'People from Cairo Tech Hub joined recently', icon: '🚀', timestamp: '30 min ago' },
+        { text: 'Active discussion: "What to expect from the keynote"', icon: '💬', timestamp: '15 min ago' },
+        { text: '12 people bookmarked this week', icon: '🔖', timestamp: '2 hrs ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=21', name: 'Omar', interest: 'AI' },
+        { avatar: 'https://i.pravatar.cc/40?img=22', name: 'Hana', interest: 'ML' },
+        { avatar: 'https://i.pravatar.cc/40?img=23', name: 'Youssef', interest: 'Startups' },
+        { avatar: 'https://i.pravatar.cc/40?img=24', name: 'Rana', interest: 'Tech' },
+        { avatar: 'https://i.pravatar.cc/40?img=25', name: 'Adel', interest: 'AI' },
+      ],
+      sharedInterests: ['AI', 'Machine Learning', 'Startups', 'Tech'],
+      discussionCount: 67,
+      bookmarkCount: 112,
+      reactionCount: 203,
+      xpReward: 200,
+      badgeUnlock: 'Tech Explorer',
+      identityLabel: 'Tech Explorer',
+      aiMatchReason: 'You may connect well with attendees interested in AI + startups',
+      softActivityFeedback: 'Community members are actively preparing for this summit',
+    }
   },
   {
     id: 'event-003',
@@ -152,7 +271,30 @@ export const mockEvents: Event[] = [
     isRecommended: false,
     relevanceScore: 0.78,
     communityId: 'comm-003',
-    attendees: []
+    attendees: [],
+    engagement: {
+      momentumLabel: 'Early interest building',
+      atmosphereLabel: 'Small intimate event',
+      vibeTags: ['Adventure seekers', 'Chill atmosphere', 'Friendly for solo attendees'],
+      activitySignals: [
+        { text: 'Attendees are sharing trail tips', icon: '🥾', timestamp: '1 hr ago' },
+        { text: 'Recent RSVP activity', icon: '✅', timestamp: '3 hrs ago' },
+        { text: 'Attendees are introducing themselves', icon: '👋', timestamp: '2 hrs ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=31', name: 'Mona', interest: 'Hiking' },
+        { avatar: 'https://i.pravatar.cc/40?img=32', name: 'Sami', interest: 'Outdoors' },
+        { avatar: 'https://i.pravatar.cc/40?img=33', name: 'Lina', interest: 'Fitness' },
+      ],
+      sharedInterests: ['Hiking', 'Outdoor', 'Nature', 'Fitness'],
+      discussionCount: 8,
+      bookmarkCount: 14,
+      reactionCount: 22,
+      xpReward: 80,
+      identityLabel: 'Adventure Seeker',
+      aiMatchReason: 'Great for meeting active outdoor enthusiasts in Cairo',
+      softActivityFeedback: 'People are planning their gear and carpools',
+    }
   },
   {
     id: 'event-004',
@@ -187,7 +329,32 @@ export const mockEvents: Event[] = [
     isRecommended: true,
     relevanceScore: 0.85,
     communityId: 'comm-004',
-    attendees: []
+    attendees: [],
+    engagement: {
+      momentumLabel: 'Growing community',
+      atmosphereLabel: 'Curated community event',
+      vibeTags: ['Artistic vibes', 'Creative crowd', 'Chill atmosphere'],
+      activitySignals: [
+        { text: 'Artists are sharing previews in the community', icon: '🎨', timestamp: '40 min ago' },
+        { text: '7 people bookmarked recently', icon: '🔖', timestamp: '1 hr ago' },
+        { text: 'New discussion: "Favourite piece from the preview"', icon: '💬', timestamp: '25 min ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=41', name: 'Farida', interest: 'Art' },
+        { avatar: 'https://i.pravatar.cc/40?img=42', name: 'Ziad', interest: 'Culture' },
+        { avatar: 'https://i.pravatar.cc/40?img=43', name: 'Heba', interest: 'Contemporary Art' },
+        { avatar: 'https://i.pravatar.cc/40?img=44', name: 'Ramy', interest: 'Photography' },
+      ],
+      sharedInterests: ['Art', 'Culture', 'Contemporary', 'Photography'],
+      discussionCount: 19,
+      bookmarkCount: 31,
+      reactionCount: 58,
+      xpReward: 100,
+      badgeUnlock: 'Creative Insider',
+      identityLabel: 'Creative Insider',
+      aiMatchReason: 'Great for meeting creative professionals and art enthusiasts',
+      softActivityFeedback: 'Attendees are sharing their favourite artists',
+    }
   },
   {
     id: 'event-005',
@@ -225,7 +392,33 @@ export const mockEvents: Event[] = [
     isRecommended: true,
     relevanceScore: 0.88,
     communityId: 'comm-005',
-    attendees: []
+    attendees: [],
+    engagement: {
+      momentumLabel: 'Popular this weekend',
+      atmosphereLabel: 'High-energy crowd expected',
+      vibeTags: ['Foodie paradise', 'Community builders', 'High-energy'],
+      activitySignals: [
+        { text: 'Vendors are posting sneak peeks', icon: '🍜', timestamp: '30 min ago' },
+        { text: 'People from your communities joined', icon: '👥', timestamp: '1 hr ago' },
+        { text: '20+ bookmarks in the last 24 hours', icon: '🔖', timestamp: '24 hrs ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=51', name: 'Amira', interest: 'Food' },
+        { avatar: 'https://i.pravatar.cc/40?img=52', name: 'Hassan', interest: 'Street Food' },
+        { avatar: 'https://i.pravatar.cc/40?img=53', name: 'Nadia', interest: 'Festivals' },
+        { avatar: 'https://i.pravatar.cc/40?img=54', name: 'Khaled', interest: 'Egyptian Cuisine' },
+        { avatar: 'https://i.pravatar.cc/40?img=55', name: 'Iman', interest: 'Food' },
+      ],
+      sharedInterests: ['Food', 'Street Food', 'Festivals', 'Egyptian Cuisine'],
+      discussionCount: 45,
+      bookmarkCount: 89,
+      reactionCount: 176,
+      xpReward: 150,
+      badgeUnlock: 'Community Builder',
+      identityLabel: 'Foodie Explorer',
+      aiMatchReason: 'This matches your interest in food culture and community events',
+      softActivityFeedback: 'People are planning their food routes together',
+    }
   }
 ];
 

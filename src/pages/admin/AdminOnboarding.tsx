@@ -258,12 +258,12 @@ export default function AdminOnboarding() {
               </button>
             ) : (
               <button
-                onClick={() => navigate('/admin/dashboard')}
+                onClick={() => navigate('/login?afterAdminOnboarding=1')}
                 className="btn-primary"
                 style={{ background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' }}
               >
                 <CheckCircle2 className="w-4 h-4" />
-                Enter Dashboard
+                Sign in to enter dashboard
               </button>
             )}
           </div>

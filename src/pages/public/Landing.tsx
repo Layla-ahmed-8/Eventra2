@@ -189,17 +189,11 @@ export default function Landing() {
                     Get Started Free
                     <ArrowRight className="w-4 h-4" />
                   </Link>
-<<<<<<< Updated upstream
-                  <button className="btn-secondary text-lg px-8 py-4">
-                    Explore the Platform
-                  </button>
-=======
                   <Link to="/login"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-base hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all">
                     <Play className="w-4 h-4 fill-current" />
                     See Demo
                   </Link>
->>>>>>> Stashed changes
                 </div>
 
                 {/* Stats row */}
@@ -538,21 +532,9 @@ export default function Landing() {
         {/* ── FINAL CTA ── */}
         <section className="py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<<<<<<< Updated upstream
-            <div className="grid md:grid-cols-4 gap-8">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-br from-[#6C4CF1] to-[#00C2FF] rounded-lg flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-xl font-bold">Eventra</span>
-                </div>
-                <p className="text-muted-foreground text-sm">AI-powered event discovery platform</p>
-=======
             <div className="relative rounded-[3rem] overflow-hidden bg-gradient-to-br from-purple-600 to-blue-700 p-12 lg:p-20 text-center text-white">
               <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,#ffffff,transparent)]" />
->>>>>>> Stashed changes
               </div>
               
               <div className="relative z-10 max-w-2xl mx-auto space-y-8">

@@ -382,7 +382,7 @@ export default function OrganizerOnboarding() {
                 </button>
               )}
               <button
-                onClick={() => navigate('/organizer/dashboard')}
+                onClick={() => navigate('/login?afterOrganizerOnboarding=1')}
                 className="text-body-sm text-muted-foreground hover:text-foreground transition px-3 py-2"
               >
                 Skip
@@ -398,12 +398,12 @@ export default function OrganizerOnboarding() {
               </button>
             ) : (
               <button
-                onClick={() => navigate('/organizer/dashboard')}
+                onClick={() => navigate('/login?afterOrganizerOnboarding=1')}
                 className="btn-primary"
                 style={{ background: 'linear-gradient(135deg, #00D4FF 0%, #7C5CFF 100%)' }}
               >
                 <CheckCircle2 className="w-4 h-4" />
-                Launch Dashboard
+                Sign in to open dashboard
               </button>
             )}
           </div>
