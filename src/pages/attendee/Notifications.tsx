@@ -89,85 +89,62 @@ export default function Notifications() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Actions */}
-        <div className="flex items-center justify-between mb-6">
-          <button className="text-primary hover:text-primary/80 font-semibold">
-            Mark all as read
-          </button>
-
-          <button
-            type="button"
-            className="flex items-center gap-2 text-body-sm text-muted-foreground hover:text-foreground font-semibold transition-colors"
-            onClick={() => {
-              clearMyNotifications();
-              setClearedLocal(true);
-              demoToast('Inbox cleared', 'List hidden for this session. Sign in again to reload seed notifications.');
-            }}
-          >
-            <Trash2 className="w-4 h-4" />
-            Clear all
-          </button>
-        </div>
-
-        {/* Notifications List */}
-        <div className="space-y-3">
-          {mockNotifications.map((notification) => {
-            const Icon = notification.icon;
-            return (
-              <div
-                key={notification.id}
-                className={`bg-card border border-border rounded-2xl shadow-lg p-4 hover:shadow-2xl hover-lift transition-all ${
-                  !notification.read ? 'border-l-4 border-primary' : ''
-                }`}
-              >
-                <div className="flex gap-4">
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      notification.type === 'reminder'
-                        ? 'bg-blue-100'
-                        : notification.type === 'achievement'
-                        ? 'bg-purple-100'
-                        : notification.type === 'community'
-                        ? 'bg-green-100'
-                        : 'bg-orange-100'
-                    }`}
-                  >
-                    <Icon
-                      className={`w-6 h-6 ${
-                        notification.type === 'reminder'
-                          ? 'text-blue-600'
-                          : notification.type === 'achievement'
-                          ? 'text-purple-600'
-                          : notification.type === 'community'
-                          ? 'text-green-600'
-                          : 'text-orange-600'
-                      }`}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-1">
-                      <h3 className="font-bold text-foreground">{notification.title}</h3>
-                      {!notification.read && (
-                        <div className="w-2 h-2 bg-[#6C4CF1] rounded-full"></div>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground mb-1">{notification.message}</p>
-                    <p className="text-sm text-muted-foreground">{notification.time}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {mockNotifications.length === 0 && (
-          <div className="bg-card border border-border rounded-2xl shadow-lg p-12 text-center">
-            <Bell className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-foreground mb-2">No notifications</h3>
-            <p className="text-muted-foreground">You're all caught up!</p>
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <div className="bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
+              <Bell className="w-5 h-5 text-primary" />
+              <h2 className="bento-title">Recent Updates</h2>
+            </div>
+            <button
+              onClick={() => demoToast('Cleared', 'All notifications marked as read.')}
+              className="text-caption font-bold text-primary hover:underline"
+            >
+              Mark all as read
+            </button>
           </div>
-        )}
+
+          <div className="space-y-3">
+            {allNotifications.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
+                  <Bell className="w-8 h-8" />
+                </div>
+                <p className="text-body-sm text-muted-foreground">No notifications yet.</p>
+              </div>
+            ) : (
+              allNotifications.map((n) => (
+                <div
+                  key={n.id}
+                  className={`activity-item ${n.isRead ? 'opacity-60 grayscale-[0.5]' : 'border-primary/20 bg-primary/5'}`}
+                >
+                  <div className="activity-icon-wrapper scale-90">
+                    {n.type === 'booking' && <Zap className="w-4 h-4 text-green-500" />}
+                    {n.type === 'community' && <Users className="w-4 h-4 text-primary" />}
+                    {n.type === 'system' && <Zap className="w-4 h-4 text-orange-500" />}
+                    {n.type === 'social' && <Sparkles className="w-4 h-4 text-pink-500" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-body-sm font-bold text-foreground truncate">{n.title}</p>
+                      <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">{n.time}</span>
+                    </div>
+                    <p className="text-caption text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
+                  </div>
+                  {!n.isRead && (
+                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {allNotifications.length > 0 && (
+            <button className="w-full mt-6 py-3 text-caption font-bold text-muted-foreground hover:text-foreground transition-colors border-t border-border/50">
+              View older notifications
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

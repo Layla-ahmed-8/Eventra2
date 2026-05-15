@@ -103,32 +103,35 @@ export default function AdminAnalytics() {
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Active Users', value: '12.4K', change: '+24%', icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
-          { label: 'Total Events', value: '847', change: '+18%', icon: Calendar, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10' },
-          { label: 'Revenue (30d)', value: 'EGP 2.4M', change: '+32%', icon: DollarSign, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10' },
-          { label: 'Retention Rate', value: '78%', change: '+12%', icon: TrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500/10' },
+          { label: 'Active Users', value: '12.4K', change: '+24%', icon: Users, iconClass: 'icon-box-primary' },
+          { label: 'Total Events', value: '847', change: '+18%', icon: Calendar, iconClass: 'icon-box-cyan' },
+          { label: 'Revenue (30d)', value: 'EGP 2.4M', change: '+32%', icon: DollarSign, iconClass: 'icon-box-orange' },
+          { label: 'Retention Rate', value: '78%', change: '+12%', icon: TrendingUp, iconClass: 'icon-box-green' },
         ].map(kpi => (
-          <div key={kpi.label} className="surface-panel p-4 sm:p-5">
+          <div key={kpi.label} className="kpi-card">
             <div className="flex items-start justify-between mb-3">
-              <div className={`w-9 h-9 rounded-xl ${kpi.bg} flex items-center justify-center`}>
-                <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+              <div className={`icon-box ${kpi.iconClass}`}>
+                <kpi.icon className="w-4 h-4" />
               </div>
-              <span className="flex items-center gap-0.5 text-caption font-bold text-green-600 dark:text-green-400">
+              <span className="kpi-trend text-green-600 dark:text-green-400">
                 <ArrowUpRight className="w-3 h-3" />{kpi.change}
               </span>
             </div>
-            <p className="text-h2 font-bold text-foreground mb-0.5">{kpi.value}</p>
-            <p className="text-caption text-muted-foreground">{kpi.label}</p>
+            <p className="kpi-value">{kpi.value}</p>
+            <p className="kpi-label">{kpi.label}</p>
           </div>
         ))}
       </div>
 
       {/* Charts row */}
       <div className="grid md:grid-cols-2 gap-5">
-        <div className="surface-panel p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-h3 font-bold text-foreground">User Growth</h2>
-            <span className="text-caption text-muted-foreground">{period}</span>
+        <div className="bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
+              <Users className="w-5 h-5 text-primary" />
+              <h2 className="bento-title">User Growth</h2>
+            </div>
+            <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">{period}</span>
           </div>
           <BarChart
             data={userGrowthData[period].data}
@@ -146,10 +149,13 @@ export default function AdminAnalytics() {
           </svg>
         </div>
 
-        <div className="surface-panel p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-h3 font-bold text-foreground">Revenue (EGP K)</h2>
-            <span className="text-caption text-muted-foreground">{period}</span>
+        <div className="bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
+              <DollarSign className="w-5 h-5 text-orange-500" />
+              <h2 className="bento-title">Revenue (EGP K)</h2>
+            </div>
+            <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">{period}</span>
           </div>
           <BarChart
             data={revenueData[period].data}
@@ -169,30 +175,35 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Category performance */}
-      <div className="surface-panel p-5">
-        <h2 className="text-h3 font-bold text-foreground mb-5">Category Performance</h2>
+      <div className="bento-section">
+        <div className="bento-header">
+          <div className="bento-title-wrapper">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <h2 className="bento-title">Category Performance</h2>
+          </div>
+        </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {categoryData.map(cat => (
-            <div key={cat.category} className="card-surface p-4">
-              <div className="flex items-center justify-between mb-3">
+            <div key={cat.category} className="card-surface p-4 hover:border-primary/20 transition-all">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ background: cat.color }} />
-                  <p className="text-body-sm font-bold text-foreground">{cat.category}</p>
+                  <div className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
+                  <p className="text-body-sm font-black text-foreground uppercase tracking-tight">{cat.category}</p>
                 </div>
-                <span className="text-caption font-bold text-green-600 dark:text-green-400">{cat.growth}</span>
+                <span className="text-caption font-black text-green-600 dark:text-green-400">{cat.growth}</span>
               </div>
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                  <p className="text-h3 font-bold text-foreground">{cat.events}</p>
-                  <p className="text-caption text-muted-foreground">Events</p>
+                  <p className="text-h3 font-black text-foreground">{cat.events}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Events</p>
                 </div>
                 <div>
-                  <p className="text-h3 font-bold text-foreground">{(cat.attendees / 1000).toFixed(1)}K</p>
-                  <p className="text-caption text-muted-foreground">Attendees</p>
+                  <p className="text-h3 font-black text-foreground">{(cat.attendees / 1000).toFixed(1)}K</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Attendees</p>
                 </div>
               </div>
               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${(cat.events / 145) * 100}%`, background: cat.color }} />
+                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${(cat.events / 145) * 100}%`, background: cat.color }} />
               </div>
             </div>
           ))}
@@ -201,37 +212,44 @@ export default function AdminAnalytics() {
 
       {/* Geographic + engagement */}
       <div className="grid md:grid-cols-2 gap-5">
-        <div className="surface-panel p-5">
-          <div className="flex items-center gap-2 mb-5">
-            <Globe className="w-5 h-5 text-primary" />
-            <h2 className="text-h3 font-bold text-foreground">Top Cities</h2>
+        <div className="bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
+              <Globe className="w-5 h-5 text-primary" />
+              <h2 className="bento-title">Top Cities</h2>
+            </div>
           </div>
           <div className="space-y-4">
             {topCities.map(city => (
               <HBar key={city.city} label={city.city} value={city.events} max={520} color={city.color} suffix=" events" />
             ))}
           </div>
-          <div className="mt-4 pt-4 border-t border-border space-y-3">
+          <div className="mt-6 pt-6 border-t border-border/50 space-y-3">
             {topCities.map(city => (
-              <div key={city.city} className="flex items-center justify-between text-body-sm">
+              <div key={city.city} className="flex items-center justify-between text-caption">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ background: city.color }} />
-                  <span className="text-muted-foreground">{city.city}</span>
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: city.color }} />
+                  <span className="font-bold text-muted-foreground">{city.city}</span>
                 </div>
-                <span className="font-bold text-foreground">{city.users.toLocaleString()} users</span>
+                <span className="font-black text-foreground uppercase">{city.users.toLocaleString()} users</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="surface-panel p-5">
-          <h2 className="text-h3 font-bold text-foreground mb-5">Engagement Metrics</h2>
-          <div className="space-y-4 mb-5">
+        <div className="bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
+              <Activity className="w-5 h-5 text-primary" />
+              <h2 className="bento-title">Engagement Metrics</h2>
+            </div>
+          </div>
+          <div className="space-y-5 mb-6">
             <HBar label="Daily Active Users" value={4200} max={12400} color="#7C5CFF" />
             <HBar label="Weekly Active Users" value={8900} max={12400} color="#00D4FF" />
             <HBar label="Monthly Active Users" value={12400} max={12400} color="#22C55E" />
           </div>
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+          <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border/50">
             {[
               { label: 'Avg Session', value: '8m 34s', icon: Zap },
               { label: 'Bounce Rate', value: '24%', icon: Target },
@@ -239,12 +257,12 @@ export default function AdminAnalytics() {
               { label: 'NPS Score', value: '72', icon: TrendingUp },
             ].map(m => (
               <div key={m.label} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <m.icon className="w-4 h-4 text-primary" />
+                <div className="icon-box icon-box-primary scale-90">
+                  <m.icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-body-sm font-bold text-foreground">{m.value}</p>
-                  <p className="text-caption text-muted-foreground">{m.label}</p>
+                  <p className="text-body-sm font-black text-foreground leading-none">{m.value}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1">{m.label}</p>
                 </div>
               </div>
             ))}
@@ -253,8 +271,13 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Revenue breakdown */}
-      <div className="surface-panel p-5">
-        <h2 className="text-h3 font-bold text-foreground mb-5">Revenue Breakdown</h2>
+      <div className="bento-section">
+        <div className="bento-header">
+          <div className="bento-title-wrapper">
+            <DollarSign className="w-5 h-5 text-orange-500" />
+            <h2 className="bento-title">Revenue Breakdown</h2>
+          </div>
+        </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Ticket Sales', value: 'EGP 1.8M', pct: 75, color: '#7C5CFF' },
@@ -262,15 +285,15 @@ export default function AdminAnalytics() {
             { label: 'VIP Upgrades', value: 'EGP 140K', pct: 5.8, color: '#FF9B3D' },
             { label: 'Partnerships', value: 'EGP 40K', pct: 1.7, color: '#22C55E' },
           ].map(r => (
-            <div key={r.label} className="card-surface p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="w-3 h-3 rounded-full" style={{ background: r.color }} />
-                <span className="text-caption font-bold text-muted-foreground">{r.pct}%</span>
+            <div key={r.label} className="card-surface p-4 hover:border-primary/20 transition-all">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-2 h-2 rounded-full" style={{ background: r.color }} />
+                <span className="text-[10px] font-black text-muted-foreground uppercase">{r.pct}%</span>
               </div>
-              <p className="text-h3 font-bold text-foreground">{r.value}</p>
-              <p className="text-caption text-muted-foreground mt-0.5">{r.label}</p>
-              <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${r.pct}%`, background: r.color }} />
+              <p className="text-h3 font-black text-foreground">{r.value}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1">{r.label}</p>
+              <div className="mt-4 h-1 bg-muted rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${r.pct}%`, background: r.color }} />
               </div>
             </div>
           ))}

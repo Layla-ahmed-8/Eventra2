@@ -183,8 +183,8 @@
     line-height: 1.5 !important;
   }
 
-  /* ─── Surface system ─── */
-
+/* ─── Surface system & Semantic Components ─── */
+@layer components {
   /* Glass panel — light */
   .surface-panel {
     background: rgba(255, 255, 255, 0.82);
@@ -257,6 +257,92 @@
       0 12px 48px rgba(0,0,0,0.5);
     transform: translateY(-3px);
   }
+
+  /* ─── Semantic Components ─── */
+
+  /* Icon container */
+  .icon-box {
+    @apply w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300;
+  }
+  .icon-box-primary { @apply bg-primary/10 text-primary; }
+  .icon-box-cyan { @apply bg-cyan-500/10 text-cyan-600 dark:text-cyan-400; }
+  .icon-box-orange { @apply bg-orange-500/10 text-orange-600 dark:text-orange-400; }
+  .icon-box-red { @apply bg-red-500/10 text-red-600 dark:text-red-400; }
+  .icon-box-green { @apply bg-green-500/10 text-green-600 dark:text-green-400; }
+
+  /* Activity item */
+  .activity-item {
+    @apply flex items-center gap-4 p-3 rounded-2xl bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-all duration-200;
+  }
+  .activity-item:hover .activity-icon-wrapper {
+    @apply scale-110;
+  }
+  .activity-icon-wrapper {
+    @apply w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center text-lg shadow-sm transition-transform;
+  }
+
+  /* KPI Card */
+  .kpi-card {
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(124, 92, 255, 0.14);
+    box-shadow: 0 8px 40px rgba(108, 76, 241, 0.07), 0 1px 0 rgba(255,255,255,0.8) inset;
+    border-radius: 1.5rem;
+    backdrop-filter: blur(20px);
+    @apply p-4 flex flex-col gap-3 hover:-translate-y-1 transition-transform duration-300 cursor-default;
+  }
+  .dark .kpi-card {
+    background: rgba(17, 24, 51, 0.72);
+    border: 1px solid rgba(124, 92, 255, 0.18);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    @apply text-foreground;
+  }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    @apply text-muted-foreground;
+  }
+  .kpi-trend {
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    @apply flex items-center gap-0.5;
+  }
+
+  /* Bento Section */
+  .bento-section {
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(124, 92, 255, 0.14);
+    box-shadow: 0 8px 40px rgba(108, 76, 241, 0.07), 0 1px 0 rgba(255,255,255,0.8) inset;
+    border-radius: 1.5rem;
+    backdrop-filter: blur(20px);
+    @apply p-5;
+  }
+  .dark .bento-section {
+    background: rgba(17, 24, 51, 0.72);
+    border: 1px solid rgba(124, 92, 255, 0.18);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+  .bento-header { @apply flex items-center justify-between mb-5; }
+  .bento-title-wrapper { @apply flex items-center gap-2; }
+  .bento-title {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    @apply text-foreground;
+  }
+}
 
   /* ─── Gradient text ─── */
   .gradient-text {

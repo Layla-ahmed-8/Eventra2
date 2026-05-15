@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { demoToast } from '../../lib/demoFeedback';
@@ -5,7 +6,7 @@ import {
   Users, Calendar, TrendingUp, AlertCircle, Activity, DollarSign,
   ShieldAlert, CheckCircle2, ArrowUpRight, ArrowDownRight, Zap,
   BarChart3, Eye, Clock, ChevronRight, Cpu, Globe, UserCheck,
-  Flag, Sparkles, RefreshCw
+  Flag, Sparkles, RefreshCw, ArrowRight
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
@@ -105,289 +106,182 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-h1 font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-body text-muted-foreground mt-1">Platform overview and real-time activity</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-caption text-muted-foreground mb-0.5">{greeting()},</p>
+          <h1 className="text-h1 font-bold text-foreground">{currentUser?.name ?? 'Admin'} 👋</h1>
+          <p className="text-body-sm text-muted-foreground mt-1">Platform overview and real-time activity.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setLastRefresh(new Date().toLocaleTimeString());
+              demoToast('Refreshed', 'Dashboard data updated.');
+            }}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+          <div className="hidden sm:block text-right">
+            <p className="text-caption text-muted-foreground">Last updated</p>
+            <p className="text-caption font-bold text-foreground">{lastRefresh}</p>
+          </div>
+        </div>
       </div>
 
-      {/* Platform Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="surface-panel p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
-                <Users className="w-5 h-5 text-[#6C4CF1]" />
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          {
+            label: 'Total Users',
+            value: '12.4K',
+            change: '+12%',
+            up: true,
+            data: userGrowthData,
+            color: '#7C5CFF',
+            icon: Users,
+            iconClass: 'icon-box-primary',
+          },
+          {
+            label: 'Active Events',
+            value: '847',
+            change: '+24%',
+            up: true,
+            data: eventData,
+            color: '#00D4FF',
+            icon: Calendar,
+            iconClass: 'icon-box-cyan',
+          },
+          {
+            label: 'Platform Revenue',
+            value: 'EGP 2.4M',
+            change: '+32%',
+            up: true,
+            data: revenueData,
+            color: '#FF8A00',
+            icon: DollarSign,
+            iconClass: 'icon-box-orange',
+          },
+          {
+            label: 'System Flags',
+            value: '24',
+            change: '-5%',
+            up: false,
+            data: [45, 38, 42, 30, 35, 28, 24],
+            color: '#EF4444',
+            icon: AlertCircle,
+            iconClass: 'icon-box-red',
+          },
+        ].map((kpi) => (
+          <div key={kpi.label} className="kpi-card">
+            <div className="flex items-center justify-between">
+              <div className={`icon-box ${kpi.iconClass}`}>
+                <kpi.icon className="w-5 h-5" />
               </div>
-
-              <span className={`flex items-center gap-0.5 text-caption font-bold ${kpi.up ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+              <div className={`kpi-trend ${kpi.up ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
                 {kpi.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                 {kpi.change}
-              </span>
+              </div>
             </div>
-            <p className="text-h2 font-bold text-foreground mb-0.5">{kpi.value}</p>
-            <p className="text-caption text-muted-foreground mb-3">{kpi.label}</p>
+            <div>
+              <p className="kpi-value">{kpi.value}</p>
+              <p className="kpi-label">{kpi.label}</p>
+            </div>
             <Sparkline data={kpi.data} color={kpi.color} />
           </div>
         ))}
       </div>
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
-        <Link to="/admin/moderation" className="surface-panel p-4 flex flex-col gap-1 hover:border-primary/40 transition-colors border border-transparent">
-          <span className="text-caption font-semibold text-muted-foreground">Moderation</span>
-          <span className="text-h3 font-bold text-foreground">Queue</span>
-          <span className="text-caption text-primary">Open center →</span>
-        </Link>
-        <Link to="/admin/users" className="surface-panel p-4 flex flex-col gap-1 hover:border-primary/40 transition-colors border border-transparent">
-          <span className="text-caption font-semibold text-muted-foreground">Organizer requests</span>
-          <span className="text-h3 font-bold text-foreground">{pendingRequests}</span>
-          <span className="text-caption text-primary">Review users →</span>
-        </Link>
-        <Link to="/admin/events" className="surface-panel p-4 flex flex-col gap-1 hover:border-primary/40 transition-colors border border-transparent">
-          <span className="text-caption font-semibold text-muted-foreground">Events</span>
-          <span className="text-h3 font-bold text-foreground">Approvals</span>
-          <span className="text-caption text-primary">Pending list →</span>
-        </Link>
-        <Link to="/admin/analytics" className="surface-panel p-4 flex flex-col gap-1 hover:border-primary/40 transition-colors border border-transparent">
-          <span className="text-caption font-semibold text-muted-foreground">Analytics</span>
-          <span className="text-h3 font-bold text-foreground">Reports</span>
-          <span className="text-caption text-primary">View insights →</span>
-        </Link>
-      </div>
-
       {/* ── Main bento ── */}
       <div className="grid lg:grid-cols-3 gap-5">
-
         {/* Real-time Activity — 2 cols */}
-        <div className="lg:col-span-2 surface-panel p-5">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
+        <div className="lg:col-span-2 bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
               <Activity className="w-5 h-5 text-primary" />
-              <h2 className="text-h3 font-bold text-foreground">Real-time Activity</h2>
+              <h2 className="bento-title">Real-time Activity</h2>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <span className="text-caption text-green-600 dark:text-green-400 font-semibold">Live</span>
             </div>
-            <p className="text-display font-semibold text-foreground mb-1">12.4K</p>
-            <p className="text-caption text-muted-foreground">Total Users</p>
           </div>
 
-          <div className="surface-panel p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-cyan-100 rounded-2xl flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-[#00C2FF]" />
+          <div className="space-y-3">
+            {realtimeActivity.map((activity, index) => (
+              <div key={index} className="activity-item">
+                <div className="activity-icon-wrapper">
+                  {activity.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-body-sm font-semibold text-foreground truncate">{activity.action}</p>
+                    <span className="text-caption text-muted-foreground whitespace-nowrap">{activity.time}</span>
+                  </div>
+                  <p className="text-caption text-muted-foreground">{activity.user}</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
               </div>
-              <span className="status-pill text-green-700 bg-green-100">+24%</span>
-            </div>
-            <p className="text-display font-semibold text-foreground mb-1">847</p>
-            <p className="text-caption text-muted-foreground">Active Events</p>
+            ))}
           </div>
 
-          <div className="surface-panel p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-[#FF8A00]" />
-              </div>
-              <span className="status-pill text-green-700 bg-green-100">+32%</span>
-            </div>
-            <p className="text-display font-semibold text-foreground mb-1">EGP 2.4M</p>
-            <p className="text-caption text-muted-foreground">Platform Revenue</p>
-          </div>
-
-          <div className="surface-panel p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-              </div>
-              <span className="status-pill text-red-700 bg-red-100">8 pending</span>
-            </div>
-            <p className="text-display font-semibold text-foreground mb-1">24</p>
-            <p className="text-caption text-muted-foreground">Flags & Reports</p>
-          </div>
+          <button
+            type="button"
+            className="w-full mt-5 py-2.5 text-caption font-bold text-primary hover:bg-primary/5 rounded-xl transition-colors border border-dashed border-primary/20"
+          >
+            View system audit log
+          </button>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Real-time Activity */}
-          <div className="md:col-span-2">
-            <div className="surface-panel p-5 mb-6">
-              <div className="panel-header">
-                <h2 className="text-h2 font-semibold text-foreground">Real-time Activity</h2>
-                <Activity className="w-5 h-5 text-green-500 animate-pulse" />
-              </div>
-
-              <div className="space-y-3">
-                {[
-                  {
-                    action: 'New user registration',
-                    user: 'Sarah Ahmed',
-                    time: 'Just now',
-                    type: 'user',
-                  },
-                  {
-                    action: 'Event published',
-                    user: 'Tech Cairo',
-                    time: '2 minutes ago',
-                    type: 'event',
-                  },
-                  {
-                    action: 'Payment processed',
-                    user: 'Mohamed Ali',
-                    time: '5 minutes ago',
-                    type: 'payment',
-                  },
-                  {
-                    action: 'Event flagged for review',
-                    user: 'System',
-                    time: '8 minutes ago',
-                    type: 'flag',
-                  },
-                  {
-                    action: 'New organizer account',
-                    user: 'Cairo Events Co',
-                    time: '12 minutes ago',
-                    type: 'organizer',
-                  },
-                ].map((activity, index) => (
-                  <div
-                    key={index}
-                    className="surface-panel p-3 flex items-center gap-4 border border-border"
-                  >
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        activity.type === 'flag' ? 'bg-red-500' : 'bg-green-500'
-                      }`}
-                    ></div>
-                    <div className="flex-1">
-                      <p className="text-body text-foreground">
-                        <span className="font-semibold text-foreground">{activity.action}</span> •{' '}
-                        {activity.user}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
+        {/* Right column — Health & Requests */}
+        <div className="space-y-5">
+          {/* Pending items */}
+          <div className="bento-section">
+            <h3 className="text-body-sm font-bold text-foreground mb-4 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-orange-500" />
+              Action required
+            </h3>
+            <div className="grid grid-cols-1 gap-2">
+              {pendingItems.map(item => (
+                <Link key={item.label} to={item.link} className={`p-3 rounded-xl ${item.bg} flex items-center justify-between group hover:scale-[1.02] transition-transform`}>
+                  <span className={`text-caption font-bold ${item.color}`}>{item.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-body-sm font-black ${item.color}`}>{item.count}</span>
+                    <ArrowRight className={`w-3.5 h-3.5 ${item.color} group-hover:translate-x-0.5 transition-transform`} />
                   </div>
-                ))}
-              </div>
-
-              <button
-                type="button"
-                className="p-1.5 hover:bg-muted rounded-lg transition-colors"
-                title={`Last refreshed ${lastRefresh}`}
-                onClick={() => {
-                  setLastRefresh(new Date().toLocaleTimeString());
-                  demoToast('Dashboard refreshed', 'Live metrics are simulated in this demo.');
-                }}
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
-              </button>
-            </div>
-
-            {/* Platform Growth Chart */}
-            <div className="surface-panel p-5">
-              <h2 className="text-h2 font-semibold text-foreground mb-6">
-                User Growth (Last 30 Days)
-              </h2>
-              <div className="h-64 flex items-end justify-between gap-2">
-                {Array.from({ length: 30 }, (_, i) => {
-                  const height = 30 + Math.random() * 70;
-                  return (
-                    <div key={i} className="flex-1 flex flex-col justify-end">
-                      <div
-                        className="bg-gradient-to-t from-[#6C4CF1] to-[#00C2FF] rounded-t"
-                        style={{ height: `${height}%` }}
-                      ></div>
-                    </div>
-                  );
-                })}
-              </div>
+                </Link>
+              ))}
             </div>
           </div>
 
-          {/* Right Sidebar */}
-          <div className="md:col-span-1 space-y-6">
-            {/* Quick Actions */}
-            <div className="surface-panel p-6">
-              <h3 className="text-h2 font-semibold text-foreground mb-4">Quick Actions</h3>
-              <div className="space-y-2">
-                <Link
-                  to="/admin/events"
-                  className="btn-primary w-full"
-                >
-                  Review Events
-                </Link>
-                <Link
-                  to="/admin/users"
-                  className="btn-secondary w-full"
-                >
-                  Manage Users
-                </Link>
-                <Link
-                  to="/admin/community"
-                  className="btn-secondary w-full"
-                >
-                  Moderate Content
-                </Link>
-                <Link
-                  to="/admin/analytics"
-                  className="btn-secondary w-full"
-                >
-                  View Analytics
-                </Link>
-              </div>
+          {/* System Health */}
+          <div className="atmo-panel p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-body-sm font-bold text-white flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-primary" />
+                System Health
+              </h3>
+              <Globe className="w-4 h-4 text-slate-500" />
             </div>
-
-            {/* Pending Reviews */}
-            <div className="surface-panel p-6">
-              <h3 className="text-h2 font-semibold text-foreground mb-4">Pending Reviews</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-body text-muted-foreground">Events</span>
-                  <span className="status-pill bg-orange-100 text-orange-700">5</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-body text-muted-foreground">User Reports</span>
-                  <span className="status-pill bg-red-100 text-red-700">3</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-body text-muted-foreground">Flagged Posts</span>
-                  <span className="status-pill bg-yellow-100 text-yellow-700">8</span>
-                </div>
-              </div>
-            </div>
-
-            {/* System Health */}
-            <div className="surface-panel p-6">
-              <h3 className="text-h2 font-semibold text-foreground mb-4">System Health</h3>
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-body mb-1">
-                    <span className="text-muted-foreground">API Status</span>
-                    <span className="text-green-600 font-semibold">Healthy</span>
+            <div className="space-y-3">
+              {systemHealth.map(s => (
+                <div key={s.label} className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    <span>{s.label}</span>
+                    <span style={{ color: s.color }}>{s.status}</span>
                   </div>
-                  <div className="h-2 bg-[#F4F3FF] rounded-full">
-                    <div className="h-full w-full bg-green-500 rounded-full"></div>
+                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-1000"
+                      style={{ width: `${s.pct}%`, background: s.color }} />
                   </div>
                 </div>
-                <div>
-                  <div className="flex justify-between text-body mb-1">
-                    <span className="text-muted-foreground">Database</span>
-                    <span className="text-green-600 font-semibold">98%</span>
-                  </div>
-                  <div className="h-2 bg-[#F4F3FF] rounded-full">
-                    <div className="h-full w-[98%] bg-green-500 rounded-full"></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-body mb-1">
-                    <span className="text-muted-foreground">Storage</span>
-                    <span className="text-yellow-600 font-semibold">72%</span>
-                  </div>
-                  <div className="h-2 bg-[#F4F3FF] rounded-full">
-                    <div className="h-full w-[72%] bg-yellow-500 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
+      </div>
     </div>
   );
 }

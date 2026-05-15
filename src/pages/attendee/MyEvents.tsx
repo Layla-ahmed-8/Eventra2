@@ -24,164 +24,124 @@ export default function MyEvents() {
       : savedEvents;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <div className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <Link to="/app/discover" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back</span>
-            </Link>
-            <h1 className="text-2xl font-bold text-foreground">My Events</h1>
-            <div className="w-20"></div>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1 bg-secondary p-1 rounded-lg">
+    <div className="space-y-6">
+      {/* Header & Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-h1 font-bold text-foreground">My Events</h1>
+          <p className="text-body-sm text-muted-foreground mt-1">Manage your bookings and saved experiences.</p>
+        </div>
+        <div className="flex gap-1 p-1 bg-muted/50 rounded-xl inline-flex">
+          {[
+            { key: 'upcoming', label: 'Upcoming', count: upcomingEvents.length },
+            { key: 'past', label: 'Past', count: pastEvents.length },
+            { key: 'bookmarked', label: 'Saved', count: savedEvents.length },
+          ].map((tab) => (
             <button
-              onClick={() => setActiveTab('upcoming')}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                activeTab === 'upcoming'
-                  ? 'bg-card text-[#6C4CF1] shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className={`px-4 py-2 rounded-lg text-caption font-bold transition-all ${activeTab === tab.key ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              Upcoming ({upcomingEvents.length})
+              {tab.label.toUpperCase()} ({tab.count})
             </button>
-            <button
-              onClick={() => setActiveTab('past')}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                activeTab === 'past'
-                  ? 'bg-card text-[#6C4CF1] shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Past ({pastEvents.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('bookmarked')}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                activeTab === 'bookmarked'
-                  ? 'bg-card text-[#6C4CF1] shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Bookmarked ({savedEvents.length})
-            </button>
-          </div>
+          ))}
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        {displayEvents.length === 0 ? (
-          <div className="bg-card border border-border rounded-2xl shadow-lg p-12 text-center">
-            {activeTab === 'upcoming' && (
-              <>
-                <Ticket className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-foreground mb-2">No upcoming events</h3>
-                <p className="text-muted-foreground mb-6">
-                  Start exploring events and book your next adventure
-                </p>
-                <Link
-                  to="/app/discover"
-                  className="inline-block px-6 py-4 bg-gradient-to-r from-[#6C4CF1] to-[#5739D4] hover:shadow-xl text-white rounded-xl font-bold transform hover:scale-105 transition-all"
-                >
-                  Discover Events
-                </Link>
-              </>
-            )}
-            {activeTab === 'past' && (
-              <>
-                <Calendar className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-foreground mb-2">No past events</h3>
-                <p className="text-muted-foreground">You haven't attended any events yet</p>
-              </>
-            )}
-            {activeTab === 'bookmarked' && (
-              <>
-                <Heart className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-foreground mb-2">No bookmarked events</h3>
-                <p className="text-muted-foreground">Save events you're interested in for later</p>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayEvents.map((event) => (
-              <div
-                key={event.id}
-                className="bg-card border border-border rounded-2xl shadow-lg hover:shadow-2xl hover-lift transition-all overflow-hidden"
-              >
-                <Link to={`/app/events/${event.id}`}>
-                  <div className="relative">
-                    <img
-                      src={event.image}
-                      alt={event.title}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="absolute top-3 left-3">
-                      <span className="px-3 py-1 bg-[#6C4CF1] text-white text-xs font-semibold rounded-full">
-                        {event.category}
-                      </span>
-                    </div>
-                    {activeTab !== 'bookmarked' && (
-                      <div className="absolute top-3 right-3">
-                        <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
-                          Confirmed
-                        </span>
-                      </div>
-                    )}
+      {displayEvents.length === 0 ? (
+        <div className="bento-section text-center py-20">
+          {activeTab === 'upcoming' && (
+            <>
+              <div className="icon-box icon-box-primary mx-auto mb-4 scale-150">
+                <Ticket className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">No upcoming events</h3>
+              <p className="text-muted-foreground mb-8">Start exploring events and book your next adventure.</p>
+              <Link to="/app/discover" className="btn-primary px-8 py-4">
+                Discover Events
+              </Link>
+            </>
+          )}
+          {activeTab === 'past' && (
+            <>
+              <div className="icon-box icon-box-cyan mx-auto mb-4 scale-150">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">No past events</h3>
+              <p className="text-muted-foreground">You haven't attended any events yet.</p>
+            </>
+          )}
+          {activeTab === 'bookmarked' && (
+            <>
+              <div className="icon-box icon-box-orange mx-auto mb-4 scale-150">
+                <Heart className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">No bookmarked events</h3>
+              <p className="text-muted-foreground">Save events you're interested in for later.</p>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayEvents.map((event) => (
+            <div
+              key={event.id}
+              className="group card-surface overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+            >
+              <div className="relative h-48 overflow-hidden">
+                <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-40" />
+                <div className="absolute top-3 left-3">
+                  <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-white/20 dark:border-white/10 text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
+                    {event.category}
+                  </span>
+                </div>
+                {activeTab !== 'bookmarked' && (
+                  <div className="absolute top-3 right-3">
+                    <span className="px-3 py-1 rounded-full bg-green-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
+                      Confirmed
+                    </span>
                   </div>
-                </Link>
+                )}
+              </div>
 
-                <div className="p-4">
-                  <Link to={`/app/events/${event.id}`}>
-                    <h3 className="font-bold text-foreground mb-2 hover:text-primary transition-colors line-clamp-2">
-                      {event.title}
-                    </h3>
-                  </Link>
+              <div className="p-5">
+                <h3 className="text-body font-bold text-foreground mb-3 line-clamp-1 group-hover:text-primary transition-colors">
+                  {event.title}
+                </h3>
 
-                  <div className="space-y-2 text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>
-                        {new Date(event.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      <span className="line-clamp-1">{event.location.venue}</span>
-                    </div>
+                <div className="space-y-2 mb-5">
+                  <div className="flex items-center gap-2 text-caption text-muted-foreground font-medium">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                   </div>
+                  <div className="flex items-center gap-2 text-caption text-muted-foreground font-medium">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span className="truncate">{event.location.venue}</span>
+                  </div>
+                </div>
 
-                  {activeTab === 'upcoming' && (
-                    <Link
-                      to={`/app/orders/${event.id}`}
-                      className="block w-full text-center px-4 py-2 border-2 border-primary text-primary rounded-xl hover:bg-primary/10 font-semibold transition-all"
-                    >
-                      View Ticket
-                    </Link>
-                  )}
-                  {activeTab === 'bookmarked' && (
-                    <Link
-                      to={`/app/events/${event.id}`}
-                      className="block w-full text-center px-4 py-2 bg-gradient-to-r from-[#6C4CF1] to-[#5739D4] hover:shadow-lg text-white rounded-xl font-bold transition-all transform hover:scale-105"
-                    >
+                <div className="flex gap-2">
+                  {activeTab === 'upcoming' ? (
+                    <>
+                      <Link to={`/app/orders/${event.id}`} className="btn-primary text-body-sm flex-1">
+                        View Ticket
+                      </Link>
+                      <Link to={`/app/events/${event.id}`} className="btn-secondary text-body-sm px-4">
+                        Info
+                      </Link>
+                    </>
+                  ) : (
+                    <Link to={`/app/events/${event.id}`} className="btn-primary text-body-sm w-full">
                       View Details
                     </Link>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

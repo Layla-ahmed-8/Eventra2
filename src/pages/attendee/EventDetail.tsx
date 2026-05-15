@@ -30,288 +30,311 @@ export default function EventDetail() {
   const similarEvents = events.filter(e => e.category === event.category && e.id !== event.id).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-purple-50 dark:from-slate-900 dark:to-purple-900/20">
+    <div className="min-h-screen">
       {/* Top Navigation */}
-      <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border-b border-purple-200/20 dark:border-purple-800/20 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-          <Link to="/app/discover" className="flex items-center gap-3 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all group">
-            <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-700 group-hover:bg-slate-200 dark:group-hover:bg-slate-600 flex items-center justify-center transition-colors">
-              <ArrowLeft className="w-5 h-5" />
+      <div className="bg-background/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/app/discover" className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-all group">
+            <div className="w-10 h-10 rounded-2xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
             </div>
-            <span className="font-bold text-lg">Back</span>
+            <span className="font-bold text-body">Back to Discovery</span>
           </Link>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => toggleBookmark(event.id)}
-                className="w-12 h-12 rounded-2xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 flex items-center justify-center transition-all hover:scale-110 shadow-lg"
-              >
-                <Heart
-                  className={`w-6 h-6 ${
-                    isBookmarked
-                      ? 'fill-red-500 text-red-500'
-                      : 'text-slate-600 dark:text-slate-300'
-                  }`}
-                />
-              </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => toggleBookmark(event.id)}
+              className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center transition-all hover:scale-105 border border-border/50"
+            >
+              <Heart
+                className={`w-5 h-5 ${
+                  isBookmarked
+                    ? 'fill-red-500 text-red-500'
+                    : 'text-muted-foreground'
+                }`}
+              />
+            </button>
 
-              <button
-                type="button"
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 flex items-center justify-center transition-all hover:scale-110 shadow-lg"
-                aria-label="Share event"
-                onClick={() =>
-                  shareOrCopyLink(event.title, event.title, `${window.location.origin}/app/events/${event.id}`)
-                }
-              >
-                <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 dark:text-slate-300" />
-              </button>
-            </div>
+            <button
+              type="button"
+              className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center transition-all hover:scale-105 border border-border/50"
+              aria-label="Share event"
+              onClick={() =>
+                shareOrCopyLink(event.title, event.title, `${window.location.origin}/app/events/${event.id}`)
+              }
+            >
+              <Share2 className="w-5 h-5 text-muted-foreground" />
+            </button>
+
+            <Link
+              to={`/app/events/${event.id}/rsvp`}
+              className="btn-primary h-11 px-6 shadow-lg shadow-primary/20"
+            >
+              Get Tickets
+            </Link>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8 grid lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Event Image */}
-          <div className="relative rounded-3xl overflow-hidden group shadow-2xl">
-            <img
-              src={event.image}
-              alt={event.title}
-              className="w-full h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="card-image-overlay"></div>
-            <div className="absolute top-6 left-6 flex gap-3">
-              <span className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-full shadow-lg">
-                {event.category}
-              </span>
-              {event.isRecommended && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full shadow-lg">
-                  <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">95% Match</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Event Info Card */}
-          <div className="hero-surface rounded-3xl p-8 shadow-xl">
-            {/* Event Title */}
-            <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">{event.title}</h1>
-
-            {/* AI Recommendation Badge */}
-            {event.isRecommended && (
-              <div className="mb-8 p-6 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border-2 border-purple-200/50 dark:border-purple-800/50 rounded-2xl">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-lg">AI Recommended for You</h4>
-                    <p className="text-slate-600 dark:text-slate-400">Based on your interests in {event.category} and past attendance</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Organizer */}
-            <div className="flex items-center gap-6 mb-8 pb-8 border-b border-purple-200/20 dark:border-purple-800/20">
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="grid lg:grid-cols-12 gap-10">
+          {/* Main Content */}
+          <div className="lg:col-span-8 space-y-10">
+            {/* Hero Image Section */}
+            <div className="relative rounded-[2.5rem] overflow-hidden group shadow-2xl ring-1 ring-border/50">
               <img
-                src={event.organizer.avatar}
-                alt={event.organizer.name}
-                className="w-16 h-16 rounded-2xl ring-2 ring-purple-200/50 dark:ring-purple-800/50 shadow-lg"
+                src={event.image}
+                alt={event.title}
+                className="w-full h-[540px] object-cover group-hover:scale-[1.02] transition-transform duration-1000"
               />
-              <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <p className="font-bold text-slate-900 dark:text-white text-xl">{event.organizer.name}</p>
-                  {event.organizer.verified && (
-                    <BadgeCheck className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  )}
-                </div>
-                <p className="text-slate-600 dark:text-slate-400">
-                  {event.organizer.followerCount.toLocaleString()} followers
-                </p>
+              <div className="absolute inset-0 bg-gradient-to-t from-night-0/80 via-transparent to-transparent opacity-60"></div>
+              <div className="absolute top-8 left-8 flex gap-3">
+                <span className="px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-white text-caption font-black uppercase tracking-widest rounded-full">
+                  {event.category}
+                </span>
+                {event.isRecommended && (
+                  <div className="flex items-center gap-2 px-5 py-2.5 bg-primary/20 backdrop-blur-md border border-primary/30 rounded-full">
+                    <Sparkles className="w-4 h-4 text-primary-soft" />
+                    <span className="text-caption font-black uppercase tracking-widest text-white">95% Match</span>
+                  </div>
+                )}
               </div>
-              <button className="px-6 py-3 border-2 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 rounded-2xl hover:bg-purple-50 dark:hover:bg-purple-900/20 font-bold transition-all hover:scale-105">
-                Follow
-              </button>
             </div>
 
-            {/* Event Details */}
-            <div className="space-y-6 mb-8">
-              <div className="flex items-start gap-5">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <Calendar className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white mb-2 text-lg">Date & Time</p>
-                  <p className="text-slate-600 dark:text-slate-400 font-medium mb-1">
-                    {new Date(event.date).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    <p className="text-slate-600 dark:text-slate-400">
-                      {new Date(event.date).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                      {' - '}
-                      {new Date(event.endDate).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+            {/* Content Details */}
+            <div className="bento-section p-10">
+              <div className="max-w-3xl">
+                <h1 className="text-display font-bold text-foreground mb-8 leading-[1.15]">{event.title}</h1>
+
+                {/* Event Highlights Grid */}
+                <div className="grid sm:grid-cols-3 gap-6 mb-12">
+                  <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
+                    <div className="icon-box bg-primary/10 text-primary mb-4">
+                      <Calendar className="w-5 h-5" />
+                    </div>
+                    <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest mb-1">When</p>
+                    <p className="text-body-sm font-bold text-foreground">
+                      {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                    <p className="text-micro text-muted-foreground font-medium">
+                      {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                </div>
-              </div>
 
-              <div className="flex items-start gap-5">
-                <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <MapPin className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white mb-2 text-lg">Location</p>
-                  <p className="text-slate-600 dark:text-slate-400 font-semibold text-lg mb-1">{event.location.venue}</p>
-                  <p className="text-slate-500 dark:text-slate-500">{event.location.address}</p>
-                  <p className="text-slate-500 dark:text-slate-500">
-                    {event.location.city}, {event.location.country}
-                  </p>
-                </div>
-              </div>
+                  <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
+                    <div className="icon-box bg-cyan-500/10 text-cyan-500 mb-4">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest mb-1">Where</p>
+                    <p className="text-body-sm font-bold text-foreground truncate">{event.location.venue}</p>
+                    <p className="text-micro text-muted-foreground font-medium truncate">{event.location.city}</p>
+                  </div>
 
-              <div className="flex items-start gap-5">
-                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <Users className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white mb-2 text-lg">Attendees</p>
-                  <p className="text-slate-600 dark:text-slate-400 mb-3">
-                    {event.rsvpCount} / {event.capacity} people attending
-                  </p>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden shadow-inner">
-                    <div
-                      className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full shadow-sm"
-                      style={{ width: `${(event.rsvpCount / event.capacity) * 100}%` }}
-                    ></div>
+                  <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
+                    <div className="icon-box bg-orange-500/10 text-orange-500 mb-4">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest mb-1">Capacity</p>
+                    <p className="text-body-sm font-bold text-foreground">{event.rsvpCount} Attending</p>
+                    <p className="text-micro text-muted-foreground font-medium">{event.capacity - event.rsvpCount} spots left</p>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Description */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">About this event</h2>
-              <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-lg">{event.description}</p>
-            </div>
+                {/* Organizer Info */}
+                <div className="flex items-center gap-6 p-6 rounded-[2rem] bg-secondary/20 border border-border/50 mb-12">
+                  <div className="relative">
+                    <img
+                      src={event.organizer.avatar}
+                      alt={event.organizer.name}
+                      className="w-16 h-16 rounded-2xl object-cover ring-2 ring-background shadow-xl"
+                    />
+                    {event.organizer.verified && (
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center ring-2 ring-background shadow-lg">
+                        <BadgeCheck className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest mb-1">Organized By</p>
+                    <h3 className="text-h3 font-bold text-foreground truncate">{event.organizer.name}</h3>
+                  </div>
+                  <button className="btn-secondary px-6 font-bold h-11">
+                    Follow
+                  </button>
+                </div>
 
-            {/* Tags */}
-            <div>
-              <h3 className="font-bold text-slate-900 dark:text-white mb-4 text-lg">Tags</h3>
-              <div className="flex flex-wrap gap-3">
-                {event.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-4 py-2 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-sm font-bold rounded-2xl hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-all hover:scale-105 cursor-pointer shadow-sm"
-                  >
-                    #{tag}
-                  </span>
-                ))}
+                {/* About Section */}
+                <div className="space-y-6 mb-12">
+                  <h2 className="text-h2 font-bold text-foreground flex items-center gap-3">
+                    About this event
+                    <div className="h-px flex-1 bg-border/50"></div>
+                  </h2>
+                  <p className="text-body-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {event.description}
+                  </p>
+                </div>
+
+                {/* Engagement Rewards */}
+                {event.engagement && (
+                  <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-orange-500/10 via-purple-500/5 to-cyan-500/10 border border-orange-500/20 mb-12">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="icon-box bg-orange-500/20 text-orange-500 scale-125">
+                        <Zap className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-h3 font-bold text-foreground">Engagement Rewards</h3>
+                        <p className="text-body-sm text-muted-foreground">Boost your level by attending</p>
+                      </div>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="flex items-center gap-4 p-4 rounded-2xl bg-background/50 border border-orange-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-600 font-bold">
+                          +{event.engagement.xpReward}
+                        </div>
+                        <span className="text-body-sm font-bold text-foreground">Experience Points</span>
+                      </div>
+                      <div className="flex items-center gap-4 p-4 rounded-2xl bg-background/50 border border-purple-500/20">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600">
+                          <Award className="w-5 h-5" />
+                        </div>
+                        <span className="text-body-sm font-bold text-foreground">{event.engagement.badgeUnlock} Badge</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2.5">
+                  {event.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-4 py-2 bg-secondary/40 text-muted-foreground text-caption font-bold rounded-xl border border-border/50 hover:border-primary/40 hover:text-foreground transition-all cursor-pointer"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Similar Events - AI Powered */}
-          {similarEvents.length > 0 && (
-            <div className="hero-surface rounded-3xl p-8 shadow-xl">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-6 h-6 text-white" />
+          {/* Sidebar */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="sticky top-28 space-y-8">
+              {/* Ticket Selection Preview */}
+              <div className="bento-section">
+                <h3 className="text-h3 font-bold text-foreground mb-6">Select Tickets</h3>
+                <div className="space-y-4 mb-8">
+                  {event.ticketTypes.map((ticket, index) => (
+                    <div
+                      key={index}
+                      className="p-5 rounded-2xl bg-secondary/30 border border-border/50 hover:border-primary/40 transition-all group"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-bold text-foreground group-hover:text-primary transition-colors">{ticket.name}</p>
+                        <p className="text-h4 font-bold gradient-text">
+                          {ticket.price === 0 ? 'FREE' : `EGP ${ticket.price.toLocaleString()}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-caption text-muted-foreground">{ticket.available} spots left</span>
+                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white">You Might Also Like</h2>
-                  <p className="text-slate-600 dark:text-slate-400">Based on your interests</p>
+                <Link
+                  to={`/app/events/${event.id}/rsvp`}
+                  className="btn-primary w-full py-4 text-h4 h-auto shadow-xl shadow-primary/25"
+                >
+                  Reserve Your Spot
+                </Link>
+                <p className="mt-4 text-center text-micro text-muted-foreground">
+                  Powered by Eventra Secure Checkout
+                </p>
+              </div>
+
+              {/* Quick Action Activity */}
+              <div className="bento-section">
+                <h3 className="text-h4 font-bold text-foreground mb-5 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-primary" />
+                  Live Activity
+                </h3>
+                <div className="space-y-4">
+                  <div className="activity-item">
+                    <div className="activity-icon-wrapper">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-body-sm font-bold text-foreground">Popular choice</p>
+                      <p className="text-micro text-muted-foreground">50+ people viewed this today</p>
+                    </div>
+                  </div>
+                  <div className="activity-item">
+                    <div className="activity-icon-wrapper text-orange-500">
+                      <Zap className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-body-sm font-bold text-foreground">Filling fast</p>
+                      <p className="text-micro text-muted-foreground">Only few tickets remaining</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="grid md:grid-cols-3 gap-6">
-                {similarEvents.map((similarEvent) => (
-                  <Link
-                    key={similarEvent.id}
-                    to={`/app/events/${similarEvent.id}`}
-                    className="group card-surface overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:scale-[1.02]"
-                  >
+            </div>
+          </div>
+        </div>
+
+        {/* Similar Events */}
+        {similarEvents.length > 0 && (
+          <div className="mt-20 space-y-8">
+            <div className="flex items-center gap-4">
+              <div className="icon-box bg-primary/10 text-primary">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-h2 font-bold text-foreground">You Might Also Like</h2>
+                <p className="text-body-sm text-muted-foreground">Based on your interest in {event.category}</p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {similarEvents.map((similarEvent) => (
+                <Link
+                  key={similarEvent.id}
+                  to={`/app/events/${similarEvent.id}`}
+                  className="group bento-section p-0 overflow-hidden hover:-translate-y-2 transition-all duration-500"
+                >
+                  <div className="relative h-48 overflow-hidden">
                     <img
                       src={similarEvent.image}
                       alt={similarEvent.title}
-                      className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
-                    <div className="p-5">
-                      <h4 className="font-bold text-slate-900 dark:text-white line-clamp-2 mb-3 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                        {similarEvent.title}
-                      </h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(similarEvent.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </p>
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-background/80 backdrop-blur-md rounded-full text-micro font-bold">
+                      {similarEvent.category}
                     </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar - Ticket Options */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-24">
-            <div className="hero-surface rounded-3xl p-8 shadow-xl">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Get Tickets</h2>
-              <div className="space-y-4 mb-8">
-                {event.ticketTypes.map((ticket, index) => (
-                  <div
-                    key={index}
-                    className="p-5 border-2 border-purple-200/50 dark:border-purple-800/50 rounded-2xl hover:border-purple-400 dark:hover:border-purple-600 transition-all hover:scale-[1.02] bg-white/50 dark:bg-slate-800/50"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-bold text-slate-900 dark:text-white text-lg">{ticket.name}</p>
-                      <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                        {ticket.price === 0 ? 'Free' : `${ticket.price} EGP`}
-                      </p>
-                    </div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {ticket.available} tickets available
-                    </p>
                   </div>
-                ))}
-              </div>
-
-              <Link
-                to={`/app/events/${event.id}/rsvp`}
-                className="w-full btn-primary flex items-center justify-center gap-3 mb-8"
-              >
-                <Ticket className="w-5 h-5" />
-                Reserve Your Spot
-              </Link>
-
-              {/* Quick Stats */}
-              <div className="pt-8 border-t border-purple-200/20 dark:border-purple-800/20 grid grid-cols-2 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{event.rsvpCount}</div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">Going</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{event.capacity - event.rsvpCount}</div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">Spots Left</div>
-                </div>
-              </div>
+                  <div className="p-6">
+                    <h4 className="text-h4 font-bold text-foreground line-clamp-2 mb-4 group-hover:text-primary transition-colors">
+                      {similarEvent.title}
+                    </h4>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-caption font-bold">
+                          {new Date(similarEvent.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <span className="text-caption font-black text-primary">
+                        {similarEvent.ticketTypes[0]?.price === 0 ? 'FREE' : `EGP ${similarEvent.ticketTypes[0]?.price}`}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

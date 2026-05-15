@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Shield, Check, ChevronRight, Users, BarChart3,
+  Shield, Check, Users, BarChart3,
   Settings, AlertCircle, CheckCircle2, Lock,
-  Database, Cpu, Activity, Eye, Flag, ArrowRight
+  Database, Cpu, Activity, Eye, Flag, ArrowRight,
+  ArrowLeft, Sparkles
 } from 'lucide-react';
 import Logo from '../../components/Logo';
 
@@ -48,27 +49,28 @@ export default function AdminOnboarding() {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
       {/* Atmospheric background */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/3 w-72 h-72 rounded-full bg-red-500/6 blur-3xl animate-orb" />
-        <div className="absolute bottom-0 right-1/3 w-64 h-64 rounded-full bg-[#FF9B3D]/5 blur-3xl animate-orb" style={{ animationDelay: '6s' }} />
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-red-500/10 blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-orange-500/10 blur-[120px]" />
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 py-8">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-6 py-12">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Logo variant="horizontal" className="h-9 w-auto" />
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-6">
+            <Logo variant="horizontal" className="h-10 w-auto" />
           </div>
-          <p className="text-body text-muted-foreground">Configure your administrator access and platform preferences</p>
+          <h1 className="text-h1 font-bold text-foreground mb-2">Configure administrator access</h1>
+          <p className="text-body text-muted-foreground">Set up your command center for platform-wide management</p>
         </div>
 
         {/* Step indicator */}
-        <div className="w-full max-w-xl mb-6">
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-4">
+        <div className="w-full max-w-2xl mb-10">
+          <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-6">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-red-500 to-red-600 transition-all duration-500"
+              className="h-full bg-red-500 transition-all duration-700 ease-out shadow-[0_0_12px_rgba(239,68,68,0.4)]"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -78,15 +80,15 @@ export default function AdminOnboarding() {
               const done = num < step;
               const active = num === step;
               return (
-                <div key={s.label} className="flex flex-col items-center gap-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                <div key={s.label} className="flex flex-col items-center gap-2 group">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 ${
                     done ? 'bg-red-500 text-white' :
-                    active ? 'bg-red-500/20 border-2 border-red-500 text-red-500' :
-                    'bg-muted text-muted-foreground'
+                    active ? 'bg-red-500/20 border-2 border-red-500 text-red-500 scale-110 shadow-lg shadow-red-500/20' :
+                    'bg-secondary text-muted-foreground'
                   }`}>
-                    {done ? <Check className="w-4 h-4" /> : <s.icon className="w-3.5 h-3.5" />}
+                    {done ? <CheckCircle2 className="w-5 h-5" /> : <s.icon className={`w-5 h-5 ${active ? 'animate-pulse' : ''}`} />}
                   </div>
-                  <span className={`text-caption hidden sm:block ${active ? 'text-red-500 font-semibold' : 'text-muted-foreground'}`}>
+                  <span className={`text-caption font-bold uppercase tracking-widest hidden sm:block ${active ? 'text-red-500' : 'text-muted-foreground'}`}>
                     {s.label}
                   </span>
                 </div>
@@ -96,39 +98,44 @@ export default function AdminOnboarding() {
         </div>
 
         {/* Card */}
-        <div className="w-full max-w-xl surface-panel p-6 sm:p-8">
+        <div className="w-full max-w-2xl bento-section p-10 animate-in fade-in zoom-in-95 duration-500">
 
           {/* Step 1 — Welcome */}
           {step === 1 && (
-            <div className="space-y-5 animate-fade-up">
-              <div>
-                <h2 className="text-h2 font-bold text-foreground mb-2">Welcome, Administrator</h2>
-                <p className="text-body text-muted-foreground">
+            <div className="space-y-8 animate-fade-up">
+              <div className="text-center space-y-4">
+                <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto text-red-500">
+                  <Shield className="w-10 h-10" />
+                </div>
+                <h2 className="text-h2 font-bold text-foreground">Welcome, Administrator</h2>
+                <p className="text-body text-muted-foreground leading-relaxed">
                   You have been granted super administrator access to the Eventra platform. This setup will configure your control center.
                 </p>
               </div>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid sm:grid-cols-2 gap-4">
                 {[
-                  { icon: Users, title: 'User Control', desc: 'Manage all 12K+ platform users', color: 'from-[#7C5CFF] to-[#9B8CFF]' },
-                  { icon: Flag, title: 'Content Safety', desc: 'AI-assisted moderation tools', color: 'from-red-500 to-red-600' },
-                  { icon: BarChart3, title: 'Platform Analytics', desc: 'Real-time metrics and insights', color: 'from-[#00D4FF] to-[#4ADEFF]' },
-                  { icon: Activity, title: 'System Health', desc: 'Monitor all platform services', color: 'from-green-500 to-teal-500' },
+                  { icon: Users, title: 'User Control', desc: 'Manage all 12K+ users', color: 'bg-primary' },
+                  { icon: Flag, title: 'Content Safety', desc: 'AI-assisted moderation', color: 'bg-red-500' },
+                  { icon: BarChart3, title: 'Platform Analytics', desc: 'Real-time metrics', color: 'bg-cyan-500' },
+                  { icon: Activity, title: 'System Health', desc: 'Monitor all services', color: 'bg-green-500' },
                 ].map((f) => (
-                  <div key={f.title} className="p-4 rounded-2xl bg-muted/40 border border-border">
-                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-3`}>
-                      <f.icon className="w-4 h-4 text-white" />
+                  <div key={f.title} className="p-4 rounded-2xl bg-secondary/30 border border-border/50 space-y-3">
+                    <div className={`w-10 h-10 rounded-xl ${f.color} flex items-center justify-center shadow-lg`}>
+                      <f.icon className="w-5 h-5 text-white" />
                     </div>
-                    <p className="text-body-sm font-bold text-foreground">{f.title}</p>
-                    <p className="text-caption text-muted-foreground mt-0.5">{f.desc}</p>
+                    <div>
+                      <p className="text-body-sm font-bold text-foreground">{f.title}</p>
+                      <p className="text-caption text-muted-foreground">{f.desc}</p>
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="p-4 rounded-xl bg-red-500/8 border border-red-500/15">
-                <p className="text-body-sm text-foreground flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                  <span>
-                    <span className="font-semibold">Important:</span> Admin actions are logged and audited. Use your access responsibly.
-                  </span>
+              <div className="p-6 rounded-[2rem] bg-red-500/5 border border-red-500/20 flex items-start gap-4">
+                <div className="icon-box bg-red-500/10 text-red-500 mt-1">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <p className="text-body-sm font-medium text-foreground leading-relaxed">
+                  <span className="font-bold text-red-500 uppercase tracking-wider">Audit Warning:</span> All administrator actions are logged and audited. Use your platform privileges responsibly.
                 </p>
               </div>
             </div>
@@ -136,35 +143,39 @@ export default function AdminOnboarding() {
 
           {/* Step 2 — Permissions */}
           {step === 2 && (
-            <div className="space-y-5 animate-fade-up">
-              <div>
-                <h2 className="text-h2 font-bold text-foreground mb-1">Review your permissions</h2>
-                <p className="text-body text-muted-foreground">Understand what you can do as a super administrator.</p>
+            <div className="space-y-8 animate-fade-up">
+              <div className="text-center">
+                <h2 className="text-h2 font-bold text-foreground mb-2">Review permissions</h2>
+                <p className="text-body text-muted-foreground">Understand your capabilities as a super administrator.</p>
               </div>
-              <div className="space-y-2">
+              <div className="grid gap-3">
                 {permissions.map((p, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-muted/30 border border-border">
-                    <div className="w-8 h-8 rounded-lg bg-green-500/15 flex items-center justify-center flex-shrink-0">
-                      <p.icon className="w-4 h-4 text-green-500" />
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-secondary/30 border border-border/50 group hover:border-green-500/30 transition-colors">
+                    <div className="icon-box bg-green-500/10 text-green-500 group-hover:bg-green-500 group-hover:text-white transition-all">
+                      <p.icon className="w-5 h-5" />
                     </div>
-                    <div>
-                      <p className="text-body-sm font-semibold text-foreground">{p.label}</p>
+                    <div className="flex-1">
+                      <p className="text-body-sm font-bold text-foreground">{p.label}</p>
                       <p className="text-caption text-muted-foreground">{p.desc}</p>
                     </div>
-                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 ml-auto mt-0.5" />
+                    <CheckCircle2 className="w-5 h-5 text-green-500" />
                   </div>
                 ))}
               </div>
-              {/* Acknowledge */}
-              <label className="flex items-start gap-3 p-4 rounded-xl border-2 border-border cursor-pointer hover:border-red-500/40 transition">
-                <input
-                  type="checkbox"
-                  checked={acknowledgedPermissions}
-                  onChange={(e) => setAcknowledgedPermissions(e.target.checked)}
-                  className="mt-0.5 accent-red-500"
-                />
-                <p className="text-body-sm text-foreground">
-                  I understand my administrator responsibilities and agree to use this access in accordance with platform policies.
+              <label className="flex items-start gap-4 p-6 rounded-[2rem] border-2 border-border cursor-pointer hover:border-red-500/40 transition-all group bg-secondary/20">
+                <div className="pt-1">
+                  <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${acknowledgedPermissions ? 'bg-red-500 border-red-500 shadow-lg shadow-red-500/20' : 'border-border bg-background'}`}>
+                    {acknowledgedPermissions && <Check className="w-4 h-4 text-white" />}
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={acknowledgedPermissions}
+                    onChange={(e) => setAcknowledgedPermissions(e.target.checked)}
+                    className="sr-only"
+                  />
+                </div>
+                <p className="text-body-sm font-medium text-foreground leading-relaxed">
+                  I acknowledge my administrator responsibilities and agree to use platform access in accordance with security policies and ethical guidelines.
                 </p>
               </label>
             </div>
@@ -172,12 +183,12 @@ export default function AdminOnboarding() {
 
           {/* Step 3 — Platform Config */}
           {step === 3 && (
-            <div className="space-y-5 animate-fade-up">
-              <div>
-                <h2 className="text-h2 font-bold text-foreground mb-1">Notification preferences</h2>
-                <p className="text-body text-muted-foreground">Choose which platform events you want to be alerted about.</p>
+            <div className="space-y-8 animate-fade-up">
+              <div className="text-center">
+                <h2 className="text-h2 font-bold text-foreground mb-2">Alert Configuration</h2>
+                <p className="text-body text-muted-foreground">Choose which system events trigger immediate notifications.</p>
               </div>
-              <div className="space-y-2">
+              <div className="grid gap-3">
                 {(Object.entries(notifPrefs) as [keyof typeof notifPrefs, boolean][]).map(([key, val]) => {
                   const labels: Record<keyof typeof notifPrefs, { label: string; desc: string }> = {
                     newUsers: { label: 'New User Signups', desc: 'Alert when new accounts are created' },
@@ -188,19 +199,19 @@ export default function AdminOnboarding() {
                   };
                   const info = labels[key];
                   return (
-                    <div key={key} className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 border border-border">
+                    <div key={key} className="flex items-center justify-between p-5 rounded-2xl bg-secondary/30 border border-border/50">
                       <div>
-                        <p className="text-body-sm font-semibold text-foreground">{info.label}</p>
+                        <p className="text-body-sm font-bold text-foreground">{info.label}</p>
                         <p className="text-caption text-muted-foreground">{info.desc}</p>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-4">
+                      <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={val}
                           onChange={() => toggleNotif(key)}
                           className="sr-only peer"
                         />
-                        <div className="w-10 h-6 bg-muted rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-4 after:transition-all peer-checked:bg-red-500" />
+                        <div className="w-12 h-6 bg-secondary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500 shadow-inner" />
                       </label>
                     </div>
                   );
@@ -211,63 +222,71 @@ export default function AdminOnboarding() {
 
           {/* Step 4 — Ready */}
           {step === 4 && (
-            <div className="text-center py-4 animate-fade-up">
-              <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-700 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-red-500/30 animate-bounce-in">
-                <Shield className="w-10 h-10 text-white" />
+            <div className="text-center py-4 animate-fade-up space-y-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-red-500 to-red-700 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl shadow-red-500/30 animate-bounce-in">
+                <Shield className="w-12 h-12 text-white" />
               </div>
-              <h2 className="text-h1 font-bold text-foreground mb-2">Control Center Ready</h2>
-              <p className="text-body text-muted-foreground mb-6 max-w-sm mx-auto">
-                Your administrator access is fully configured. You have complete control over the Eventra platform.
-              </p>
-              <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto mb-6">
+              <div>
+                <h2 className="text-display font-bold text-foreground mb-2">Command Center Ready</h2>
+                <p className="text-body-lg text-muted-foreground max-w-sm mx-auto">
+                  Your administrator profile is fully configured. You have complete authority over the Eventra platform.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
                 {[
                   { label: 'Permissions', value: '6 / 6' },
-                  { label: 'Notifications', value: `${Object.values(notifPrefs).filter(Boolean).length} active` },
+                  { label: 'Alerts', value: `${Object.values(notifPrefs).filter(Boolean).length} Active` },
                 ].map((s) => (
-                  <div key={s.label} className="p-3 rounded-xl bg-muted/40 border border-border">
-                    <p className="text-h3 font-bold text-foreground">{s.value}</p>
-                    <p className="text-caption text-muted-foreground">{s.label}</p>
+                  <div key={s.label} className="p-4 rounded-2xl bg-secondary/30 border border-border/50">
+                    <p className="text-h2 font-bold text-foreground">{s.value}</p>
+                    <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest">{s.label}</p>
                   </div>
                 ))}
               </div>
-              <div className="p-4 rounded-xl bg-red-500/8 border border-red-500/15 text-left">
-                <p className="text-body-sm text-foreground">
-                  <span className="font-semibold">First steps:</span> Review the 8 pending moderation items and 5 organizer requests waiting for your approval.
+              <div className="p-6 rounded-[2rem] bg-red-500/5 border border-red-500/20 text-left">
+                <p className="text-body-sm font-medium text-foreground">
+                  <span className="font-bold text-red-500 uppercase tracking-wider">Priority Tasks:</span> You have 8 pending moderation items and 5 organizer requests waiting for review.
                 </p>
               </div>
             </div>
           )}
 
           {/* Navigation */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-            <div>
-              {step > 1 && (
-                <button onClick={() => setStep(s => s - 1)} className="btn-secondary text-body-sm">
-                  Back
-                </button>
-              )}
-            </div>
-            {step < TOTAL_STEPS ? (
+          <div className="mt-12 pt-8 border-t border-border/50 flex items-center justify-between">
+            {step > 1 ? (
               <button
-                onClick={() => setStep(s => s + 1)}
-                disabled={!canContinue()}
-                className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' }}
+                onClick={() => setStep(step - 1)}
+                className="btn-ghost flex items-center gap-2 font-bold text-muted-foreground hover:text-foreground"
               >
-                Continue <ChevronRight className="w-4 h-4" />
+                <ArrowLeft className="w-5 h-5" />
+                Back
               </button>
             ) : (
-              <button
-                onClick={() => navigate('/login?afterAdminOnboarding=1')}
-                className="btn-primary"
-                style={{ background: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)' }}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Sign in to enter dashboard
-              </button>
+              <div />
             )}
+
+            <button
+              onClick={() => step < TOTAL_STEPS ? setStep(step + 1) : navigate('/login?afterAdminOnboarding=1')}
+              disabled={!canContinue()}
+              className="btn-primary bg-red-500 hover:bg-red-600 border-red-500 px-10 h-14 text-body font-bold shadow-xl shadow-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed group"
+            >
+              {step === TOTAL_STEPS ? (
+                <>
+                  Enter Dashboard <Sparkles className="ml-2 w-5 h-5" />
+                </>
+              ) : (
+                <>
+                  Continue <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Footer */}
+        <p className="mt-12 text-caption font-medium text-muted-foreground flex items-center gap-2">
+          Securely powered by <Logo variant="horizontal" className="h-4 w-auto grayscale opacity-50" />
+        </p>
       </div>
     </div>
   );

@@ -27,123 +27,127 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
     <div className="min-h-screen bg-background flex">
       {/* Sidebar - Desktop */}
       <aside
-        className={`hidden lg:flex flex-col bg-sidebar backdrop-blur-xl border-r border-sidebar-border transition-all duration-300 ${
-          sidebarOpen ? 'w-64' : 'w-20'
+        className={`hidden lg:flex flex-col bg-sidebar backdrop-blur-xl border-r border-sidebar-border transition-all duration-300 relative z-30 ${
+          sidebarOpen ? 'w-72' : 'w-24'
         }`}
       >
         {/* Sidebar Header */}
-        <div className="h-[52px] flex items-center justify-between px-3 border-b border-sidebar-border">
-          {sidebarOpen && (
-            <Link to="/app/discover" className="flex items-center min-w-0">
-              <Logo variant="horizontal" theme={theme === 'dark' ? 'dark' : 'light'} className="h-7 w-auto max-w-[140px]" />
+        <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border/50">
+          {sidebarOpen ? (
+            <Link to="/app/discover" className="flex items-center min-w-0 animate-in fade-in duration-500">
+              <Logo variant="horizontal" className="h-8 w-auto" />
+            </Link>
+          ) : (
+            <Link to="/app/discover" className="flex items-center justify-center w-full animate-in zoom-in duration-500">
+              <Logo variant="small" className="h-10 w-auto" />
             </Link>
           )}
-          {!sidebarOpen && (
-            <Link to="/app/discover" className="flex items-center justify-center w-full">
-              <Logo variant="small" className="h-8 w-auto" />
-            </Link>
-          )}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={toggleTheme}
-              className="p-2 hover:bg-sidebar-accent rounded-lg transition"
-              aria-label="Toggle dark mode"
-            >
-              {theme === 'dark' ? <Sun className="w-5 h-5 text-sidebar-foreground" /> : <Moon className="w-5 h-5 text-sidebar-foreground" />}
-            </button>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-sidebar-accent rounded-lg transition"
-              aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-            >
-              <ChevronLeft className={`w-5 h-5 text-sidebar-foreground transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
-            </button>
-          </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition group ${
+                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${
                   isActive
-                    ? 'bg-gradient-to-r from-[#6C4CF1]/10 via-[#C084FC]/08 to-[#C084FC]/06 text-[#6C4CF1] font-semibold border-l-2 border-[#6C4CF1]'
-                    : 'text-sidebar-foreground hover:bg-[#6C4CF1]/8 hover:text-[#6C4CF1]'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/25 translate-x-1'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:translate-x-1'
                 }`}
-                title={!sidebarOpen ? item.label : ''}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && <span className="font-medium">{item.label}</span>}
-                {!sidebarOpen && isActive && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-primary text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                {sidebarOpen && <span className="font-bold text-body-sm tracking-wide">{item.label}</span>}
+                {!sidebarOpen && (
+                  <div className="absolute left-full ml-4 px-3 py-2 bg-sidebar-accent border border-sidebar-border text-sidebar-foreground text-caption font-bold rounded-xl whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl">
                     {item.label}
                   </div>
+                )}
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-full ml-1" />
                 )}
               </Link>
             );
           })}
         </nav>
 
-        <div className="px-3 pb-2">
+        {/* Sidebar Footer */}
+        <div className="p-4 space-y-4 border-t border-sidebar-border/50 bg-sidebar/50">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="flex-1 h-12 rounded-2xl bg-sidebar-accent flex items-center justify-center border border-sidebar-border/50 hover:bg-sidebar-accent/80 transition-all active:scale-95 group"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5 text-sidebar-foreground group-hover:rotate-45 transition-transform" />
+              ) : (
+                <Moon className="w-5 h-5 text-sidebar-foreground group-hover:-rotate-12 transition-transform" />
+              )}
+            </button>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="w-12 h-12 rounded-2xl bg-sidebar-accent flex items-center justify-center border border-sidebar-border/50 hover:bg-sidebar-accent/80 transition-all active:scale-95"
+              aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            >
+              <ChevronLeft className={`w-5 h-5 text-sidebar-foreground transition-transform duration-500 ${!sidebarOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+
+          <Link
+            to="/app/profile"
+            className={`flex items-center gap-3 p-3 rounded-2xl hover:bg-sidebar-accent transition-all group ${
+              !sidebarOpen ? 'justify-center' : ''
+            }`}
+          >
+            <div className="relative flex-shrink-0">
+              <img
+                src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
+                alt={currentUser?.name}
+                className="w-11 h-11 rounded-xl ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all object-cover"
+              />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-primary to-primary-soft rounded-lg flex items-center justify-center text-micro text-white font-black shadow-lg">
+                {currentUser?.level}
+              </div>
+            </div>
+            {sidebarOpen && (
+              <div className="flex-1 min-w-0">
+                <p className="text-body-sm font-bold text-sidebar-foreground truncate">{currentUser?.name}</p>
+                <p className="text-micro font-bold text-muted-foreground uppercase tracking-widest">Level {currentUser?.level}</p>
+              </div>
+            )}
+          </Link>
+
           <button
             type="button"
             onClick={() => {
               logout();
               navigate('/login');
             }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition text-sm font-medium"
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            {sidebarOpen && <span>Log out</span>}
-          </button>
-        </div>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-sidebar-border">
-          <Link
-            to="/app/profile"
-            className={`flex items-center gap-3 p-3 rounded-xl hover:bg-sidebar-accent transition ${
+            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-all group ${
               !sidebarOpen ? 'justify-center' : ''
             }`}
           >
-            <div className="relative">
-              <img
-                src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
-                alt={currentUser?.name}
-                className="w-10 h-10 rounded-full ring-2 ring-primary/20"
-              />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-micro text-white font-bold">
-                {currentUser?.level}
-              </div>
-            </div>
-            {sidebarOpen && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-sidebar-foreground truncate">{currentUser?.name}</p>
-                <p className="text-xs text-muted-foreground">Level {currentUser?.level} • {currentUser?.xp} XP</p>
-              </div>
-            )}
-          </Link>
+            <LogOut className="w-5 h-5 flex-shrink-0 group-hover:-translate-x-0.5 transition-transform" />
+            {sidebarOpen && <span className="text-body-sm font-bold">Sign Out</span>}
+          </button>
         </div>
       </aside>
 
       {/* Mobile Sidebar */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-sidebar shadow-2xl">
-            <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-              <Link to="/app/discover" className="flex items-center min-w-0">
-                <Logo variant="horizontal" theme={theme === 'dark' ? 'dark' : 'light'} className="h-7 w-auto max-w-[140px]" />
-              </Link>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-sidebar-foreground">
-                <X className="w-6 h-6" />
+        <div className="lg:hidden fixed inset-0 z-[100]">
+          <div className="absolute inset-0 bg-night-0/80 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)}></div>
+          <aside className="absolute left-0 top-0 bottom-0 w-80 bg-sidebar shadow-2xl animate-in slide-in-from-left duration-300">
+            <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border/50">
+              <Logo variant="horizontal" className="h-7 w-auto" />
+              <button onClick={() => setMobileMenuOpen(false)} className="w-10 h-10 rounded-xl bg-sidebar-accent flex items-center justify-center text-sidebar-foreground">
+                <X className="w-5 h-5" />
               </button>
             </div>
-            <nav className="p-3 space-y-1 pb-20">
+            <nav className="p-4 space-y-2 pb-20 overflow-y-auto max-h-[calc(100vh-200px)]">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
                 return (
@@ -151,79 +155,78 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                    className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${
                       isActive
-                        ? 'bg-gradient-to-r from-[#6C4CF1] to-[#5739D4] text-white'
+                        ? 'bg-primary text-white shadow-lg shadow-primary/25'
                         : 'text-sidebar-foreground hover:bg-sidebar-accent'
                     }`}
                   >
                     <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
+                    <span className="font-bold text-body tracking-wide">{item.label}</span>
                   </Link>
                 );
               })}
-              <button
-                type="button"
-                onClick={() => {
-                  logout();
-                  navigate('/login');
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-red-500/10 mt-2"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Log out</span>
-              </button>
             </nav>
 
-            {/* Mobile User Profile */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-sidebar-border bg-sidebar">
-              <Link
-                to="/app/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 p-3 rounded-xl hover:bg-sidebar-accent transition"
-              >
-                <div className="relative">
-                  <img
-                    src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
-                    alt={currentUser?.name}
-                    className="w-10 h-10 rounded-full ring-2 ring-primary/20"
-                  />
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-micro text-white font-bold">
-                    {currentUser?.level}
-                  </div>
+            <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-sidebar-border/50 bg-sidebar/95 backdrop-blur-md">
+              <div className="flex items-center gap-4 mb-6">
+                <img
+                  src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
+                  alt={currentUser?.name}
+                  className="w-12 h-12 rounded-xl object-cover ring-2 ring-primary/20"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-body font-bold text-sidebar-foreground truncate">{currentUser?.name}</p>
+                  <p className="text-caption font-bold text-muted-foreground">Level {currentUser?.level} · {currentUser?.xp} XP</p>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-sidebar-foreground">{currentUser?.name}</p>
-                  <p className="text-xs text-muted-foreground">Level {currentUser?.level} • {currentUser?.xp} XP</p>
-                </div>
-              </Link>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={toggleTheme}
+                  className="flex-1 h-12 rounded-xl bg-sidebar-accent flex items-center justify-center border border-sidebar-border/50"
+                >
+                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate('/login');
+                  }}
+                  className="flex-[2] h-12 rounded-xl bg-red-500/10 text-red-500 font-bold flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Sign Out
+                </button>
+              </div>
             </div>
           </aside>
         </div>
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Top Bar - Mobile */}
-        <div className="lg:hidden h-[52px] bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4">
-          <button onClick={() => setMobileMenuOpen(true)} className="p-2 text-sidebar-foreground">
+        <div className="lg:hidden h-16 bg-sidebar/80 backdrop-blur-md border-b border-sidebar-border/50 flex items-center justify-between px-4 sticky top-0 z-40">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="w-11 h-11 rounded-xl bg-sidebar-accent flex items-center justify-center text-sidebar-foreground border border-sidebar-border/50"
+          >
             <Menu className="w-6 h-6" />
           </button>
-          <div className="flex items-center">
-            <Logo variant="horizontal" theme={theme === 'dark' ? 'dark' : 'light'} className="h-6 w-auto max-w-[120px]" />
-          </div>
+          <Logo variant="horizontal" className="h-6 w-auto" />
           <Link to="/app/profile">
             <img
               src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
               alt={currentUser?.name}
-              className="w-10 h-10 rounded-full"
+              className="w-10 h-10 rounded-xl object-cover ring-2 ring-primary/20"
             />
           </Link>
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 lg:p-6 xl:px-8">{children}</main>
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10 xl:p-12">
+          {children}
+        </main>
       </div>
     </div>
   );

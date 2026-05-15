@@ -36,55 +36,56 @@ export default function OrganizerEvents() {
         </Link>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search your events..."
-          className="w-full pl-10 pr-4 input-base"
-        />
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {[
-          { label: 'All', value: 'all' as const },
-          { label: 'Upcoming', value: 'upcoming' as const },
-          { label: 'Past', value: 'past' as const },
-          { label: 'Drafts', value: 'draft' as const },
-        ].map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => setFilter(tab.value)}
-            className={`filter-chip ${filter === tab.value ? 'active' : 'inactive'}`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      {filter === 'draft' && (
-        <div className="surface-panel p-8 text-center text-body-sm text-muted-foreground">
-          No drafts in this demo.{' '}
-          <Link to="/organizer/events/create" className="text-primary font-semibold hover:underline">
-            Start a new event
-          </Link>
+      <div className="bento-section">
+        <div className="bento-header flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex gap-1 p-1 bg-muted/50 rounded-xl">
+            {[
+              { label: 'All', value: 'all' as const },
+              { label: 'Upcoming', value: 'upcoming' as const },
+              { label: 'Past', value: 'past' as const },
+              { label: 'Drafts', value: 'draft' as const },
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setFilter(tab.value)}
+                className={`px-3 py-1.5 rounded-lg text-caption font-bold transition-all ${filter === tab.value ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                {tab.label.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <div className="relative flex-1 w-full sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search your events..."
+              className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-background text-body-sm"
+            />
+          </div>
         </div>
-      )}
 
-      {filter !== 'draft' && (
-        <div className="surface-panel overflow-hidden">
+        {filter === 'draft' && (
+          <div className="text-center py-12 text-muted-foreground text-body-sm">
+            No drafts in this demo.{' '}
+            <Link to="/organizer/events/create" className="text-primary font-bold hover:underline">
+              Start a new event
+            </Link>
+          </div>
+        )}
+
+        {filter !== 'draft' && (
           <div className="overflow-x-auto">
-            <table className="table-surface min-w-[700px]">
+            <table className="table-surface min-w-[800px]">
               <thead className="bg-secondary border-b border-border">
                 <tr>
-                  <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Event</th>
-                  <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Date</th>
-                  <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Attendees</th>
-                  <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Revenue</th>
-                  <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Status</th>
-                  <th className="px-4 py-3 text-right text-caption font-semibold text-foreground">Actions</th>
+                  <th className="px-4 py-3 text-left text-caption font-black text-foreground uppercase tracking-widest">Event</th>
+                  <th className="px-4 py-3 text-left text-caption font-black text-foreground uppercase tracking-widest">Date</th>
+                  <th className="px-4 py-3 text-left text-caption font-black text-foreground uppercase tracking-widest">Attendees</th>
+                  <th className="px-4 py-3 text-left text-caption font-black text-foreground uppercase tracking-widest">Revenue</th>
+                  <th className="px-4 py-3 text-left text-caption font-black text-foreground uppercase tracking-widest">Status</th>
+                  <th className="px-4 py-3 text-right text-caption font-black text-foreground uppercase tracking-widest">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -92,27 +93,27 @@ export default function OrganizerEvents() {
                   <tr key={event.id} className="hover:bg-secondary/50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <img src={event.image} alt={event.title} className="w-12 h-12 object-cover rounded-xl flex-shrink-0" />
+                        <img src={event.image} alt={event.title} className="w-12 h-12 object-cover rounded-xl flex-shrink-0 border border-border" />
                         <div className="min-w-0">
-                          <p className="text-body-sm font-semibold text-foreground line-clamp-1">{event.title}</p>
-                          <p className="text-caption text-muted-foreground">{event.category}</p>
+                          <p className="text-body-sm font-bold text-foreground line-clamp-1">{event.title}</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{event.category}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-body-sm text-foreground whitespace-nowrap">
+                    <td className="px-4 py-3 text-caption font-bold text-foreground whitespace-nowrap">
                       {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-body-sm font-semibold text-foreground">
+                      <p className="text-body-sm font-bold text-foreground">
                         {event.rsvpCount} / {event.capacity}
                       </p>
-                      <p className="text-caption text-muted-foreground">{Math.round((event.rsvpCount / event.capacity) * 100)}% filled</p>
+                      <p className="text-[10px] font-black text-muted-foreground">{Math.round((event.rsvpCount / event.capacity) * 100)}% filled</p>
                     </td>
-                    <td className="px-4 py-3 text-body-sm font-semibold text-foreground whitespace-nowrap">
+                    <td className="px-4 py-3 text-body-sm font-black text-foreground whitespace-nowrap">
                       EGP {(event.rsvpCount * event.price).toLocaleString()}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="status-pill bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Published</span>
+                      <span className="status-pill bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 font-black uppercase text-[10px]">Published</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
@@ -147,11 +148,11 @@ export default function OrganizerEvents() {
               </tbody>
             </table>
           </div>
-          {rows.length === 0 && (
-            <div className="p-8 text-center text-body-sm text-muted-foreground">No events match this filter or search.</div>
-          )}
-        </div>
-      )}
+        )}
+        {rows.length === 0 && filter !== 'draft' && (
+          <div className="p-12 text-center text-body-sm text-muted-foreground font-bold">No events match this filter or search.</div>
+        )}
+      </div>
     </div>
   );
 }

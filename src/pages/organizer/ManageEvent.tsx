@@ -25,7 +25,7 @@ export default function ManageEvent() {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2 bg-[#F5F3FF] p-2 rounded-2xl inline-flex">
+      <div className="flex flex-wrap gap-1 p-1 bg-muted/50 rounded-xl inline-flex">
         {[
           { key: 'attendees', label: 'Attendees' },
           { key: 'analytics', label: 'Analytics' },
@@ -35,50 +35,54 @@ export default function ManageEvent() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as any)}
-            className={`filter-chip ${activeTab === tab.key ? 'active' : 'inactive'}`}
+            className={`px-4 py-2 rounded-lg text-caption font-bold transition-all ${activeTab === tab.key ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            {tab.label}
+            {tab.label.toUpperCase()}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div>
+      <div className="mt-6">
         {activeTab === 'attendees' && (
-          <div className="surface-panel p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-              <h2 className="text-h2 font-semibold text-foreground">Attendees (142)</h2>
-              <button className="btn-secondary flex items-center gap-2 self-start sm:self-auto">
+          <div className="bento-section">
+            <div className="bento-header">
+              <div className="bento-title-wrapper">
+                <Users className="w-5 h-5 text-primary" />
+                <h2 className="bento-title">Attendees (142)</h2>
+              </div>
+              <button className="btn-secondary text-body-sm flex items-center gap-2">
                 <Download className="w-4 h-4" />
-                Export List
+                Export CSV
               </button>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="table-surface w-full min-w-[560px]">
+              <table className="table-surface w-full min-w-[600px]">
                 <thead className="bg-secondary border-b border-border">
                   <tr>
-                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Name</th>
-                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Email</th>
-                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Ticket Type</th>
-                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Booked</th>
-                    <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Status</th>
+                    <th className="px-4 py-3 text-left text-caption font-black text-foreground uppercase tracking-widest">Name</th>
+                    <th className="px-4 py-3 text-left text-caption font-black text-foreground uppercase tracking-widest">Ticket Type</th>
+                    <th className="px-4 py-3 text-left text-caption font-black text-foreground uppercase tracking-widest">Booked</th>
+                    <th className="px-4 py-3 text-left text-caption font-black text-foreground uppercase tracking-widest">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {Array.from({ length: 10 }, (_, i) => (
+                  {Array.from({ length: 8 }, (_, i) => (
                     <tr key={i} className="hover:bg-secondary/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <img src={`https://i.pravatar.cc/40?img=${i + 1}`} alt="" className="w-9 h-9 rounded-full flex-shrink-0" />
-                          <span className="text-body-sm font-medium text-foreground">Attendee {i + 1}</span>
+                          <img src={`https://i.pravatar.cc/40?img=${i + 20}`} alt="" className="w-9 h-9 rounded-full flex-shrink-0 border border-border" />
+                          <div className="min-w-0">
+                            <p className="text-body-sm font-bold text-foreground truncate">Attendee {i + 1}</p>
+                            <p className="text-[10px] font-medium text-muted-foreground truncate">attendee{i + 1}@example.com</p>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-body-sm text-muted-foreground">attendee{i + 1}@example.com</td>
-                      <td className="px-4 py-3 text-body-sm text-muted-foreground">{i % 3 === 0 ? 'VIP Table' : 'General Admission'}</td>
-                      <td className="px-4 py-3 text-body-sm text-muted-foreground whitespace-nowrap">May {i + 1}, 2026</td>
+                      <td className="px-4 py-3 text-caption font-bold text-muted-foreground">{i % 3 === 0 ? 'VIP' : 'GA'}</td>
+                      <td className="px-4 py-3 text-caption font-bold text-muted-foreground whitespace-nowrap">May {i + 10}, 2026</td>
                       <td className="px-4 py-3">
-                        <span className="status-pill bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Confirmed</span>
+                        <span className="status-pill bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 font-black uppercase text-[10px]">Confirmed</span>
                       </td>
                     </tr>
                   ))}
@@ -90,41 +94,42 @@ export default function ManageEvent() {
 
         {activeTab === 'analytics' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="surface-panel p-5">
-                <p className="text-caption text-muted-foreground mb-1">Page Views</p>
-                <p className="text-display font-semibold text-foreground">2,847</p>
-                <p className="text-caption text-green-600 mt-1">+18% vs last week</p>
-              </div>
-              <div className="surface-panel p-5">
-                <p className="text-caption text-muted-foreground mb-1">Conversion Rate</p>
-                <p className="text-display font-semibold text-foreground">24%</p>
-                <p className="text-caption text-green-600 mt-1">+5% vs average</p>
-              </div>
-              <div className="surface-panel p-5">
-                <p className="text-caption text-muted-foreground mb-1">Revenue</p>
-                <p className="text-display font-semibold text-foreground">21.3K</p>
-                <p className="text-caption text-muted-foreground mt-1">EGP</p>
-              </div>
-              <div className="surface-panel p-5">
-                <p className="text-caption text-muted-foreground mb-1">Avg Ticket Price</p>
-                <p className="text-display font-semibold text-foreground">150</p>
-                <p className="text-caption text-muted-foreground mt-1">EGP</p>
-              </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: 'Page Views', value: '2,847', change: '+18%', icon: Eye, bg: 'icon-box-primary' },
+                { label: 'Conversion', value: '24%', change: '+5%', icon: BarChart, bg: 'icon-box-cyan' },
+                { label: 'Revenue', value: '21.3K', icon: DollarSign, bg: 'icon-box-orange' },
+                { label: 'Avg Ticket', value: '150', icon: DollarSign, bg: 'icon-box-green' },
+              ].map((kpi) => (
+                <div key={kpi.label} className="kpi-card">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={`icon-box ${kpi.bg}`}>
+                      <kpi.icon className="w-4 h-4" />
+                    </div>
+                    {kpi.change && (
+                      <span className="kpi-trend text-green-600 dark:text-green-400">
+                        <ArrowUpRight className="w-3 h-3" />{kpi.change}
+                      </span>
+                    )}
+                  </div>
+                  <p className="kpi-value">{kpi.value}</p>
+                  <p className="kpi-label">{kpi.label}</p>
+                </div>
+              ))}
             </div>
 
-            <div className="surface-panel p-5">
-              <h3 className="text-h3 font-semibold text-foreground mb-4">Registration Timeline</h3>
-              <div className="h-64 flex items-end justify-between gap-2">
+            <div className="bento-section">
+              <div className="bento-header">
+                <div className="bento-title-wrapper">
+                  <BarChart className="w-5 h-5 text-primary" />
+                  <h2 className="bento-title">Registration Timeline</h2>
+                </div>
+              </div>
+              <div className="h-64 flex items-end justify-between gap-1.5 pt-4">
                 {Array.from({ length: 14 }, (_, i) => {
-                  const height = Math.random() * 100;
+                  const h = 20 + Math.random() * 80;
                   return (
-                    <div key={i} className="flex-1 flex flex-col justify-end">
-                      <div
-                        className="bg-gradient-to-t from-[#6C4CF1] to-[#00C2FF] rounded-t"
-                        style={{ height: `${height}%` }}
-                      ></div>
-                    </div>
+                    <div key={i} className="flex-1 bg-primary/20 rounded-t-lg hover:bg-primary/40 transition-colors" style={{ height: `${h}%` }} />
                   );
                 })}
               </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, Users, Eye, DollarSign, ArrowUpRight, Calendar, Target, Repeat, ChevronDown } from 'lucide-react';
+import { TrendingUp, Users, Eye, DollarSign, ArrowUpRight, Calendar, Target, Repeat, ChevronDown, Sparkles } from 'lucide-react';
 
 const PERIODS = ['7d', '30d', '90d', 'All'] as const;
 type Period = typeof PERIODS[number];
@@ -112,128 +112,107 @@ export default function OrganizerAnalytics() {
         </div>
       </div>
 
-      {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Page Views', value: '45.2K', change: '+24%', icon: Eye, color: 'text-primary', bg: 'bg-primary/10' },
-          { label: 'Registrations', value: '1,247', change: '+18%', icon: Users, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-500/10' },
-          { label: 'Conversion Rate', value: '2.8%', change: '+12%', icon: Target, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-500/10' },
-          { label: 'Total Revenue', value: 'EGP 70.4K', change: '+32%', icon: DollarSign, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10' },
-        ].map(kpi => (
-          <div key={kpi.label} className="surface-panel p-4 sm:p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className={`w-9 h-9 rounded-xl ${kpi.bg} flex items-center justify-center`}>
-                <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+          { label: 'Total Revenue', value: 'EGP 45.2K', change: '+18%', icon: DollarSign, bg: 'icon-box-orange' },
+          { label: 'Total RSVPs', value: '1,247', change: '+24%', icon: Users, bg: 'icon-box-primary' },
+          { label: 'Avg Fill Rate', value: '87%', change: '+5%', icon: TrendingUp, bg: 'icon-box-green' },
+          { label: 'Repeat Rate', value: '32%', change: '+8%', icon: Repeat, bg: 'icon-box-cyan' },
+        ].map((stat) => (
+          <div key={stat.label} className="kpi-card">
+            <div className="flex items-center justify-between">
+              <div className={`icon-box ${stat.bg}`}>
+                <stat.icon className="w-5 h-5" />
               </div>
-              <span className="flex items-center gap-0.5 text-caption font-bold text-green-600 dark:text-green-400">
-                <ArrowUpRight className="w-3 h-3" />{kpi.change}
+              <span className="kpi-trend text-green-600 dark:text-green-400">
+                <ArrowUpRight className="w-3 h-3" />{stat.change}
               </span>
             </div>
-            <p className="text-h2 font-bold text-foreground mb-0.5">{kpi.value}</p>
-            <p className="text-caption text-muted-foreground">{kpi.label}</p>
+            <div>
+              <p className="kpi-value">{stat.value}</p>
+              <p className="kpi-label">{stat.label}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Registration timeline */}
-      <div className="surface-panel p-5">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-h3 font-bold text-foreground">Registration Timeline</h2>
-          <span className="text-caption text-muted-foreground">{period === '7d' ? 'Last 7 days' : period === '30d' ? 'Last 30 days' : period === '90d' ? 'Last 90 days' : 'All time'}</span>
-        </div>
-        <BarChart
-          data={registrationData[period]}
-          labels={registrationLabels[period]}
-          color="url(#grad)"
-          height={160}
-        />
-        {/* SVG gradient def */}
-        <svg width="0" height="0">
-          <defs>
-            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#7C5CFF" />
-              <stop offset="100%" stopColor="#00D4FF" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-
-      {/* Middle row */}
-      <div className="grid md:grid-cols-2 gap-5">
-        {/* Traffic sources */}
-        <div className="surface-panel p-5">
-          <h2 className="text-h3 font-bold text-foreground mb-5">Traffic Sources</h2>
-          <div className="space-y-4">
-            {[
-              { source: 'Direct', value: 42, color: '#7C5CFF' },
-              { source: 'Social Media', value: 28, color: '#00D4FF' },
-              { source: 'Search', value: 18, color: '#FF9B3D' },
-              { source: 'Email', value: 12, color: '#22C55E' },
-            ].map(item => (
-              <HBar key={item.source} label={item.source} value={item.value} max={100} color={item.color} suffix="%" />
-            ))}
-          </div>
-        </div>
-
-        {/* Audience demographics */}
-        <div className="surface-panel p-5">
-          <h2 className="text-h3 font-bold text-foreground mb-5">Audience Demographics</h2>
-          <div className="space-y-4 mb-5">
-            {[
-              { range: '18–24', value: 35, color: '#7C5CFF' },
-              { range: '25–34', value: 45, color: '#00D4FF' },
-              { range: '35–44', value: 15, color: '#FF9B3D' },
-              { range: '45+', value: 5, color: '#22C55E' },
-            ].map(item => (
-              <HBar key={item.range} label={`${item.range} years`} value={item.value} max={100} color={item.color} suffix="%" />
-            ))}
-          </div>
-          <div className="pt-4 border-t border-border grid grid-cols-2 gap-4">
-            <div className="text-center">
-              <p className="text-h3 font-bold text-foreground">62%</p>
-              <p className="text-caption text-muted-foreground">Female</p>
-            </div>
-            <div className="text-center">
-              <p className="text-h3 font-bold text-foreground">38%</p>
-              <p className="text-caption text-muted-foreground">Male</p>
+      <div className="grid lg:grid-cols-2 gap-5">
+        <div className="bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h2 className="bento-title">Sales Over Time</h2>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Conversion funnel */}
-      <div className="surface-panel p-5">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-h3 font-bold text-foreground">Conversion Funnel</h2>
-          <span className="text-caption text-muted-foreground">Last 30 days</span>
-        </div>
-        <div className="space-y-4 max-w-2xl">
-          <FunnelStep label="Page Views" value={45200} pct={100} color="#7C5CFF" />
-          <FunnelStep label="Event Detail Views" value={12400} pct={27} color="#8B7CFF" />
-          <FunnelStep label="Ticket Selection" value={3800} pct={8} color="#00D4FF" />
-          <FunnelStep label="Checkout Started" value={1800} pct={4} color="#4ADEFF" />
-          <FunnelStep label="Completed Bookings" value={1247} pct={2.8} color="#22C55E" isLast />
-        </div>
-      </div>
-
-      {/* Revenue by event */}
-      <div className="surface-panel p-5">
-        <h2 className="text-h3 font-bold text-foreground mb-5">Revenue & Attendance by Event</h2>
-        <div className="space-y-4">
-          {revenueByEvent.map(ev => (
-            <div key={ev.name} className="card-surface p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: ev.color }} />
-                  <p className="text-body-sm font-bold text-foreground">{ev.name}</p>
+          <div className="h-64 flex items-end justify-between gap-1.5 pt-4">
+            {Array.from({ length: 12 }, (_, i) => {
+              const h = 40 + Math.random() * 60;
+              return (
+                <div key={i} className="flex-1 flex flex-col justify-end group relative">
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 font-bold">
+                    EGP {(h * 1.2).toFixed(1)}K
+                  </div>
+                  <div className="w-full bg-primary/20 rounded-t-lg group-hover:bg-primary/40 transition-colors" style={{ height: `${h}%` }} />
+                  <p className="text-[10px] font-bold text-muted-foreground mt-2 text-center">M{i+1}</p>
                 </div>
-                <div className="flex items-center gap-4 text-body-sm">
-                  <span className="text-muted-foreground">{ev.attendees} attendees</span>
-                  <span className="font-bold text-foreground">{ev.revenue === 0 ? 'Free' : `EGP ${ev.revenue.toLocaleString()}`}</span>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
+              <Users className="w-5 h-5 text-cyan-500" />
+              <h2 className="bento-title">Conversion Funnel</h2>
+            </div>
+          </div>
+          <div className="space-y-4 pt-2">
+            {[
+              { label: 'Page Views', value: '12,432', pct: 100, color: 'bg-primary' },
+              { label: 'Add to Cart', value: '3,108', pct: 25, color: 'bg-cyan-500' },
+              { label: 'Checkout Started', value: '1,865', pct: 15, color: 'bg-purple-500' },
+              { label: 'Completed RSVPs', value: '1,247', pct: 10, color: 'bg-green-500' },
+            ].map((step) => (
+              <div key={step.label} className="space-y-1.5">
+                <div className="flex justify-between text-caption font-bold">
+                  <span className="text-muted-foreground">{step.label}</span>
+                  <span className="text-foreground">{step.value} ({step.pct}%)</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div className={`h-full ${step.color} rounded-full transition-all duration-1000`} style={{ width: `${step.pct}%` }} />
                 </div>
               </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${(ev.attendees / 1000) * 100}%`, background: ev.color }} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="bento-section">
+        <div className="bento-header">
+          <div className="bento-title-wrapper">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <h2 className="bento-title">Top Performing Events</h2>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {[
+            { title: 'Cairo Jazz Night', rsvp: 142, revenue: 21300, fill: 94 },
+            { title: 'Street Food Festival', rsvp: 654, revenue: 49050, fill: 82 },
+            { title: 'AI Summit 2026', rsvp: 387, revenue: 0, fill: 77 },
+          ].map((e, i) => (
+            <div key={i} className="card-surface p-4 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-body-sm font-bold text-foreground truncate">{e.title}</p>
+                <p className="text-caption text-muted-foreground">{e.rsvp} attendees • {e.fill}% full</p>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-body-sm font-black text-foreground">
+                  {e.revenue === 0 ? 'FREE' : `EGP ${e.revenue.toLocaleString()}`}
+                </p>
+                <div className="flex items-center gap-1 text-green-600 font-bold text-[10px] justify-end">
+                  <ArrowUpRight className="w-3 h-3" /> +12%
+                </div>
               </div>
             </div>
           ))}

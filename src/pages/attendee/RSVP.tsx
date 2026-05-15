@@ -85,85 +85,110 @@ export default function RSVP() {
   return (
     <div className="min-h-screen bg-background">
       {/* Top Navigation */}
-      <div className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="bg-card border-b border-border sticky top-0 z-10 backdrop-blur-xl bg-background/80">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <Link
             to={`/app/events/${event.id}`}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Event</span>
+            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            </div>
+            <span className="font-medium">Back to Event Details</span>
           </Link>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="mb-8">
+          <h1 className="text-display font-bold text-foreground mb-2">Complete Your RSVP</h1>
+          <p className="text-muted-foreground">Secure your spot for this amazing event</p>
+        </div>
+
         {alreadyRsvped && (
-          <div className="mb-6 p-4 rounded-2xl border border-green-500/30 bg-green-500/5 text-body-sm text-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">You already have a booking for this event.</p>
-                <p className="text-muted-foreground">Open your ticket or event details anytime.</p>
+          <div className="mb-8 bento-section border-green-500/20 bg-green-500/5 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div className="flex items-start gap-4">
+                <div className="icon-box bg-green-500/10 text-green-600">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-h3 font-bold text-foreground">Booking Confirmed</p>
+                  <p className="text-muted-foreground">You already have a ticket for this event. Check your orders for details.</p>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link to={`/app/orders/${event.id}`} className="btn-primary text-center">
-                View ticket
-              </Link>
-              <Link to={`/app/events/${event.id}`} className="btn-secondary text-center">
-                Event details
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link to={`/app/orders/${event.id}`} className="btn-primary">
+                  View Ticket
+                </Link>
+                <Link to={`/app/events/${event.id}`} className="btn-secondary">
+                  Event Details
+                </Link>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-12 gap-8">
           {/* Left Column - Ticket Selection */}
-          <div className="md:col-span-2 space-y-6 order-2 md:order-1">
-            <div className={`bg-card border border-border rounded-2xl shadow-lg p-6 ${alreadyRsvped ? 'opacity-60 pointer-events-none' : ''}`}>
-              <h1 className="text-2xl font-bold text-foreground mb-6">Select Tickets</h1>
+          <div className="lg:col-span-8 space-y-8 order-2 lg:order-1">
+            <div className={`bento-section ${alreadyRsvped ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="bento-header">
+                <div className="bento-title-wrapper">
+                  <div className="icon-box bg-primary/10 text-primary">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <h2 className="bento-title">Select Your Tickets</h2>
+                </div>
+              </div>
 
-              <div className="space-y-4">
+              <div className="grid gap-4">
                 {event.ticketTypes.map((ticket, index) => (
                   <div
                     key={index}
-                    className="border-2 border-border rounded-xl p-4 hover:border-primary transition"
+                    className="p-5 rounded-2xl bg-secondary/30 border border-border/50 hover:border-primary/40 hover:bg-secondary/50 transition-all duration-300 group"
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="font-bold text-foreground">{ticket.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {ticket.available} available
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-h3 font-bold text-foreground">{ticket.name}</p>
+                          {ticket.price === 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-micro font-bold uppercase tracking-wider">
+                              Free
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-caption text-muted-foreground">
+                          {ticket.available} spots remaining
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-foreground">
-                          {ticket.price === 0 ? 'Free' : `EGP ${ticket.price}`}
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-muted-foreground">Quantity:</span>
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => updateQuantity(ticket.name, -1)}
-                          disabled={!quantities[ticket.name] || alreadyRsvped}
-                          className="w-8 h-8 flex items-center justify-center border-2 border-border rounded-lg hover:border-[#6C4CF1] disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="w-8 text-center font-semibold">
-                          {quantities[ticket.name] || 0}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(ticket.name, 1)}
-                          disabled={quantities[ticket.name] >= 10 || alreadyRsvped}
-                          className="w-8 h-8 flex items-center justify-center border-2 border-border rounded-lg hover:border-[#6C4CF1] disabled:opacity-30 disabled:cursor-not-allowed"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
+                      <div className="flex items-center justify-between sm:justify-end gap-6 sm:gap-10">
+                        <div className="text-right">
+                          <p className="text-h3 font-bold text-foreground">
+                            {ticket.price === 0 ? '0.00' : `EGP ${ticket.price.toLocaleString()}`}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-4 bg-background/50 rounded-xl p-1.5 border border-border">
+                          <button
+                            onClick={() => updateQuantity(ticket.name, -1)}
+                            disabled={!quantities[ticket.name] || alreadyRsvped}
+                            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="w-6 text-center font-bold text-foreground">
+                            {quantities[ticket.name] || 0}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(ticket.name, 1)}
+                            disabled={quantities[ticket.name] >= 10 || alreadyRsvped}
+                            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -173,50 +198,66 @@ export default function RSVP() {
 
             {/* Payment Information */}
             {!alreadyRsvped && totalTickets > 0 && subtotal > 0 && (
-              <div className="bg-card border border-border rounded-2xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-foreground mb-4">Payment Details</h2>
+              <div className="bento-section animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="bento-header">
+                  <div className="bento-title-wrapper">
+                    <div className="icon-box bg-cyan-500/10 text-cyan-500">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <h2 className="bento-title">Payment Details</h2>
+                  </div>
+                </div>
+
                 {paymentState === 'error' && (
-                  <div className="mb-4 p-3 rounded-xl border border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-900 text-red-700 dark:text-red-300 text-sm flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 mt-0.5" />
+                  <div className="mb-6 p-4 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-500 text-body-sm flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 mt-0.5" />
                     <span>{paymentError}</span>
                   </div>
                 )}
-                {paymentState === 'success' && (
-                  <div className="mb-4 p-3 rounded-xl border border-green-300 bg-green-50 dark:bg-green-950/30 dark:border-green-900 text-green-700 dark:text-green-300 text-sm flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 mt-0.5" />
-                    <span>Booking confirmed. Redirecting to your ticket…</span>
-                  </div>
-                )}
-                <div className="space-y-4">
+
+                <div className="grid gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Card Number
+                    <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
+                      Cardholder Name
                     </label>
                     <input
                       type="text"
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                      placeholder="Enter full name"
+                      className="input-base w-full"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
+                      Card Number
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="0000 0000 0000 0000"
+                        className="input-base w-full pr-12"
+                      />
+                      <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
+                      <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
                         Expiry Date
                       </label>
                       <input
                         type="text"
                         placeholder="MM/YY"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                        className="input-base w-full"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
+                      <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
                         CVV
                       </label>
                       <input
                         type="text"
                         placeholder="123"
-                        className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                        className="input-base w-full"
                       />
                     </div>
                   </div>
@@ -226,120 +267,89 @@ export default function RSVP() {
           </div>
 
           {/* Right Column - Order Summary */}
-          <div className="md:col-span-1 order-1 md:order-2">
-            <div className="bg-card border border-border rounded-2xl shadow-lg p-6 sticky top-24">
-              <h2 className="text-xl font-bold text-foreground mb-4">Order Summary</h2>
+          <div className="lg:col-span-4 order-1 lg:order-2">
+            <div className="bento-section sticky top-28">
+              <h2 className="text-h3 font-bold text-foreground mb-6">Order Summary</h2>
 
-              {/* Event Info */}
-              <div className="mb-6 pb-6 border-b border-border">
+              {/* Event Info Card */}
+              <div className="p-4 rounded-2xl bg-secondary/40 border border-border/50 mb-6">
                 <img
                   src={event.image}
                   alt={event.title}
-                  className="w-full h-32 object-cover rounded-lg mb-3"
+                  className="w-full h-40 object-cover rounded-xl mb-4 shadow-sm"
                 />
-                <h3 className="font-bold text-foreground mb-2 line-clamp-2">
+                <h3 className="text-h4 font-bold text-foreground mb-3 line-clamp-2">
                   {event.title}
                 </h3>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4 text-primary" />
                     <span>
                       {new Date(event.date).toLocaleDateString('en-US', {
+                        weekday: 'short',
                         month: 'short',
                         day: 'numeric',
+                        year: 'numeric'
                       })}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    <span className="line-clamp-1">{event.location.venue}</span>
+                  <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
+                    <MapPin className="w-4 h-4 text-cyan-500" />
+                    <span className="truncate">{event.location.venue}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Price Breakdown */}
-              <div className="space-y-3 mb-6">
-                {event.ticketTypes.map((ticket, index) => {
-                  const qty = quantities[ticket.name] || 0;
-                  if (qty === 0) return null;
-                  return (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {ticket.name} x {qty}
-                      </span>
-                      <span className="font-semibold">
-                        EGP {(ticket.price * qty).toFixed(2)}
-                      </span>
-                    </div>
-                  );
-                })}
-                {subtotal > 0 ? (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Service Fee (3%)</span>
-                      <span className="font-semibold">EGP {serviceFee.toFixed(2)}</span>
-                    </div>
-                    <div className="pt-3 border-t border-border flex justify-between">
-                      <span className="font-bold text-foreground">Total</span>
-                      <span className="text-xl font-bold text-[#6C4CF1]">
-                        EGP {total.toFixed(2)}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  totalTickets > 0 && (
-                    <div className="pt-3 border-t border-border flex justify-between">
-                      <span className="font-bold text-foreground">Total</span>
-                      <span className="text-xl font-bold text-[#6C4CF1]">Free</span>
-                    </div>
-                  )
-                )}
+              {/* Cost Breakdown */}
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between text-body-sm text-muted-foreground">
+                  <span>Subtotal</span>
+                  <span className="font-semibold text-foreground">EGP {subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-body-sm text-muted-foreground">
+                  <span>Service Fee (3%)</span>
+                  <span className="font-semibold text-foreground">EGP {serviceFee.toLocaleString()}</span>
+                </div>
+                <div className="pt-4 border-t border-border flex justify-between items-center">
+                  <span className="text-h4 font-bold text-foreground">Total Amount</span>
+                  <span className="text-h2 font-bold gradient-text">EGP {total.toLocaleString()}</span>
+                </div>
               </div>
 
-              {/* Checkout Button */}
               <button
                 onClick={handleCheckout}
-                disabled={
-                  alreadyRsvped ||
-                  totalTickets === 0 ||
-                  paymentState === 'processing' ||
-                  paymentState === 'success'
-                }
-                className="w-full bg-gradient-to-r from-[#6C4CF1] to-[#5739D4] hover:shadow-xl text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                disabled={totalTickets === 0 || paymentState === 'processing' || alreadyRsvped}
+                className="btn-primary w-full py-4 text-h4 h-auto shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CreditCard className="w-5 h-5" />
-                {alreadyRsvped
-                  ? 'Already booked'
-                  : totalTickets === 0
-                  ? 'Select Tickets'
-                  : paymentState === 'processing'
-                  ? total <= 0
-                    ? 'Confirming…'
-                    : 'Processing Payment...'
-                  : paymentState === 'success'
-                  ? '🎉 Booking Confirmed!'
-                  : paymentState === 'error'
-                  ? 'Retry Payment'
-                  : total <= 0
-                  ? 'Confirm free booking'
-                  : `Pay EGP ${total.toFixed(2)}`}
+                {paymentState === 'processing' ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Processing...</span>
+                  </div>
+                ) : alreadyRsvped ? (
+                  'Already RSVPed'
+                ) : totalTickets === 0 ? (
+                  'Select Tickets'
+                ) : (
+                  `Confirm & Pay EGP ${total.toLocaleString()}`
+                )}
               </button>
 
               {/* XP Preview */}
               {event.engagement && totalTickets > 0 && paymentState !== 'success' && (
-                <div className="mt-4 p-3 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 border border-orange-200 dark:border-orange-800 rounded-xl flex items-center gap-3">
-                  <Zap className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                <div className="mt-6 p-4 bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border border-orange-500/20 rounded-2xl flex items-center gap-4">
+                  <div className="icon-box bg-orange-500/20 text-orange-500">
+                    <Zap className="w-5 h-5" />
+                  </div>
                   <div>
-                    <p className="text-xs font-bold text-orange-700 dark:text-orange-300">+{event.engagement.xpReward} XP on confirmation</p>
-                    {event.engagement.badgeUnlock && (
-                      <p className="text-xs text-muted-foreground">Unlocks "{event.engagement.badgeUnlock}" badge</p>
-                    )}
+                    <p className="text-body-sm font-bold text-foreground">+{event.engagement.xpReward} XP Reward</p>
+                    <p className="text-caption text-muted-foreground">Unlocks "{event.engagement.badgeUnlock}" badge</p>
                   </div>
                 </div>
               )}
 
-              <p className="mt-4 text-xs text-center text-muted-foreground">
-                Your booking is protected by Eventra's secure payment system
+              <p className="mt-4 text-center text-micro text-muted-foreground px-4">
+                By confirming, you agree to our Terms of Service and Event Refund Policy.
               </p>
             </div>
           </div>

@@ -4,7 +4,8 @@ import {
   Music, Code, Trophy, Palette, UtensilsCrossed, Briefcase,
   Heart, Gamepad2, Film, Shirt, FlaskConical, Users,
   MapPin, Check, Calendar, ChevronRight, Sparkles,
-  ThumbsUp, ThumbsDown, Zap, Star, ArrowRight
+  ThumbsUp, ThumbsDown, Zap, Star, ArrowRight,
+  CheckCircle2, Image, ArrowLeft, Award
 } from 'lucide-react';
 import { categories } from '../../data/mockData';
 import Logo from '../../components/Logo';
@@ -37,87 +38,82 @@ const previewEvents = [
   { id: 'ai-3', title: 'Weekend Run Crew', category: 'Sports', img: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=400', reason: 'Fits your weekend rhythm' },
 ];
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 4;
 
 const stepMeta = [
   { label: 'Welcome', icon: Sparkles },
+  { label: 'Avatar', icon: Users },
   { label: 'Interests', icon: Star },
-  { label: 'Location', icon: MapPin },
-  { label: 'Calendar', icon: Calendar },
-  { label: 'AI Feed', icon: Zap },
-  { label: 'Launch', icon: Check },
+  { label: 'Summary', icon: CheckCircle2 },
 ];
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [location, setLocation] = useState('');
-  const [radius, setRadius] = useState(15);
-  const [travelPref, setTravelPref] = useState<'local' | 'city' | 'anywhere'>('city');
-  const [likedEvents, setLikedEvents] = useState<string[]>([]);
-  const [calendarProvider, setCalendarProvider] = useState<string | null>(null);
+  const [interests, setInterests] = useState<string[]>([]);
+  const [avatar, setAvatar] = useState('https://i.pravatar.cc/150?img=33');
 
   const toggleInterest = (cat: string) =>
-    setSelectedInterests(prev =>
+    setInterests(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
 
-  const toggleLike = (id: string, like: boolean) =>
-    setLikedEvents(prev =>
-      like ? (prev.includes(id) ? prev : [...prev, id]) : prev.filter(e => e !== id)
-    );
+  const handleNext = () => {
+    if (step < TOTAL_STEPS) {
+      setStep(step + 1);
+    } else {
+      navigate('/login?afterOnboarding=1');
+    }
+  };
 
   const canContinue = () => {
-    if (step === 2) return selectedInterests.length >= 3;
-    if (step === 3) return location.trim().length > 1;
+    if (step === 3) return interests.length >= 3;
     return true;
   };
 
   const pct = Math.round(((step - 1) / (TOTAL_STEPS - 1)) * 100);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* ── Atmospheric background ── */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-[#7C5CFF]/8 blur-3xl animate-orb" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-[#00D4FF]/6 blur-3xl animate-orb" style={{ animationDelay: '4s' }} />
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      {/* Atmospheric background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-500/10 blur-[120px]" />
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 py-8">
-        {/* ── Header ── */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Logo variant="horizontal" className="h-9 w-auto" />
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-6 py-12">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-6">
+            <Logo variant="horizontal" className="h-10 w-auto" />
           </div>
-          <p className="text-body text-muted-foreground">Set up your personalized experience in {TOTAL_STEPS} steps</p>
+          <h1 className="text-h1 font-bold text-foreground mb-2">Welcome to the future of events</h1>
+          <p className="text-body text-muted-foreground">Let's personalize your experience in just a few steps</p>
         </div>
 
-        {/* ── Step indicator ── */}
-        <div className="w-full max-w-2xl mb-6">
-          {/* Progress bar */}
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-4">
+        {/* Step indicator */}
+        <div className="w-full max-w-2xl mb-10">
+          <div className="h-1.5 bg-secondary rounded-full overflow-hidden mb-6">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[#7C5CFF] to-[#00D4FF] transition-all duration-500"
+              className="h-full bg-primary transition-all duration-700 ease-out shadow-[0_0_12px_rgba(108,76,241,0.4)]"
               style={{ width: `${pct}%` }}
             />
           </div>
-          {/* Step dots */}
           <div className="flex items-center justify-between">
             {stepMeta.map((s, i) => {
               const num = i + 1;
               const done = num < step;
               const active = num === step;
               return (
-                <div key={s.label} className="flex flex-col items-center gap-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                    done ? 'bg-[#7C5CFF] text-white' :
-                    active ? 'bg-[#7C5CFF]/20 border-2 border-[#7C5CFF] text-[#7C5CFF]' :
-                    'bg-muted text-muted-foreground'
+                <div key={s.label} className="flex flex-col items-center gap-2 group">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+                    done ? 'bg-primary text-white' :
+                    active ? 'bg-primary/20 border-2 border-primary text-primary scale-110 shadow-lg shadow-primary/20' :
+                    'bg-secondary text-muted-foreground'
                   }`}>
-                    {done ? <Check className="w-4 h-4" /> : <s.icon className="w-3.5 h-3.5" />}
+                    {done ? <CheckCircle2 className="w-5 h-5" /> : <s.icon className={`w-5 h-5 ${active ? 'animate-pulse' : ''}`} />}
                   </div>
-                  <span className={`text-caption hidden sm:block ${active ? 'text-[#7C5CFF] font-semibold' : 'text-muted-foreground'}`}>
+                  <span className={`text-caption font-bold uppercase tracking-widest hidden sm:block ${active ? 'text-primary' : 'text-muted-foreground'}`}>
                     {s.label}
                   </span>
                 </div>
@@ -126,129 +122,70 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* ── Card ── */}
-        <div className="w-full max-w-2xl surface-panel p-6 sm:p-8">
+        {/* Card */}
+        <div className="w-full max-w-2xl bento-section p-10 animate-in fade-in zoom-in-95 duration-500">
 
           {/* Step 1 — Welcome */}
           {step === 1 && (
-            <div className="space-y-6 animate-fade-up">
-              <div>
-                <h2 className="text-h2 font-bold text-foreground mb-2">Your AI-powered event journey starts now</h2>
-                <p className="text-body text-muted-foreground">
-                  Eventra learns from your interests, location, and behavior to surface events you'll genuinely love.
+            <div className="space-y-8">
+              <div className="text-center space-y-4">
+                <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary">
+                  <Sparkles className="w-10 h-10" />
+                </div>
+                <h2 className="text-display font-bold text-foreground leading-tight">Ready for a <span className="gradient-text">smarter</span> way to discover?</h2>
+                <p className="text-body-lg text-muted-foreground leading-relaxed">
+                  Eventra uses AI to understand your unique interests and connect you with experiences you'll actually love.
                 </p>
               </div>
-              <div className="grid sm:grid-cols-3 gap-3">
+
+              <div className="grid sm:grid-cols-3 gap-4">
                 {[
-                  { icon: Sparkles, title: 'Smart Recommendations', desc: 'AI matches events to your taste', color: 'from-[#7C5CFF] to-[#9B8CFF]' },
-                  { icon: Zap, title: 'Explainable AI', desc: 'Always know why we suggest something', color: 'from-[#00D4FF] to-[#4ADEFF]' },
-                  { icon: Star, title: 'Earn as You Go', desc: 'XP, badges, and rewards for attending', color: 'from-[#FF9B3D] to-[#FFD56A]' },
+                  { icon: Zap, label: 'Smart Recs', color: 'text-orange-500' },
+                  { icon: Users, label: 'Community', color: 'text-cyan-500' },
+                  { icon: Award, label: 'Rewards', color: 'text-primary' },
                 ].map((f) => (
-                  <div key={f.title} className="p-4 rounded-2xl bg-muted/40 border border-border">
-                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-3`}>
-                      <f.icon className="w-4 h-4 text-white" />
-                    </div>
-                    <p className="text-body-sm font-bold text-foreground mb-1">{f.title}</p>
-                    <p className="text-caption text-muted-foreground">{f.desc}</p>
+                  <div key={f.label} className="p-4 rounded-2xl bg-secondary/30 border border-border/50 text-center space-y-2">
+                    <f.icon className={`w-6 h-6 mx-auto ${f.color}`} />
+                    <span className="text-caption font-bold text-foreground block">{f.label}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Step 2 — Interests */}
+          {/* Step 2 — Avatar */}
           {step === 2 && (
-            <div className="animate-fade-up">
-              <h2 className="text-h2 font-bold text-foreground mb-1">Pick your interests</h2>
-              <p className="text-body text-muted-foreground mb-1">Select at least 3 categories to personalize your feed.</p>
-              {selectedInterests.length > 0 && selectedInterests.length < 3 && (
-                <p className="text-caption text-amber-500 font-semibold mb-4">
-                  {3 - selectedInterests.length} more to continue
-                </p>
-              )}
-              {selectedInterests.length >= 3 && (
-                <p className="text-caption text-green-500 font-semibold mb-4">
-                  ✓ {selectedInterests.length} selected — great choice!
-                </p>
-              )}
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 mt-4">
-                {categories.map((cat) => {
-                  const Icon = categoryIcons[cat] || Users;
-                  const active = selectedInterests.includes(cat);
-                  const grad = categoryColors[cat] || 'from-[#7C5CFF] to-[#9B8CFF]';
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => toggleInterest(cat)}
-                      className={`p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
-                        active
-                          ? 'border-[#7C5CFF] bg-[#7C5CFF]/10 scale-[1.03]'
-                          : 'border-border bg-muted/30 hover:border-[#7C5CFF]/40'
-                      }`}
-                    >
-                      <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <p className="text-caption font-semibold text-foreground text-center leading-tight">{cat}</p>
-                      {active && <Check className="w-3 h-3 text-[#7C5CFF]" />}
-                    </button>
-                  );
-                })}
+            <div className="space-y-8 text-center">
+              <div>
+                <h2 className="text-h2 font-bold text-foreground mb-2">Set your identity</h2>
+                <p className="text-body text-muted-foreground">This is how the community will see you</p>
               </div>
-            </div>
-          )}
 
-          {/* Step 3 — Location */}
-          {step === 3 && (
-            <div className="space-y-5 animate-fade-up">
-              <div>
-                <h2 className="text-h2 font-bold text-foreground mb-1">Set your location</h2>
-                <p className="text-body text-muted-foreground">We'll show events near you first.</p>
-              </div>
-              <div>
-                <label className="block text-body-sm font-semibold text-foreground mb-2">Your city</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7C5CFF]" />
-                  <input
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="e.g. Cairo, Egypt"
-                    className="w-full pl-10 pr-4 input-base"
+              <div className="relative group mx-auto w-40">
+                <div className="w-40 h-40 rounded-[2.5rem] overflow-hidden ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all duration-500 shadow-2xl">
+                  <img
+                    src={avatar || 'https://i.pravatar.cc/150?img=33'}
+                    alt="Profile"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                 </div>
+                <button className="absolute -bottom-2 -right-2 w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
+                  <Image className="w-5 h-5" />
+                </button>
               </div>
-              <div>
-                <label className="block text-body-sm font-semibold text-foreground mb-2">
-                  Discovery radius: <span className="text-[#7C5CFF]">{radius} km</span>
-                </label>
-                <input
-                  type="range" min="5" max="75" value={radius}
-                  onChange={(e) => setRadius(Number(e.target.value))}
-                  className="w-full accent-[#7C5CFF]"
-                />
-                <div className="flex justify-between text-caption text-muted-foreground mt-1">
-                  <span>5 km</span><span>75 km</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-body-sm font-semibold text-foreground mb-2">Travel preference</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'local', label: 'Local only', desc: 'Walking distance' },
-                    { id: 'city', label: 'Same city', desc: 'Nearby areas' },
-                    { id: 'anywhere', label: 'Open to travel', desc: 'Any distance' },
-                  ].map((p) => (
+
+              <div className="space-y-4">
+                <p className="text-caption font-black uppercase tracking-widest text-muted-foreground">Quick Select</p>
+                <div className="flex justify-center gap-4">
+                  {[33, 25, 12, 47, 60].map(id => (
                     <button
-                      key={p.id}
-                      onClick={() => setTravelPref(p.id as any)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${
-                        travelPref === p.id
-                          ? 'border-[#7C5CFF] bg-[#7C5CFF]/10'
-                          : 'border-border bg-muted/30 hover:border-[#7C5CFF]/40'
+                      key={id}
+                      onClick={() => setAvatar(`https://i.pravatar.cc/150?img=${id}`)}
+                      className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all ${
+                        avatar.includes(`img=${id}`) ? 'border-primary scale-110 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'
                       }`}
                     >
-                      <p className="text-body-sm font-bold text-foreground">{p.label}</p>
-                      <p className="text-caption text-muted-foreground">{p.desc}</p>
+                      <img src={`https://i.pravatar.cc/150?img=${id}`} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -256,148 +193,118 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 4 — Calendar */}
-          {step === 4 && (
-            <div className="space-y-5 animate-fade-up">
-              <div>
-                <h2 className="text-h2 font-bold text-foreground mb-1">Connect your calendar</h2>
-                <p className="text-body text-muted-foreground">Optional — enables reminders and conflict detection.</p>
+          {/* Step 3 — Interests */}
+          {step === 3 && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-h2 font-bold text-foreground mb-2">What moves you?</h2>
+                <p className="text-body text-muted-foreground">Select at least 3 categories to train your AI discovery engine</p>
               </div>
-              <div className="grid sm:grid-cols-3 gap-3">
-                {[
-                  { name: 'Google Calendar', icon: '📅', color: 'from-blue-500 to-blue-600' },
-                  { name: 'Apple Calendar', icon: '🍎', color: 'from-gray-600 to-gray-700' },
-                  { name: 'Outlook', icon: '📧', color: 'from-blue-600 to-indigo-600' },
-                ].map((p) => (
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {categories.map((cat) => (
                   <button
-                    key={p.name}
-                    onClick={() => setCalendarProvider(p.name)}
-                    className={`p-4 rounded-2xl border-2 text-left transition-all ${
-                      calendarProvider === p.name
-                        ? 'border-[#7C5CFF] bg-[#7C5CFF]/10'
-                        : 'border-border bg-muted/30 hover:border-[#7C5CFF]/40'
+                    key={cat}
+                    onClick={() => toggleInterest(cat)}
+                    className={`p-4 rounded-2xl text-body-sm font-bold border transition-all duration-300 text-center ${
+                      interests.includes(cat)
+                        ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 -translate-y-1'
+                        : 'bg-secondary/40 border-border/50 text-muted-foreground hover:bg-secondary/60 hover:border-primary/30'
                     }`}
                   >
-                    <span className="text-2xl mb-2 block">{p.icon}</span>
-                    <p className="text-body-sm font-bold text-foreground">{p.name}</p>
-                    <p className="text-caption text-muted-foreground mt-0.5">
-                      {calendarProvider === p.name ? '✓ Connected' : 'Connect now'}
-                    </p>
+                    {cat}
                   </button>
                 ))}
               </div>
-              <p className="text-caption text-muted-foreground">
-                You can always connect your calendar later from Settings.
-              </p>
-            </div>
-          )}
-
-          {/* Step 5 — AI Feed Training */}
-          {step === 5 && (
-            <div className="space-y-5 animate-fade-up">
-              <div>
-                <h2 className="text-h2 font-bold text-foreground mb-1">Train your AI feed</h2>
-                <p className="text-body text-muted-foreground">Like or skip these suggestions to calibrate your recommendations.</p>
-              </div>
-              <div className="space-y-3">
-                {previewEvents.map((ev) => (
-                  <div key={ev.id} className="flex items-center gap-4 p-3 rounded-2xl border border-border bg-muted/30">
-                    <img
-                      src={ev.img}
-                      alt={ev.title}
-                      className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-body-sm font-bold text-foreground truncate">{ev.title}</p>
-                      <p className="text-caption text-muted-foreground">{ev.category}</p>
-                      <p className="text-caption text-[#7C5CFF] mt-0.5 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />{ev.reason}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => toggleLike(ev.id, true)}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                          likedEvents.includes(ev.id)
-                            ? 'bg-green-500 text-white shadow-md'
-                            : 'bg-muted text-muted-foreground hover:bg-green-500/20 hover:text-green-500'
-                        }`}
-                      >
-                        <ThumbsUp className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => toggleLike(ev.id, false)}
-                        className="w-9 h-9 rounded-xl flex items-center justify-center bg-muted text-muted-foreground hover:bg-red-500/20 hover:text-red-500 transition-all"
-                      >
-                        <ThumbsDown className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 6 — Launch */}
-          {step === 6 && (
-            <div className="text-center py-4 animate-fade-up">
-              <div className="w-20 h-20 bg-gradient-to-br from-[#7C5CFF] to-[#00D4FF] rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-xl shadow-[#7C5CFF]/30 animate-bounce-in">
-                <Check className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-h1 font-bold text-foreground mb-2">You're all set!</h2>
-              <p className="text-body text-muted-foreground mb-6 max-w-sm mx-auto">
-                Your AI feed is ready. We'll prioritize{' '}
-                <span className="text-[#7C5CFF] font-semibold">
-                  {selectedInterests.slice(0, 2).join(' & ') || 'your interests'}
-                </span>{' '}
-                near <span className="text-[#00D4FF] font-semibold">{location || 'your location'}</span>.
-              </p>
-              <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto mb-6">
-                {[
-                  { label: 'AI Readiness', value: '95%' },
-                  { label: 'Interests', value: `${selectedInterests.length}` },
-                  { label: 'Radius', value: `${radius} km` },
-                ].map((s) => (
-                  <div key={s.label} className="p-3 rounded-xl bg-muted/40 border border-border">
-                    <p className="text-h3 font-bold text-foreground">{s.value}</p>
-                    <p className="text-caption text-muted-foreground">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Navigation ── */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-            <div className="flex gap-2">
-              {step > 1 && (
-                <button
-                  onClick={() => setStep(s => s - 1)}
-                  className="btn-secondary text-body-sm"
-                >
-                  Back
-                </button>
+              {interests.length > 0 && interests.length < 3 && (
+                <div className="flex items-center justify-center gap-2 text-primary font-bold animate-pulse">
+                  <Sparkles className="w-4 h-4" />
+                  <p className="text-body-sm">{3 - interests.length} more to unlock recommendations</p>
+                </div>
               )}
-              <button
-                onClick={() => navigate('/login?afterOnboarding=1')}
-                className="text-body-sm text-muted-foreground hover:text-foreground transition px-3 py-2"
-              >
-                Skip
-              </button>
             </div>
+          )}
+
+          {/* Step 4 — Summary */}
+          {step === 4 && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-h2 font-bold text-foreground mb-2">Your profile is ready</h2>
+                <p className="text-body text-muted-foreground">Here's a snapshot of your new identity</p>
+              </div>
+
+              <div className="p-8 rounded-[2.5rem] bg-secondary/30 border border-border/50 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Logo variant="small" className="w-24 h-auto" />
+                </div>
+                <div className="flex items-center gap-6 relative z-10">
+                  <img src={avatar} alt="" className="w-24 h-24 rounded-3xl object-cover shadow-xl ring-4 ring-primary/10" />
+                  <div>
+                    <h3 className="text-h2 font-bold text-foreground mb-2">The Explorer</h3>
+                    <div className="flex items-center gap-3 text-body-sm font-bold text-primary">
+                      <Zap className="w-4 h-4" />
+                      <span>Level 1 · 0 XP</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-8 pt-8 border-t border-border/50 grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-caption font-black uppercase tracking-widest text-muted-foreground mb-3">Interests</p>
+                    <div className="flex flex-wrap gap-2">
+                      {interests.map(i => (
+                        <span key={i} className="px-3 py-1 rounded-lg bg-primary/10 text-primary text-micro font-black uppercase tracking-wider border border-primary/20">
+                          {i}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-caption font-black uppercase tracking-widest text-muted-foreground mb-3">Status</p>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-green-500/10 text-green-600 text-micro font-black uppercase tracking-wider border border-green-500/20">
+                      <CheckCircle2 className="w-3 h-3" /> Verified
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="mt-10 pt-8 border-t border-border/50 flex items-center justify-between">
+            {step > 1 ? (
+              <button
+                onClick={() => setStep(step - 1)}
+                className="btn-ghost flex items-center gap-2 font-bold text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back
+              </button>
+            ) : (
+              <div />
+            )}
+
             <button
-              onClick={() => step < TOTAL_STEPS ? setStep(s => s + 1) : navigate('/login?afterOnboarding=1')}
+              onClick={handleNext}
               disabled={!canContinue()}
-              className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-primary px-8 h-14 text-body font-bold shadow-xl shadow-primary/20 disabled:opacity-40 disabled:cursor-not-allowed group"
             >
               {step === TOTAL_STEPS ? (
-                <>Start Exploring <ArrowRight className="w-4 h-4" /></>
+                <>
+                  Enter the App <Sparkles className="ml-2 w-5 h-5" />
+                </>
               ) : (
-                <>Continue <ChevronRight className="w-4 h-4" /></>
+                <>
+                  Continue <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
               )}
             </button>
           </div>
         </div>
+
+        {/* Footer */}
+        <p className="mt-12 text-caption font-medium text-muted-foreground flex items-center gap-2">
+          Securely powered by <Logo variant="horizontal" className="h-4 w-auto grayscale opacity-50" />
+        </p>
       </div>
     </div>
   );

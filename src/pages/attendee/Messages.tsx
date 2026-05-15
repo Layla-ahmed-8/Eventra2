@@ -120,106 +120,106 @@ export default function Messages() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {filteredThreads.length === 0 ? (
-          <div className="bg-card border border-border rounded-2xl shadow-lg p-12 text-center">
-            <Mail className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+          <div className="bento-section text-center py-20">
+            <Mail className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-foreground mb-2">No conversations found</h3>
             <p className="text-muted-foreground">Try clearing filters or searching for another thread.</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="md:col-span-1">
-              <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden">
+          <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-280px)] min-h-[500px]">
+            <div className="lg:col-span-1 bento-section flex flex-col p-0 overflow-hidden">
+              <div className="p-4 border-b border-border bg-secondary/20">
+                <p className="text-caption font-black text-muted-foreground uppercase tracking-widest">Conversations</p>
+              </div>
+              <div className="flex-1 overflow-y-auto divide-y divide-border/50">
                 {filteredThreads.map((thread) => (
                   <button
                     key={thread.id}
                     onClick={() => setActiveThreadId(thread.id)}
-                    className={`w-full p-4 text-left border-b border-border hover:bg-background transition-colors ${
-                      activeThread?.id === thread.id ? 'bg-primary/10' : ''
+                    className={`w-full p-4 text-left transition-all hover:bg-secondary/40 relative ${
+                      activeThread?.id === thread.id ? 'bg-primary/5' : ''
                     }`}
                   >
+                    {activeThread?.id === thread.id && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
+                    )}
                     <div className="flex items-start justify-between mb-1">
-                      <h3 className="font-semibold text-foreground">{thread.title}</h3>
-                      {thread.unread && <div className="w-2 h-2 bg-[#6C4CF1] rounded-full mt-1" />}
+                      <h3 className={`text-body-sm font-bold truncate ${thread.unread ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {thread.title}
+                      </h3>
+                      <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap">{thread.time}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-1">{thread.from}</p>
-                    <p className="text-sm text-muted-foreground line-clamp-1 mb-2">{thread.preview}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
-                        <Clock className="w-3 h-3" />
-                        <span>{thread.time}</span>
-                      </div>
-                      {thread.priority && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
-                          Priority
-                        </span>
-                      )}
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/70 mb-2">{thread.from}</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-caption text-muted-foreground line-clamp-1 flex-1">{thread.preview}</p>
+                      {thread.unread && <div className="w-2 h-2 bg-primary rounded-full shadow-sm shadow-primary/40" />}
                     </div>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="md:col-span-2">
-              <div className="bg-card border border-border rounded-2xl shadow-lg p-6 md:p-8">
-                {activeThread ? (
-                  <div className="space-y-5">
-                    <div className="pb-4 border-b border-border">
-                      <h3 className="text-xl font-bold text-foreground">{activeThread.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {activeThread.type === 'event-room' && activeThread.phase
-                          ? `Event room (${activeThread.phase})`
-                          : activeThread.type === 'broadcast'
-                          ? 'Organizer broadcast channel'
-                          : activeThread.type === 'group'
-                          ? 'Community group chat'
-                          : 'Direct message'}
+            <div className="lg:col-span-2 bento-section flex flex-col p-0 overflow-hidden">
+              {activeThread ? (
+                <>
+                  <div className="p-4 border-b border-border bg-secondary/20 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-body font-bold text-foreground leading-none">{activeThread.title}</h3>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-primary mt-1">
+                        {activeThread.type.replace('-', ' ')}
                       </p>
                     </div>
+                    <button className="btn-secondary p-2 rounded-xl">
+                      <ShieldAlert className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                    <div className="space-y-3">
-                      <div className="p-3 rounded-xl bg-secondary text-foreground max-w-[80%]">
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-background/30">
+                    <div className="flex flex-col gap-1 max-w-[80%]">
+                      <div className="p-4 rounded-2xl bg-secondary border border-border text-body-sm text-foreground">
                         {activeThread.preview}
                       </div>
-                      <div className="p-3 rounded-xl bg-primary text-primary-foreground max-w-[80%] ml-auto">
+                      <span className="text-[10px] font-bold text-muted-foreground px-1">{activeThread.time}</span>
+                    </div>
+
+                    <div className="flex flex-col gap-1 max-w-[80%] ml-auto items-end">
+                      <div className="p-4 rounded-2xl bg-primary text-primary-foreground text-body-sm shadow-lg shadow-primary/20">
                         Got it. I will be there 15 minutes early.
                       </div>
+                      <span className="text-[10px] font-bold text-muted-foreground px-1">Just now</span>
                     </div>
+                  </div>
 
-                    <div className="rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground flex items-center gap-2">
-                      <ShieldAlert className="w-4 h-4" />
-                      Safety tools: report, block, and AI toxicity filtering are active in this chat.
-                    </div>
-
+                  <div className="p-4 border-t border-border bg-secondary/10">
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={draft}
                         onChange={(e) => setDraft(e.target.value)}
                         placeholder="Type your message..."
-                        className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+                        className="flex-1 px-4 py-3 rounded-xl border border-border bg-background text-body-sm focus:ring-2 focus:ring-primary/20 transition-all"
                       />
                       <button
-
                         type="button"
-                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground disabled:opacity-60 flex-shrink-0"
+                        className="btn-primary p-3 rounded-xl flex-shrink-0"
                         disabled={!draft.trim()}
                         onClick={() => {
                           demoToast('Message sent', `“${draft.trim().slice(0, 80)}${draft.length > 80 ? '…' : ''}”`);
                           setDraft('');
                         }}
                       >
-                        <Send className="w-4 h-4" />
+                        <Send className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Mail className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-foreground mb-2">Select a conversation</h3>
-                    <p className="text-muted-foreground">Choose any thread from the left panel.</p>
-                  </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
+                  <Mail className="w-16 h-16 text-muted-foreground/30 mb-4" />
+                  <h3 className="text-xl font-bold text-foreground mb-2">Select a conversation</h3>
+                  <p className="text-muted-foreground">Choose any thread from the left panel to start chatting.</p>
+                </div>
+              )}
             </div>
           </div>
         )}

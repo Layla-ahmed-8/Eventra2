@@ -133,17 +133,21 @@ export default function AttendeeProfile() {
         {/* ── Stats Row ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
-            { label: 'Events', value: currentUser.rsvpedEvents.length, icon: Ticket, grad: 'from-[#7C5CFF] to-[#9B8CFF]' },
-            { label: 'Communities', value: 5, icon: Users, grad: 'from-[#00D4FF] to-[#4ADEFF]' },
-            { label: 'Badges', value: currentUser.badges.length, icon: Award, grad: 'from-[#FF9B3D] to-[#FFD56A]' },
-            { label: 'Bookmarks', value: currentUser.bookmarkedEvents.length, icon: Star, grad: 'from-[#FF4FD8] to-[#FF9B3D]' },
+            { label: 'Events', value: currentUser.rsvpedEvents.length, icon: Ticket, grad: 'icon-box-primary' },
+            { label: 'Communities', value: 5, icon: Users, grad: 'icon-box-cyan' },
+            { label: 'Badges', value: currentUser.badges.length, icon: Award, grad: 'icon-box-orange' },
+            { label: 'Bookmarks', value: currentUser.bookmarkedEvents.length, icon: Star, grad: 'icon-box-green' },
           ].map((s) => (
-            <div key={s.label} className="surface-panel p-4 flex flex-col gap-2 hover:-translate-y-0.5 transition-transform">
-              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${s.grad} flex items-center justify-center`}>
-                <s.icon className="w-4 h-4 text-white" />
+            <div key={s.label} className="kpi-card">
+              <div className="flex items-center justify-between">
+                <div className={`icon-box ${s.grad}`}>
+                  <s.icon className="w-4 h-4" />
+                </div>
               </div>
-              <p className="text-h2 font-bold text-foreground">{s.value}</p>
-              <p className="text-caption text-muted-foreground">{s.label}</p>
+              <div>
+                <p className="kpi-value">{s.value}</p>
+                <p className="kpi-label">{s.label}</p>
+              </div>
             </div>
           ))}
         </div>

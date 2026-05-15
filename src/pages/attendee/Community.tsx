@@ -39,59 +39,88 @@ export default function Community() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mockCommunities.map((community) => (
-            <div
-              key={community.id}
-              className="bg-card rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-            >
-              <Link to={`/app/community/${community.id}`}>
-                <div className="relative h-32">
-                  <img
-                    src={community.coverImage}
-                    alt={community.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4">
-                    <span className="px-3 py-1 bg-card/90 backdrop-blur-sm text-foreground text-xs font-semibold rounded-full">
-                      {community.category}
-                    </span>
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Communities List */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bento-header">
+              <h2 className="bento-title">Featured Communities</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {mockCommunities.map((community) => (
+                <div key={community.id} className="card-surface p-5 hover:border-primary/20 transition-all group">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                      <Users className="w-7 h-7 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-body font-bold text-foreground truncate">{community.name}</h3>
+                      <p className="text-caption text-muted-foreground">{community.memberCount.toLocaleString()} members</p>
+                    </div>
+                  </div>
+                  <p className="text-caption text-muted-foreground line-clamp-2 mb-5 h-8">
+                    {community.description}
+                  </p>
+                  <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                    <div className="flex -space-x-2">
+                      {[1, 2, 3].map(i => (
+                        <img key={i} src={`https://i.pravatar.cc/24?img=${i + 30}`} className="w-6 h-6 rounded-full border-2 border-background" alt="" />
+                      ))}
+                    </div>
+                    <button
+                      className="btn-primary text-body-sm px-4"
+                    >
+                      {community.isJoined ? 'Joined' : 'Join'}
+                    </button>
                   </div>
                 </div>
-              </Link>
+              ))}
+            </div>
+          </div>
 
-              <div className="p-6">
-                <Link to={`/app/community/${community.id}`}>
-                  <h3 className="text-xl font-bold text-foreground mb-2 hover:text-primary transition-colors">
-                    {community.name}
-                  </h3>
-                </Link>
-                <p className="text-muted-foreground mb-4 line-clamp-2">{community.description}</p>
-
-                <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    <span>{community.memberCount.toLocaleString()} members</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>{community.eventCount} events</span>
-                  </div>
+          {/* Discussions / Trends */}
+          <div className="space-y-6">
+            <div className="bento-section">
+              <div className="bento-header">
+                <div className="bento-title-wrapper">
+                  <h2 className="bento-title">Trending Now</h2>
                 </div>
-
-                {community.isJoined ? (
-                  <button className="w-full px-4 py-2 border-2 border-green-500 text-green-600 rounded-lg font-semibold">
-                    Joined
-                  </button>
-                ) : (
-                  <button className="w-full px-4 py-2 bg-gradient-to-r from-[#6C4CF1] to-[#5739D4] hover:shadow-lg text-white rounded-xl font-bold transform hover:scale-105 transition-all">
-                    Join Community
-                  </button>
-                )}
+              </div>
+              <div className="space-y-4">
+                {[
+                  { tag: 'JazzInCairo', posts: 142 },
+                  { tag: 'TechFounders', posts: 89 },
+                  { tag: 'FoodiesEgypt', posts: 256 },
+                ].map((trend) => (
+                  <div key={trend.tag} className="flex items-center justify-between group cursor-pointer">
+                    <p className="text-body-sm font-bold text-foreground group-hover:text-primary transition-colors">#{trend.tag}</p>
+                    <span className="text-caption text-muted-foreground">{trend.posts} posts</span>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+
+            <div className="bento-section">
+              <div className="bento-header">
+                <div className="bento-title-wrapper">
+                  <Users className="w-5 h-5 text-primary" />
+                  <h2 className="bento-title">Recent Activity</h2>
+                </div>
+              </div>
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex items-start gap-3">
+                    <img src={`https://i.pravatar.cc/32?img=${i + 40}`} className="w-8 h-8 rounded-full border border-border" alt="" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-caption text-foreground leading-tight">
+                        <span className="font-bold">User {i}</span> joined <span className="text-primary font-bold">Tech Cairo</span>
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{i * 5}m ago</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Suggested Communities */}

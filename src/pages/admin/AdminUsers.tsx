@@ -116,7 +116,7 @@ export default function AdminUsers() {
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6C4CF1]" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
         <input
           type="search"
           value={query}
@@ -125,49 +125,34 @@ export default function AdminUsers() {
           className="w-full pl-10 pr-4 input-base"
         />
       </div>
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="surface-panel p-5">
-            <p className="text-caption text-muted-foreground mb-1">Total Users</p>
-            <p className="text-display font-semibold text-foreground">12,437</p>
-          </div>
-          <div className="surface-panel p-5">
-            <p className="text-caption text-muted-foreground mb-1">Attendees</p>
-            <p className="text-display font-semibold text-foreground">11,245</p>
-          </div>
-          <div className="surface-panel p-5">
-            <p className="text-caption text-muted-foreground mb-1">Organizers</p>
-            <p className="text-display font-semibold text-foreground">1,180</p>
-          </div>
-          <div className="surface-panel p-5">
-            <p className="text-caption text-muted-foreground mb-1">Suspended</p>
-            <p className="text-display font-semibold text-red-600">12</p>
-          </div>
-        </div>
 
-        {/* Users Table */}
-        <div className="surface-panel overflow-hidden">
-          <table className="table-surface">
-            <thead className="bg-[#F8F5FF] border-b border-[#E9E4FF]">
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Users', value: '12,437', color: 'text-foreground' },
+          { label: 'Attendees', value: '11,245', color: 'text-foreground' },
+          { label: 'Organizers', value: '1,180', color: 'text-foreground' },
+          { label: 'Suspended', value: '12', color: 'text-red-500' },
+        ].map((stat) => (
+          <div key={stat.label} className="kpi-card">
+            <p className="kpi-label">{stat.label}</p>
+            <p className={`text-h2 font-bold ${stat.color}`}>{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Users Table */}
+      <div className="surface-panel overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="table-surface min-w-[800px]">
+            <thead className="bg-secondary border-b border-border">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                  User
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                  Role
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                  Joined
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                  Events
-                </th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
-                  Actions
-                </th>
+                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">User</th>
+                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Role</th>
+                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Status</th>
+                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Joined</th>
+                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Events</th>
+                <th className="px-4 py-3 text-right text-caption font-semibold text-foreground">Actions</th>
               </tr>
             </thead>
 
@@ -179,70 +164,70 @@ export default function AdminUsers() {
                       <img
                         src={`https://i.pravatar.cc/40?img=${user.id}`}
                         alt={user.name}
-                        className="w-10 h-10 rounded-full"
+                        className="w-10 h-10 rounded-full border border-border"
                       />
-                      <div>
-                        <p className="font-semibold text-foreground">{user.name}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                      <div className="min-w-0">
+                        <p className="text-body-sm font-bold text-foreground truncate">{user.name}</p>
+                        <p className="text-caption text-muted-foreground truncate">{user.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      className={`status-pill uppercase text-[10px] font-black ${
                         user.role === 'organizer'
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-blue-100 text-blue-700'
+                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                       }`}
                     >
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      className={`status-pill uppercase text-[10px] font-black ${
                         user.status === 'active'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
                       }`}
                     >
                       {user.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-gray-700">
-                    {new Date(user.joined).toLocaleDateString()}
+                  <td className="px-4 py-3 text-caption font-medium text-muted-foreground">
+                    {new Date(user.joined).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
 
-                  <td className="px-4 py-3 text-body-sm font-semibold text-foreground">{user.events}</td>
+                  <td className="px-4 py-3 text-body-sm font-bold text-foreground">{user.events}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
                       <button
                         type="button"
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                        className="btn-ghost p-2"
                         title="View Profile"
                         onClick={() => demoToast('User profile', `${user.name} — demo preview only.`)}
                       >
-                        <Eye className="w-4 h-4 text-muted-foreground" />
+                        <Eye className="w-4 h-4" />
                       </button>
                       {user.role === 'attendee' && (
                         <button
                           type="button"
-                          className="p-2 hover:bg-muted rounded-lg transition-colors"
+                          className="btn-ghost p-2"
                           title="Grant Organizer"
                           onClick={() => demoToast('Grant organizer', `Would promote ${user.name} in production.`)}
                         >
-                          <Award className="w-4 h-4 text-muted-foreground" />
+                          <Award className="w-4 h-4" />
                         </button>
                       )}
                       <button
                         type="button"
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                        className="btn-ghost p-2 text-red-500 hover:text-red-600 hover:bg-red-50"
                         title={user.status === 'active' ? 'Suspend' : 'Activate'}
                         onClick={() =>
                           demoToast(user.status === 'active' ? 'User suspended' : 'User activated', user.name)
                         }
                       >
-                        <UserX className="w-4 h-4 text-muted-foreground" />
+                        <UserX className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -251,6 +236,7 @@ export default function AdminUsers() {
             </tbody>
           </table>
         </div>
+      </div>
     </div>
   );
 }
