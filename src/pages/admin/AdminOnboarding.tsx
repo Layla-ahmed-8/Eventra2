@@ -5,6 +5,7 @@ import {
   Settings, AlertCircle, CheckCircle2, Lock,
   Database, Cpu, Activity, Eye, Flag, ArrowRight
 } from 'lucide-react';
+import Logo from '../../components/Logo';
 
 const TOTAL_STEPS = 4;
 
@@ -57,10 +58,9 @@ export default function AdminOnboarding() {
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-red-500/30">
-            <Shield className="w-7 h-7 text-white" />
+          <div className="flex justify-center mb-4">
+            <Logo variant="horizontal" className="h-9 w-auto" />
           </div>
-          <h1 className="text-h1 font-bold text-foreground mb-1">Admin Control Center</h1>
           <p className="text-body text-muted-foreground">Configure your administrator access and platform preferences</p>
         </div>
 

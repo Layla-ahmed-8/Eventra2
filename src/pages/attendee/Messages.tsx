@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { demoToast } from '../../lib/demoFeedback';
 import { ArrowLeft, Mail, Search, Clock, MessageCircle, Users, Megaphone, Send, Bell, ShieldAlert } from 'lucide-react';
 
 type ChannelType = 'dm' | 'group' | 'event-room' | 'broadcast';
@@ -198,8 +199,17 @@ export default function Messages() {
                         className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground"
                       />
                       <button
+<<<<<<< Updated upstream
                         className="px-4 py-2 rounded-xl bg-primary text-primary-foreground disabled:opacity-60"
+=======
+                        type="button"
+                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground disabled:opacity-60 flex-shrink-0"
+>>>>>>> Stashed changes
                         disabled={!draft.trim()}
+                        onClick={() => {
+                          demoToast('Message sent', `“${draft.trim().slice(0, 80)}${draft.length > 80 ? '…' : ''}”`);
+                          setDraft('');
+                        }}
                       >
                         <Send className="w-4 h-4" />
                       </button>

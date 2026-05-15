@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { useAppStore } from '../store/useAppStore';
 
 // Layouts
@@ -57,6 +58,7 @@ export default function App() {
   return (
     <div className={theme === 'dark' ? 'dark' : ''}>
       <div className="min-h-screen bg-background text-foreground">
+        <Toaster richColors position="top-center" theme={theme === 'dark' ? 'dark' : 'light'} />
         <BrowserRouter>
           <Routes>
             {/* ── Public Routes ── */}

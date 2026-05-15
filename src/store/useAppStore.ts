@@ -42,6 +42,7 @@ interface AppState {
   toggleBookmark: (eventId: string) => void;
   rsvpEvent: (eventId: string) => void;
   markNotificationAsRead: (notificationId: string) => void;
+  clearMyNotifications: () => void;
   toggleTheme: () => void;
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
   redeemReward: (rewardId: string) => void;
@@ -301,6 +302,14 @@ export const useAppStore = create<AppState>()(
           notifications: state.notifications.map(n =>
             n.id === notificationId ? { ...n, isRead: true } : n
           )
+        }));
+      },
+
+      clearMyNotifications: () => {
+        const uid = get().currentUser?.id;
+        if (!uid) return;
+        set((state) => ({
+          notifications: state.notifications.filter((n) => n.userId !== uid),
         }));
       },
 

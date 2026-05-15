@@ -1,12 +1,13 @@
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Plus, BarChart3, MessageSquare, Settings, ChevronLeft, Menu, X, Moon, Sun, Crown } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Calendar, Plus, BarChart3, MessageSquare, Settings, ChevronLeft, Menu, X, Moon, Sun, Crown, LogOut } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
 
 export default function OrganizerLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const { currentUser, theme, toggleTheme } = useAppStore();
+  const navigate = useNavigate();
+  const { currentUser, theme, toggleTheme, logout } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -28,10 +29,10 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
         }`}
       >
         {/* Sidebar Header */}
-        <div className="h-[52px] flex items-center justify-between px-4 border-b border-sidebar-border">
+        <div className="h-[52px] flex items-center justify-between px-3 border-b border-sidebar-border">
           {sidebarOpen && (
-            <Link to="/organizer/dashboard" className="flex items-center">
-              <Logo variant="horizontal" className="h-8 w-auto" />
+            <Link to="/organizer/dashboard" className="flex items-center min-w-0">
+              <Logo variant="horizontal" theme={theme === 'dark' ? 'dark' : 'light'} className="h-7 w-auto max-w-[140px]" />
             </Link>
           )}
           {!sidebarOpen && (
@@ -84,6 +85,20 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
+        <div className="px-3 pb-2">
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              navigate('/login');
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition text-sm font-medium"
+          >
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            {sidebarOpen && <span>Log out</span>}
+          </button>
+        </div>
+
         {/* User Profile */}
         <div className="p-4 border-t border-sidebar-border">
           <Link
@@ -125,7 +140,7 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <nav className="p-3 space-y-1">
+            <nav className="p-3 space-y-1 pb-20">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
                 return (
@@ -144,6 +159,18 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
                   </Link>
                 );
               })}
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sidebar-foreground hover:bg-red-500/10 mt-2"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium">Log out</span>
+              </button>
             </nav>
 
             {/* Mobile User Profile */}

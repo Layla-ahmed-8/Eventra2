@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, Image, DollarSign, CheckCircle } from 'lucide-react';
 import { categories } from '../../data/mockData';
+import { demoToast } from '../../lib/demoFeedback';
 
 export default function CreateEvent() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function CreateEvent() {
   };
 
   const handlePublish = () => {
+    demoToast('Event published', 'In this demo, new events are not persisted to the catalog. Review flows on My Events.');
     navigate('/organizer/events');
   };
 

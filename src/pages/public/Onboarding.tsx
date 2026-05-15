@@ -7,6 +7,7 @@ import {
   ThumbsUp, ThumbsDown, Zap, Star, ArrowRight
 } from 'lucide-react';
 import { categories } from '../../data/mockData';
+import Logo from '../../components/Logo';
 
 const categoryIcons: Record<string, any> = {
   Music, Tech: Code, Sports: Trophy, Art: Palette,
@@ -86,10 +87,9 @@ export default function Onboarding() {
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 py-8">
         {/* ── Header ── */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-[#7C5CFF] to-[#00D4FF] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#7C5CFF]/30">
-            <Sparkles className="w-7 h-7 text-white" />
+          <div className="flex justify-center mb-4">
+            <Logo variant="horizontal" className="h-9 w-auto" />
           </div>
-          <h1 className="text-h1 font-bold text-foreground mb-1">Welcome to Eventra</h1>
           <p className="text-body text-muted-foreground">Set up your personalized experience in {TOTAL_STEPS} steps</p>
         </div>
 

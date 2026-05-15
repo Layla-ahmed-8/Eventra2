@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, Download, Share2, QrCode } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { demoToast, downloadTextFile, shareOrCopyLink } from '../../lib/demoFeedback';
 
 export default function OrderSummary() {
   const { bookingId, id } = useParams<{ bookingId?: string; id?: string }>();
@@ -34,11 +35,41 @@ export default function OrderSummary() {
               <span>Back to My Events</span>
             </Link>
             <div className="flex items-center gap-2">
+<<<<<<< Updated upstream
               <button className="p-2 hover:bg-gray-100 rounded-lg">
                 <Share2 className="w-5 h-5 text-gray-600" />
               </button>
               <button className="p-2 hover:bg-gray-100 rounded-lg">
                 <Download className="w-5 h-5 text-gray-600" />
+=======
+              <button
+                type="button"
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                aria-label="Share booking"
+                onClick={() =>
+                  shareOrCopyLink(
+                    `Ticket: ${event.title}`,
+                    'Join me on Eventra',
+                    window.location.href
+                  )
+                }
+              >
+                <Share2 className="w-5 h-5 text-muted-foreground" />
+              </button>
+              <button
+                type="button"
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                aria-label="Download summary"
+                onClick={() => {
+                  const ref = booking?.bookingRef || `EVT-${event.id}`;
+                  downloadTextFile(
+                    `eventra-ticket-${ref}.txt`,
+                    `Event: ${event.title}\nDate: ${event.date}\nRef: ${ref}\n${booking ? `Total: ${booking.currency} ${booking.total}` : ''}`
+                  );
+                }}
+              >
+                <Download className="w-5 h-5 text-muted-foreground" />
+>>>>>>> Stashed changes
               </button>
             </div>
           </div>
@@ -77,8 +108,19 @@ export default function OrderSummary() {
                 </p>
               </div>
 
+<<<<<<< Updated upstream
               <button className="w-full px-4 py-3 bg-[#6C4CF1] hover:bg-[#5a3dd1] text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2">
                 <Download className="w-5 h-5" />
+=======
+              <button
+                type="button"
+                className="btn-primary w-full"
+                onClick={() => {
+                  demoToast('Ticket saved', 'In this demo, use the header download for a text summary or screenshot the QR code.');
+                }}
+              >
+                <Download className="w-4 h-4" />
+>>>>>>> Stashed changes
                 Download Ticket
               </button>
             </div>
@@ -407,7 +449,15 @@ export default function OrderSummary() {
                 >
                   Message Organizer
                 </Link>
+<<<<<<< Updated upstream
                 <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+=======
+                <button
+                  type="button"
+                  className="btn-primary text-body-sm"
+                  onClick={() => demoToast('Support', 'Demo: email support@eventra.com or use in-app messages.')}
+                >
+>>>>>>> Stashed changes
                   Contact Support
                 </button>
               </div>

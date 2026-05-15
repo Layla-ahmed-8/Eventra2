@@ -1,41 +1,147 @@
+﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Calendar, Users, Trophy, Search, ArrowRight, Zap, Brain, Target, BarChart3, MessageSquare, Shield, Star, TrendingUp, Award, Bot, Moon, Sun } from 'lucide-react';
+import {
+  Sparkles, Calendar, Users, Trophy, Search, ArrowRight, Zap,
+  Brain, Target, BarChart3, MessageSquare, Shield, Star, TrendingUp,
+  Award, Bot, Moon, Sun, Play, CheckCircle2, Hash, Heart,
+  ThumbsUp, MessageCircle, Share2, Flame, Globe, ChevronRight
+} from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import Logo from '../../components/Logo';
 
+// ── Floating avatar cluster ───────────────────────────────────────────────────
+function AvatarCluster({ avatars, label }: { avatars: string[]; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex -space-x-2">
+        {avatars.map((src, i) => (
+          <img key={i} src={src} alt="" className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-slate-900 object-cover" />
+        ))}
+      </div>
+      <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">{label}</span>
+    </div>
+  );
+}
+
+// ── Stat pill ─────────────────────────────────────────────────────────────────
+function StatPill({ value, label, color }: { value: string; label: string; color: string }) {
+  return (
+    <div className="flex flex-col items-center px-6 py-4 rounded-2xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/40 dark:border-slate-700/40 shadow-lg">
+      <span className={`text-2xl font-extrabold ${color}`}>{value}</span>
+      <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 text-center">{label}</span>
+    </div>
+  );
+}
+
+const communityThreads = [
+  {
+    community: 'Cairo Music Lovers',
+    category: 'Music',
+    avatar: 'https://i.pravatar.cc/40?img=11',
+    author: 'Nour Ahmed',
+    time: '2 min ago',
+    title: 'Best jazz venues in Cairo this summer? 🎷',
+    replies: 24,
+    likes: 87,
+    hot: true,
+    color: 'from-purple-500 to-pink-500',
+    emoji: '🎵',
+  },
+  {
+    community: 'Tech Cairo Hub',
+    category: 'Tech',
+    avatar: 'https://i.pravatar.cc/40?img=22',
+    author: 'Omar Farouk',
+    time: '8 min ago',
+    title: 'Who else is going to the AI Summit next week?',
+    replies: 41,
+    likes: 132,
+    hot: true,
+    color: 'from-cyan-500 to-blue-500',
+    emoji: '🚀',
+  },
+  {
+    community: 'Cairo Foodies',
+    category: 'Food',
+    avatar: 'https://i.pravatar.cc/40?img=33',
+    author: 'Amira Hassan',
+    time: '15 min ago',
+    title: 'Street Food Festival vendor lineup just dropped 🍜',
+    replies: 18,
+    likes: 64,
+    hot: false,
+    color: 'from-orange-400 to-yellow-400',
+    emoji: '🍜',
+  },
+  {
+    community: 'Art & Culture Enthusiasts',
+    category: 'Art',
+    avatar: 'https://i.pravatar.cc/40?img=44',
+    author: 'Farida Zaki',
+    time: '32 min ago',
+    title: 'Voices of the Nile exhibition — my honest review 🎨',
+    replies: 9,
+    likes: 38,
+    hot: false,
+    color: 'from-pink-500 to-rose-500',
+    emoji: '🎨',
+  },
+];
+
+const liveActivities = [
+  { icon: '🎟️', text: 'Karim just RSVPed to Cairo Jazz Night', time: 'just now' },
+  { icon: '💬', text: 'New discussion in Tech Cairo Hub', time: '1 min ago' },
+  { icon: '🏆', text: 'Sarah unlocked "Music Lover" badge', time: '3 min ago' },
+  { icon: '👥', text: '12 people joined Cairo Foodies today', time: '5 min ago' },
+  { icon: '⚡', text: 'AI Summit is trending in your area', time: '8 min ago' },
+];
+
 export default function Landing() {
   const { theme, toggleTheme } = useAppStore();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className={theme === 'dark' ? 'dark' : ''}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/40 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-foreground transition-all duration-500">
-        {/* Navbar */}
-        <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-purple-200/20 dark:border-purple-800/20">
+      <div className="min-h-screen bg-[#F7F6FF] dark:bg-[#0A0F1E] text-foreground transition-colors duration-500 overflow-x-hidden">
+
+        {/* ── Ambient background orbs ── */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-purple-400/15 to-cyan-400/10 blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-pink-400/10 to-purple-400/10 blur-3xl" />
+          <div className="absolute -bottom-40 right-1/3 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-cyan-400/10 to-blue-400/8 blur-3xl" />
+        </div>
+
+        {/* ── Navbar ── */}
+        <nav className="sticky top-0 z-50 backdrop-blur-2xl bg-white/75 dark:bg-[#0A0F1E]/80 border-b border-purple-200/20 dark:border-purple-900/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
+              <Logo variant="horizontal" theme={theme === 'dark' ? 'dark' : 'light'} className="h-8 w-auto" />
+
+              {/* Desktop nav */}
+              <div className="hidden md:flex items-center gap-1 text-sm">
+                {[
+                  { href: '#features', label: 'Features' },
+                  { href: '#ai', label: 'AI Powered' },
+                  { href: '#community', label: 'Community' },
+                  { href: '#organizers', label: 'For Organizers' },
+                ].map(item => (
+                  <a key={item.href} href={item.href}
+                    className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-purple-100/60 dark:hover:bg-purple-900/30 hover:text-purple-700 dark:hover:text-purple-300 font-medium transition-all">
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+
               <div className="flex items-center gap-3">
-                <Logo variant="horizontal" className="h-8 w-auto" />
-              </div>
-
-              <div className="hidden md:flex items-center gap-8 text-sm text-slate-600 dark:text-slate-300">
-                <a href="#features" className="rounded-lg px-3 py-2 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 hover:text-purple-600 transition-all">Features</a>
-                <a href="#ai" className="rounded-lg px-3 py-2 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 hover:text-purple-600 transition-all">AI Powered</a>
-                <a href="#organizers" className="rounded-lg px-3 py-2 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 hover:text-purple-600 transition-all">For Organizers</a>
-                <a href="#community" className="rounded-lg px-3 py-2 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 hover:text-purple-600 transition-all">Community</a>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={toggleTheme}
-                  className="p-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 transition-all"
-                  aria-label="Toggle dark mode"
-                >
-                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                <button onClick={toggleTheme}
+                  className="p-2 rounded-xl bg-slate-100/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:bg-purple-100/60 dark:hover:bg-purple-900/30 transition-all"
+                  aria-label="Toggle dark mode">
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
-                <Link to="/login" className="text-sm text-slate-600 dark:text-slate-300 hover:text-purple-600 transition-all">
+                <Link to="/login" className="hidden sm:block text-sm text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 font-medium transition-all px-3 py-2">
                   Sign In
                 </Link>
-                <Link to="/signup" className="btn-primary">
+                <Link to="/signup" className="btn-primary text-sm">
                   Get Started Free
                 </Link>
               </div>
@@ -43,73 +149,138 @@ export default function Landing() {
           </div>
         </nav>
 
-        {/* Hero Section */}
-        <section className="relative overflow-hidden py-20 lg:py-32">
-          <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full bg-gradient-to-br from-purple-400/20 to-cyan-400/20 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-[250px] h-[250px] rounded-full bg-gradient-to-tr from-orange-400/15 to-purple-400/15 blur-3xl pointer-events-none" />
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-16 lg:grid-cols-[1.2fr_0.8fr] items-center">
-              <div className="space-y-8">
-                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-r from-purple-100/60 to-cyan-100/60 dark:from-purple-900/40 dark:to-cyan-900/40 border border-purple-200/30 dark:border-purple-800/30 text-purple-700 dark:text-purple-300 text-sm font-semibold">
-                  <Sparkles className="w-4 h-4" />
-                  AI-powered event discovery
+        {/* ── HERO ── */}
+        <section className="relative z-10 pt-20 pb-16 lg:pt-28 lg:pb-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+              {/* Left copy */}
+              <div className="space-y-7">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-cyan-100 dark:from-purple-900/50 dark:to-cyan-900/50 border border-purple-200/40 dark:border-purple-700/40 text-purple-700 dark:text-purple-300 text-sm font-semibold shadow-sm">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  AI-powered event discovery · 2026
                 </div>
-                <h1 className="text-5xl lg:text-7xl font-bold text-slate-900 dark:text-white max-w-3xl leading-[1.05]">
-                  Discover events with <span className="bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">intelligent</span> recommendations.
+
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white leading-[1.08] tracking-tight">
+                  Discover events<br />
+                  that actually{' '}
+                  <span className="relative inline-block">
+                    <span className="bg-gradient-to-r from-[#7C5CFF] via-[#C084FC] to-[#00D4FF] bg-clip-text text-transparent">
+                      matter to you.
+                    </span>
+                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-[#7C5CFF] to-[#00D4FF] rounded-full opacity-40" />
+                  </span>
                 </h1>
-                <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
-                  AI-powered matching, gamified engagement, live community connections, and organizer tools designed to help you find the perfect experience every time.
+
+                <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl">
+                  AI-powered matching, gamified engagement, live community connections, and organizer tools — all in one premium platform.
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 max-w-2xl">
-                  <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-purple-200/20 dark:border-purple-800/20 rounded-2xl p-6 shadow-lg">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Events matched per month</p>
-                    <p className="text-3xl font-bold text-slate-900 dark:text-white">3.4K+</p>
-                  </div>
-                  <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-purple-200/20 dark:border-purple-800/20 rounded-2xl p-6 shadow-lg">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Community groups active</p>
-                    <p className="text-3xl font-bold text-slate-900 dark:text-white">320+</p>
-                  </div>
-                  <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-purple-200/20 dark:border-purple-800/20 rounded-2xl p-6 shadow-lg">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Average RSVP uplift</p>
-                    <p className="text-3xl font-bold text-slate-900 dark:text-white">+28%</p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-4 items-center mt-10">
-                  <Link to="/signup" className="btn-primary text-lg px-8 py-4">
+
+                {/* Social proof avatars */}
+                <AvatarCluster
+                  avatars={['https://i.pravatar.cc/40?img=25','https://i.pravatar.cc/40?img=12','https://i.pravatar.cc/40?img=47','https://i.pravatar.cc/40?img=33','https://i.pravatar.cc/40?img=22']}
+                  label="50,000+ people already exploring"
+                />
+
+                {/* CTAs */}
+                <div className="flex flex-wrap gap-3">
+                  <Link to="/signup" className="btn-primary px-6 py-3 text-base">
                     Get Started Free
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
+<<<<<<< Updated upstream
                   <button className="btn-secondary text-lg px-8 py-4">
                     Explore the Platform
                   </button>
+=======
+                  <Link to="/login"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-base hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all">
+                    <Play className="w-4 h-4 fill-current" />
+                    See Demo
+                  </Link>
+>>>>>>> Stashed changes
+                </div>
+
+                {/* Stats row */}
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <StatPill value="3.4K+" label="Events matched / month" color="text-purple-600 dark:text-purple-400" />
+                  <StatPill value="320+" label="Active communities" color="text-cyan-600 dark:text-cyan-400" />
+                  <StatPill value="+28%" label="Avg RSVP uplift" color="text-green-600 dark:text-green-400" />
                 </div>
               </div>
 
-              <div className="relative mx-auto max-w-lg">
-                <div className="absolute -top-8 -right-8 w-32 h-32 rounded-3xl bg-gradient-to-br from-cyan-400 to-purple-500 shadow-2xl flex items-center justify-center text-white animate-bounce">
-                  <Brain className="w-12 h-12" />
+              {/* Right — hero card */}
+              <div className="relative">
+                {/* Floating badge */}
+                <div className="absolute -top-4 -right-4 z-20 flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-purple-100 dark:border-purple-900/50">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200">Live activity</span>
                 </div>
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-200/20 dark:border-purple-800/20 p-8">
+
+                {/* Floating XP badge */}
+                <div className="absolute -bottom-4 -left-4 z-20 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl shadow-xl text-white">
+                  <Zap className="w-4 h-4" />
+                  <span className="text-xs font-bold">+120 XP earned!</span>
+                </div>
+
+                <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-purple-100/60 dark:border-purple-900/40 overflow-hidden">
                   <img
-                    src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600"
+                    src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=700"
                     alt="Event"
-                    className="rounded-2xl w-full h-64 object-cover shadow-lg"
+                    className="w-full h-52 object-cover"
                   />
-                  <div className="mt-6 space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 font-semibold">
-                      <Sparkles className="w-4 h-4" />
-                      AI Recommended for you
+                  {/* Gradient overlay on image */}
+                  <div className="absolute top-0 left-0 right-0 h-52 bg-gradient-to-b from-transparent via-transparent to-white/20 dark:to-slate-800/40" />
+
+                  {/* AI badge on image */}
+                  <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full shadow-lg">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                    <span className="text-xs font-bold text-purple-700 dark:text-purple-300">95% Match</span>
+                  </div>
+
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-1">Music · Cairo</p>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">Cairo Jazz Night: Live at Sunset</h3>
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Cairo Jazz Night</h3>
-                    <div className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
-                      <span>May 15 • 7:00 PM</span>
-                      <span>•</span>
-                      <span>142 going</span>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-500 dark:text-slate-400">May 15 · 7:00 PM</span>
+                      </div>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">EGP 150</span>
                     </div>
+
+                    {/* Vibe tags */}
                     <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-sm font-medium">Music</span>
-                      <span className="px-3 py-1 rounded-full bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 text-sm font-medium">Live</span>
+                      {['Music lovers', 'Chill atmosphere', 'Networking-friendly'].map(tag => (
+                        <span key={tag} className="px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold border border-purple-100 dark:border-purple-800/50">
+                          {tag}
+                        </span>
+                      ))}
                     </div>
+
+                    {/* Avatar cluster + momentum */}
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-2">
+                        <div className="flex -space-x-1.5">
+                          {['11','12','13','14','15'].map(n => (
+                            <img key={n} src={`https://i.pravatar.cc/32?img=${n}`} alt="" className="w-7 h-7 rounded-full ring-2 ring-white dark:ring-slate-800" />
+                          ))}
+                        </div>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">People are joining right now</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        <span className="text-xs font-bold">Trending</span>
+                      </div>
+                    </div>
+
+                    <Link to="/signup" className="btn-primary w-full justify-center text-sm">
+                      Reserve Your Spot
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -117,255 +288,257 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* AI Features Section */}
-        <section id="ai" className="py-32 bg-gradient-to-b from-white/50 to-slate-50/30 dark:from-slate-900 dark:to-slate-800/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-20">
-              <div className="inline-flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-purple-100/60 to-cyan-100/60 dark:from-purple-900/40 dark:to-cyan-900/40 border border-purple-200/30 dark:border-purple-800/30 rounded-full text-purple-700 dark:text-purple-300 text-sm font-bold uppercase tracking-wider mb-6">
-                <Bot className="w-5 h-5" />
-                AI POWERED PLATFORM
-              </div>
-              <h2 className="text-5xl lg:text-6xl font-bold mb-8 text-slate-900 dark:text-white">
-                Intelligence That <span className="bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">Works For You</span>
-              </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-300 max-w-4xl mx-auto leading-relaxed">
-                Advanced AI features that understand your preferences, predict trends, and optimize every aspect of event discovery and management
-              </p>
+        {/* TICKER_PLACEHOLDER */}
+        <section className="py-12 border-y border-slate-200/40 dark:border-slate-800/40 bg-white/30 dark:bg-slate-900/30">
+          <div className="max-w-7xl mx-auto px-4">
+            <p className="text-center text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-8">
+              Trusted by leading communities and event organizers
+            </p>
+            <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 opacity-50 grayscale dark:invert">
+              {['Tech Cairo', 'MusicHub', 'ArtVibe', 'FoodConnect', 'DevSummit', 'CairoJazz'].map(name => (
+                <span key={name} className="text-xl font-black tracking-tighter text-slate-900">{name}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FEATURES ── */}
+        <section id="features" className="py-24 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+              <h2 className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-[0.2em]">Platform Features</h2>
+              <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">
+                Everything you need to discover, attend, and connect
+              </h3>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
                 {
-                  icon: Brain,
-                  title: 'Smart Recommendations',
-                  desc: 'Our AI learns from your interests and behavior to suggest events you\'ll genuinely love',
-                  color: 'from-purple-500 to-purple-600',
-                  stat: '95% match accuracy'
+                  icon: <Sparkles className="w-6 h-6 text-purple-500" />,
+                  title: 'Personalized Discovery',
+                  desc: 'Our AI learns your taste to suggest events you\'ll actually love, not just what\'s trending.'
                 },
                 {
-                  icon: Target,
-                  title: 'Predictive Analytics',
-                  desc: 'Organizers get AI-powered insights on attendance predictions, optimal pricing, and best posting times',
-                  color: 'from-cyan-500 to-cyan-600',
-                  stat: '+40% attendance'
+                  icon: <Search className="w-6 h-6 text-cyan-500" />,
+                  title: 'Ask, Don\'t Filter',
+                  desc: 'Search like a human. "Jazz concerts this weekend under EGP 200" — our AI handles the rest.'
                 },
                 {
-                  icon: Shield,
-                  title: 'Auto Moderation',
-                  desc: 'AI screens events and community content to keep the platform safe and spam-free',
-                  color: 'from-orange-500 to-orange-600',
-                  stat: '99.9% accuracy'
+                  icon: <Users className="w-6 h-6 text-pink-500" />,
+                  title: 'Build Lasting Connections',
+                  desc: 'Join community threads before the event starts. Meet your tribe and keep the vibe going.'
                 },
-              ].map((feature, idx) => (
-                <div key={idx} className="group bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-purple-200/20 dark:border-purple-800/20 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                    <feature.icon className="w-8 h-8 text-white" />
+                {
+                  icon: <Trophy className="w-6 h-6 text-orange-500" />,
+                  title: 'Earn & Achieve',
+                  desc: 'Get rewarded for your passion. Unlock badges, earn XP, and get exclusive event perks.'
+                },
+                {
+                  icon: <BarChart3 className="w-6 h-6 text-blue-500" />,
+                  title: 'Organizer Dashboard',
+                  desc: 'Powerful tools for organizers to manage tickets, analyze audience, and grow communities.'
+                },
+                {
+                  icon: <Shield className="w-6 h-6 text-green-500" />,
+                  title: 'Secure & Seamless',
+                  desc: 'Fast checkout, secure digital tickets, and verified organizer profiles for peace of mind.'
+                }
+              ].map((feature, i) => (
+                <div key={i} className="group p-8 rounded-3xl bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/50 hover:border-purple-200 dark:hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    {feature.icon}
                   </div>
-                  <h3 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">{feature.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">{feature.desc}</p>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50 text-green-700 dark:text-green-300 rounded-full text-sm font-bold">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>{feature.stat}</span>
-                  </div>
+                  <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{feature.title}</h4>
+                  <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
+                    {feature.desc}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Gamification Section */}
-        <section className="py-32 bg-gradient-to-r from-purple-50/30 via-white/50 to-cyan-50/30 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800">
+        {/* ── HOW IT WORKS ── */}
+        <section className="py-24 bg-purple-50/50 dark:bg-purple-900/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-20">
+              <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-4">Your journey to great experiences</h2>
+              <p className="text-slate-600 dark:text-slate-400">Four simple steps to elevate your social life</p>
+            </div>
+
+            <div className="relative">
+              {/* Connector line (desktop) */}
+              <div className="hidden lg:block absolute top-12 left-0 right-0 h-0.5 bg-dashed bg-purple-200 dark:bg-purple-800" />
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
+                {[
+                  { step: '01', title: 'Tell us what you love', desc: 'Pick your interests and let our AI curate your personalized feed.' },
+                  { step: '02', title: 'RSVP with one click', desc: 'Find your event and secure your spot instantly with seamless checkout.' },
+                  { step: '03', title: 'Connect with community', desc: 'Join the discussion, meet attendees, and coordinate before you go.' },
+                  { step: '04', title: 'Level up your experience', desc: 'Attend, earn XP, unlock rewards, and build your event reputation.' }
+                ].map((item, i) => (
+                  <div key={i} className="text-center space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-white dark:bg-slate-800 border-4 border-purple-100 dark:border-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-400 font-black text-xl mx-auto shadow-lg">
+                      {item.step}
+                    </div>
+                    <h4 className="font-bold text-slate-900 dark:text-white">{item.title}</h4>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 px-4">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FOR ORGANIZERS ── */}
+        <section id="organizers" className="py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="space-y-8">
-                <div className="inline-flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-orange-100/60 to-orange-200/60 dark:from-orange-900/40 dark:to-orange-800/40 border border-orange-200/30 dark:border-orange-800/30 rounded-full text-orange-700 dark:text-orange-300 text-sm font-bold uppercase tracking-wider">
-                  <Trophy className="w-5 h-5" />
-                  GAMIFICATION
+                <div className="space-y-4">
+                  <h2 className="text-xs font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-[0.2em]">For Organizers</h2>
+                  <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight">
+                    Host events that people<br />will never forget
+                  </h3>
+                  <p className="text-lg text-slate-600 dark:text-slate-400">
+                    Powerful tools to grow your community and sell out every event.
+                  </p>
                 </div>
-                <h2 className="text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white leading-tight">
-                  Level Up Your <span className="bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">Event Journey</span>
-                </h2>
-                <p className="text-xl text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Earn XP, unlock badges, and climb the leaderboards as you attend events, engage with communities, and explore new experiences
-                </p>
+
                 <div className="space-y-4">
                   {[
-                    { icon: Award, title: 'Earn Badges', desc: '50+ unique badges to collect' },
-                    { icon: TrendingUp, title: 'Level System', desc: 'Unlock perks as you progress' },
-                    { icon: Users, title: 'Leaderboards', desc: 'Compete with friends' },
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-4 p-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-purple-200/20 dark:border-purple-800/20 hover:border-purple-300/40 dark:hover:border-purple-700/40 transition-all">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-                        <item.icon className="w-6 h-6 text-white" />
+                    'AI-powered audience targeting',
+                    'Built-in community engagement tools',
+                    'Real-time analytics and reporting',
+                    'Seamless ticket management',
+                    'Customizable event landing pages'
+                  ].map(item => (
+                    <div key={item} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                       </div>
-                      <div>
-                        <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-1">{item.title}</h4>
-                        <p className="text-slate-600 dark:text-slate-300 text-sm">{item.desc}</p>
-                      </div>
+                      <span className="text-slate-700 dark:text-slate-300 font-medium">{item}</span>
                     </div>
                   ))}
                 </div>
-              </div>
 
-              <div className="relative">
-                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-200/20 dark:border-purple-800/20 p-8">
-                  <div className="flex items-center gap-4 mb-6">
-                    <img src="https://i.pravatar.cc/150?img=25" alt="User" className="w-20 h-20 rounded-3xl ring-4 ring-purple-200/30 dark:ring-purple-800/30 shadow-lg" />
-                    <div>
-                      <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Sarah Johnson</h3>
-                      <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                        <Award className="w-4 h-4 text-orange-500" />
-                        <span>Level 8 • 1,580 XP</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-r from-purple-50 to-cyan-50 dark:from-purple-900/30 dark:to-cyan-900/30 rounded-2xl p-6 mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Level Progress</span>
-                      <span className="text-sm text-slate-500 dark:text-slate-400">1,580 / 2,000 XP</span>
-                    </div>
-                    <div className="h-4 bg-white/50 dark:bg-slate-700/50 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-1000" style={{ width: '79%' }}></div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    {[
-                      { emoji: '🎵', name: 'Music Lover', color: 'from-purple-500 to-purple-600' },
-                      { emoji: '🎨', name: 'Art Explorer', color: 'from-pink-500 to-pink-600' },
-                      { emoji: '⚡', name: 'Early Bird', color: 'from-orange-500 to-orange-600' },
-                    ].map((badge, idx) => (
-                      <div key={idx} className={`bg-gradient-to-br ${badge.color} p-4 rounded-2xl text-center text-white shadow-lg`}>
-                        <div className="text-3xl mb-2">{badge.emoji}</div>
-                        <div className="text-xs font-bold">{badge.name}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Core Features Grid */}
-        <section id="features" className="py-28 bg-secondary/30">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <div className="text-primary font-bold text-sm uppercase tracking-wider mb-4">
-                COMPLETE PLATFORM
-              </div>
-              <h2 className="text-5xl md:text-6xl font-bold mb-4">
-                Everything You Need in <span className="gradient-text">One Place</span>
-              </h2>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { icon: Search, title: 'Smart Discovery', desc: 'AI-powered search and filters', color: 'purple' },
-                { icon: Calendar, title: 'Never Miss Out', desc: 'Calendar sync & reminders', color: 'cyan' },
-                { icon: Users, title: 'Communities', desc: 'Join vibrant interest groups', color: 'orange' },
-                { icon: MessageSquare, title: 'Connect', desc: 'Chat with attendees', color: 'pink' },
-                { icon: BarChart3, title: 'Analytics', desc: 'Detailed event insights', color: 'purple' },
-                { icon: Zap, title: 'Quick RSVP', desc: 'One-click registration', color: 'cyan' },
-                { icon: Shield, title: 'Safe & Secure', desc: 'Verified events only', color: 'orange' },
-                { icon: Star, title: 'Bookmarks', desc: 'Save favorites for later', color: 'pink' },
-              ].map((feature, idx) => (
-                <div key={idx} className="bg-card p-6 rounded-2xl shadow-lg border border-border hover:shadow-xl hover:-translate-y-1 transition-all hover-lift group">
-                  <feature.icon className={`w-10 h-10 text-${feature.color}-500 mb-4 group-hover:scale-110 transition-transform`} />
-                  <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Organizer Section */}
-        <section id="organizers" className="py-28">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 gap-16 items-center">
-              <div className="relative order-2 md:order-1">
-                <div className="glass rounded-3xl p-8 border border-border">
-                  <h4 className="text-sm font-bold text-primary mb-4">ORGANIZER DASHBOARD</h4>
-                  <div className="space-y-4">
-                    <div className="bg-card/50 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-semibold">Total Attendees</span>
-                        <TrendingUp className="w-4 h-4 text-green-500" />
-                      </div>
-                      <div className="text-3xl font-bold">1,247</div>
-                      <div className="text-xs text-green-500">+23% from last month</div>
-                    </div>
-                    <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl p-4 border border-primary/20">
-                      <div className="flex items-center gap-2 text-primary mb-2">
-                        <Brain className="w-4 h-4" />
-                        <span className="text-sm font-bold">AI Insights</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">Send reminder emails to boost attendance by 15%</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="order-1 md:order-2">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 rounded-full text-sm font-bold uppercase tracking-wider mb-4">
-                  <BarChart3 className="w-4 h-4" />
-                  FOR ORGANIZERS
-                </div>
-                <h2 className="text-5xl font-bold mb-6">
-                  Create Events That <span className="gradient-text">Stand Out</span>
-                </h2>
-                <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                  Powerful tools to create, manage, and grow your events with AI-powered insights and advanced analytics
-                </p>
-                <div className="space-y-3 mb-8">
-                  {[
-                    'AI-powered attendance predictions',
-                    'Real-time analytics dashboard',
-                    'Automated marketing suggestions',
-                    'Attendee management tools',
-                    'Custom ticketing options',
-                  ].map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-sm">✓</span>
-                      </div>
-                      <span className="text-foreground">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link to="/signup" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-xl font-semibold hover:shadow-lg transition">
-                  Start Creating Events
-                  <ArrowRight className="w-5 h-5" />
+                <Link to="/signup" className="btn-primary px-8 py-4 text-base">
+                  Start Organizing
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
+
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-[3rem] blur-2xl group-hover:opacity-100 transition-opacity opacity-0" />
+                <div className="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 p-8">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
+                        <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-400">Analytics Overview</p>
+                        <h4 className="font-bold text-slate-900 dark:text-white">Cairo Jazz Festival</h4>
+                      </div>
+                    </div>
+                    <div className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold">
+                      Live
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                      <p className="text-xs text-slate-500 mb-1">Total Revenue</p>
+                      <p className="text-xl font-black text-slate-900 dark:text-white">EGP 142.5K</p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                      <p className="text-xs text-slate-500 mb-1">Tickets Sold</p>
+                      <p className="text-xl font-black text-slate-900 dark:text-white">842 / 1000</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-slate-500">Attendee Vibe Match</span>
+                      <span className="text-purple-600">92% Optimal</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 w-[92%]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-28 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C4CF1] via-[#5739D4] to-[#00C2FF]"></div>
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-            <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-200 rounded-full blur-3xl"></div>
+        {/* ── COMMUNITY SHOWCASE ── */}
+        <section id="community" className="py-24 bg-slate-900 text-white relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+            <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-purple-500 blur-[120px]" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[40%] h-[40%] rounded-full bg-cyan-500 blur-[120px]" />
           </div>
-          <div className="relative max-w-4xl mx-auto text-center px-4">
-            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              Ready to Start Your Event Journey?
-            </h2>
-            <p className="text-xl text-white/90 mb-8">
-              Join 50,000+ users discovering amazing experiences every day
-            </p>
-            <Link to="/signup" className="inline-block px-10 py-5 bg-white text-[#6C4CF1] rounded-xl font-bold hover:shadow-2xl transition transform hover:-translate-y-1 text-lg">
-              Get Started Free
-            </Link>
-            <p className="mt-6 text-sm text-white/80">No credit card required • Free forever • Cancel anytime</p>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid lg:grid-cols-2 gap-16 items-center">
+              <div className="space-y-8">
+                <h2 className="text-4xl font-extrabold leading-tight">
+                  Join the most vibrant<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+                    event communities
+                  </span>
+                </h2>
+                <p className="text-lg text-slate-400 leading-relaxed">
+                  Don't just attend — belong. Our community-first approach ensures you meet people who share your passions before you even arrive.
+                </p>
+                <div className="flex items-center gap-8 pt-4">
+                  <div>
+                    <p className="text-3xl font-black text-white">50K+</p>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Active Members</p>
+                  </div>
+                  <div className="w-px h-12 bg-slate-800" />
+                  <div>
+                    <p className="text-3xl font-black text-white">1.2K</p>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Daily Threads</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {communityThreads.map((thread, i) => (
+                  <div key={i} className="p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:bg-white/10 transition-all group">
+                    <div className="flex items-start gap-4">
+                      <img src={thread.avatar} alt="" className="w-10 h-10 rounded-full border-2 border-slate-800" />
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-purple-400">{thread.community}</span>
+                          <span className="text-[10px] text-slate-500">{thread.time}</span>
+                        </div>
+                        <h4 className="font-bold text-slate-200 group-hover:text-white transition-colors line-clamp-1">
+                          {thread.title}
+                        </h4>
+                        <div className="flex items-center gap-4 pt-1">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                            <MessageSquare className="w-3.5 h-3.5" /> {thread.replies}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                            <Heart className="w-3.5 h-3.5" /> {thread.likes}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="bg-card border-t border-border py-16">
+        {/* ── FINAL CTA ── */}
+        <section className="py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<<<<<<< Updated upstream
             <div className="grid md:grid-cols-4 gap-8">
               <div>
                 <div className="flex items-center gap-2 mb-4">
@@ -375,37 +548,89 @@ export default function Landing() {
                   <span className="text-xl font-bold">Eventra</span>
                 </div>
                 <p className="text-muted-foreground text-sm">AI-powered event discovery platform</p>
+=======
+            <div className="relative rounded-[3rem] overflow-hidden bg-gradient-to-br from-purple-600 to-blue-700 p-12 lg:p-20 text-center text-white">
+              <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
+                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,#ffffff,transparent)]" />
+>>>>>>> Stashed changes
               </div>
-              <div>
-                <h4 className="font-bold mb-4">Product</h4>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="hover:text-foreground cursor-pointer transition">Features</div>
-                  <div className="hover:text-foreground cursor-pointer transition">For Organizers</div>
-                  <div className="hover:text-foreground cursor-pointer transition">Pricing</div>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-bold mb-4">Resources</h4>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="hover:text-foreground cursor-pointer transition">Blog</div>
-                  <div className="hover:text-foreground cursor-pointer transition">Help Center</div>
-                  <div className="hover:text-foreground cursor-pointer transition">API Docs</div>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-bold mb-4">Company</h4>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <div className="hover:text-foreground cursor-pointer transition">About</div>
-                  <div className="hover:text-foreground cursor-pointer transition">Careers</div>
-                  <div className="hover:text-foreground cursor-pointer transition">Contact</div>
+              
+              <div className="relative z-10 max-w-2xl mx-auto space-y-8">
+                <h2 className="text-4xl sm:text-5xl font-black leading-tight">
+                  Ready to discover your next favorite experience?
+                </h2>
+                <p className="text-lg text-purple-100">
+                  Join 50,000+ people discovering events that actually matter. No credit card required. Free forever.
+                </p>
+                <div className="flex flex-wrap justify-center gap-4 pt-4">
+                  <Link to="/signup" className="px-10 py-5 rounded-full bg-white text-purple-600 font-black text-lg hover:scale-105 transition-transform shadow-xl shadow-black/20">
+                    Get Started Free
+                  </Link>
                 </div>
               </div>
             </div>
-            <div className="border-t border-border mt-12 pt-8 text-center text-sm text-muted-foreground">
-              <p>&copy; 2026 Eventra. All rights reserved.</p>
+          </div>
+        </section>
+
+        {/* ── FOOTER ── */}
+        <footer className="bg-slate-900 text-slate-400 py-20 border-t border-slate-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">
+              <div className="col-span-2 space-y-6">
+                <Logo variant="horizontal" theme="dark" className="h-8 w-auto opacity-80" />
+                <p className="max-w-xs text-sm leading-relaxed">
+                  The AI-powered social ecosystem for discovering experiences and building real-world communities.
+                </p>
+                <div className="flex gap-4">
+                  {[Globe, Heart, MessageSquare, Share2].map((Icon, i) => (
+                    <a key={i} href="#" className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center hover:bg-purple-600 hover:text-white transition-all">
+                      <Icon className="w-5 h-5" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <h4 className="text-white font-bold uppercase tracking-widest text-xs">Product</h4>
+                <ul className="space-y-4 text-sm font-medium">
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">Discover</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">AI Search</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">Communities</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">Rewards</a></li>
+                </ul>
+              </div>
+
+              <div className="space-y-6">
+                <h4 className="text-white font-bold uppercase tracking-widest text-xs">Resources</h4>
+                <ul className="space-y-4 text-sm font-medium">
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">Help Center</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">For Organizers</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">API Docs</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">Guidelines</a></li>
+                </ul>
+              </div>
+
+              <div className="space-y-6">
+                <h4 className="text-white font-bold uppercase tracking-widest text-xs">Company</h4>
+                <ul className="space-y-4 text-sm font-medium">
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">About Us</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">Careers</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">Privacy</a></li>
+                  <li><a href="#" className="hover:text-purple-400 transition-colors">Terms</a></li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold uppercase tracking-widest">
+              <p>© 2026 Eventra AI. Built for the future of social.</p>
+              <div className="flex gap-8">
+                <a href="#" className="hover:text-white transition-colors">English (US)</a>
+                <a href="#" className="hover:text-white transition-colors">Status: Operational</a>
+              </div>
             </div>
           </div>
         </footer>
+
       </div>
     </div>
   );

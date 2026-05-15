@@ -1,5 +1,12 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+<<<<<<< Updated upstream
 import { ArrowLeft, Bell, Calendar, Award, MessageSquare, Users, Settings } from 'lucide-react';
+=======
+import { demoToast } from '../../lib/demoFeedback';
+import { Bell, Calendar, Award, MessageSquare, Users, Settings, CheckCheck, Trash2, Sparkles, Zap } from 'lucide-react';
+import { useAppStore } from '../../store/useAppStore';
+>>>>>>> Stashed changes
 
 const mockNotifications = [
   {
@@ -50,7 +57,18 @@ const mockNotifications = [
 ];
 
 export default function Notifications() {
+<<<<<<< Updated upstream
   const unreadCount = mockNotifications.filter((n) => !n.read).length;
+=======
+  const { notifications, markNotificationAsRead, currentUser, clearMyNotifications } = useAppStore();
+  const [clearedLocal, setClearedLocal] = useState(false);
+
+  const mine = currentUser
+    ? notifications.filter((n) => n.userId === currentUser.id)
+    : notifications;
+  const allNotifications = clearedLocal ? [] : mine.length > 0 ? mine : fallbackNotifications;
+  const unreadCount = allNotifications.filter((n) => !n.isRead).length;
+>>>>>>> Stashed changes
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,7 +101,20 @@ export default function Notifications() {
           <button className="text-primary hover:text-primary/80 font-semibold">
             Mark all as read
           </button>
+<<<<<<< Updated upstream
           <button className="text-muted-foreground hover:text-foreground font-semibold">
+=======
+          <button
+            type="button"
+            className="flex items-center gap-2 text-body-sm text-muted-foreground hover:text-foreground font-semibold transition-colors"
+            onClick={() => {
+              clearMyNotifications();
+              setClearedLocal(true);
+              demoToast('Inbox cleared', 'List hidden for this session. Sign in again to reload seed notifications.');
+            }}
+          >
+            <Trash2 className="w-4 h-4" />
+>>>>>>> Stashed changes
             Clear all
           </button>
         </div>

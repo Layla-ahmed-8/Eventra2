@@ -70,7 +70,15 @@ export default function Discover() {
                   <Sparkles className="w-5 h-5" />
                   AI Search
                 </button>
+<<<<<<< Updated upstream
                 <button className="btn-secondary text-lg px-6 py-3">
+=======
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => document.getElementById('discover-event-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                >
+>>>>>>> Stashed changes
                   Browse Events
                 </button>
               </div>
@@ -197,7 +205,7 @@ export default function Discover() {
         )}
 
         {/* All Events / Filtered Results */}
-        <div className="mt-16">
+        <div id="discover-event-grid" className="mt-16 scroll-mt-24">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
