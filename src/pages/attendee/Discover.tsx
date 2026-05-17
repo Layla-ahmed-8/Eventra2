@@ -10,11 +10,13 @@ import {
   Compass,
   SlidersHorizontal,
   ArrowUpDown,
+  ArrowRight,
   X,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { categories } from '../../data/mockData';
 import AISearchModal from '../../components/AISearchModal';
+import MapDiscovery from './MapDiscovery';
 import { Skeleton } from '../../app/components/ui/skeleton';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
@@ -46,6 +48,9 @@ type EnrichedEvent = {
   tags: string[];
   isRecommended: boolean;
   rsvpCount: number;
+  aiScore?: number;
+  aiReason?: string | null;
+  isTopPick?: boolean;
 };
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -58,12 +63,20 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function enrichEvent(event: any, userRadius: number, currentCity: string | null, userCoordinates: { lat: number; lng: number } | null): EnrichedEvent {
+function enrichEvent(
+  event: any, 
+  userRadius: number, 
+  currentCity: string | null, 
+  userCoordinates: { lat: number; lng: number } | null,
+  recommendations: any
+): EnrichedEvent {
   const distanceKm =
     userCoordinates && event.location.lat && event.location.lng
       ? haversineKm(userCoordinates.lat, userCoordinates.lng, event.location.lat, event.location.lng)
       : null;
   const sameCity = currentCity ? event.location.city.toLowerCase() === currentCity : false;
+
+  const rec = recommendations?.recommendations.find((r: any) => r.eventId === event.id);
 
   return {
     ...event,
@@ -78,17 +91,21 @@ function enrichEvent(event: any, userRadius: number, currentCity: string | null,
       event.location.city,
       event.tags.join(' '),
     ].join(' ').toLowerCase(),
+    aiScore: rec?.score,
+    aiReason: rec?.reason,
+    isTopPick: rec?.topPick,
   };
 }
 
 export default function Discover() {
-  const { events, bookmarkedEvents, toggleBookmark, recordBrowse, currentUser, locationEnabled, userCoordinates } = useAppStore();
+  const { events, bookmarkedEvents, toggleBookmark, recordBrowse, currentUser, locationEnabled, userCoordinates, aiRecommendations } = useAppStore();
 
   useEffect(() => {
     recordBrowse();
   }, [recordBrowse]);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showAISearch, setShowAISearch] = useState(false);
@@ -109,8 +126,8 @@ export default function Discover() {
   const userRadius = currentUser?.radius ?? 25;
 
   const enrichedEvents = useMemo<EnrichedEvent[]>(() => {
-    return events.map((event) => enrichEvent(event, userRadius, currentCity, userCoordinates));
-  }, [events, currentCity, userCoordinates, userRadius]);
+    return events.map((event) => enrichEvent(event, userRadius, currentCity, userCoordinates, aiRecommendations));
+  }, [events, currentCity, userCoordinates, userRadius, aiRecommendations]);
 
   const filteredEvents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -120,7 +137,7 @@ export default function Discover() {
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(event.category);
       const matchesTag = selectedTags.length === 0 || selectedTags.some((tag) => event.tags.some((eventTag) => eventTag.toLowerCase().includes(tag.toLowerCase())));
       const matchesPrice = event.price <= maxPrice;
-      const matchesRecommended = !showOnlyRecommended || event.isRecommended;
+      const matchesRecommended = !showOnlyRecommended || event.isTopPick;
       const matchesNearMe = !showNearMeOnly || event.isNearMe;
       const matchesMode =
         modeFilter === 'all' ||
@@ -146,6 +163,7 @@ export default function Discover() {
           return b.price - a.price;
         case 'recommended':
         default:
+          if (a.aiScore !== b.aiScore) return (b.aiScore || 0) - (a.aiScore || 0);
           if (a.isRecommended !== b.isRecommended) return a.isRecommended ? -1 : 1;
           if (a.distanceKm !== null && b.distanceKm !== null && a.distanceKm !== b.distanceKm) {
             return a.distanceKm - b.distanceKm;
@@ -230,12 +248,19 @@ export default function Discover() {
                   <Sparkles className="w-5 h-5" />
                   Try AI Search
                 </button>
+                <Link
+                  to="/app/map"
+                  className="btn-secondary px-7 py-3 h-auto text-body font-bold flex items-center gap-2"
+                >
+                  <MapPin className="w-4 h-4" />
+                  View Map
+                </Link>
                 <button
                   type="button"
-                  className="btn-secondary px-7 py-3 h-auto text-body font-bold"
+                  className="btn-ghost px-7 py-3 h-auto text-body font-bold"
                   onClick={() => document.getElementById('discover-event-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 >
-                  Browse Events
+                  Browse List
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -420,33 +445,57 @@ export default function Discover() {
                 Showing <span className="text-foreground font-bold">{filteredEvents.length}</span> matching experiences
               </p>
             </div>
-            <div className="flex items-center gap-3 text-caption font-bold text-muted-foreground uppercase tracking-wider">
-              <ArrowUpDown className="w-4 h-4" />
-              {sortBy.replace('-', ' ')}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center p-1 bg-secondary/30 rounded-xl border border-border/50">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-1.5 rounded-lg text-caption font-bold transition-all ${
+                    viewMode === 'grid' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Grid
+                </button>
+                <button
+                  onClick={() => setViewMode('map')}
+                  className={`px-3 py-1.5 rounded-lg text-caption font-bold transition-all ${
+                    viewMode === 'map' ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Map
+                </button>
+              </div>
+              <div className="flex items-center gap-3 text-caption font-bold text-muted-foreground uppercase tracking-wider">
+                <ArrowUpDown className="w-4 h-4" />
+                {sortBy.replace('-', ' ')}
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="card-surface p-4 space-y-3">
-                  <Skeleton className="h-48 w-full rounded-xl" />
-                  <Skeleton className="h-4 w-3/4 rounded" />
-                  <Skeleton className="h-4 w-1/2 rounded" />
-                  <div className="flex gap-2 pt-1">
-                    <Skeleton className="h-8 w-20 rounded-full" />
-                    <Skeleton className="h-8 w-20 rounded-full" />
+          {viewMode === 'map' ? (
+            <MapDiscovery />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="card-surface p-4 space-y-3">
+                    <Skeleton className="h-48 w-full rounded-xl" />
+                    <Skeleton className="h-4 w-3/4 rounded" />
+                    <Skeleton className="h-4 w-1/2 rounded" />
+                    <div className="flex gap-2 pt-1">
+                      <Skeleton className="h-8 w-20 rounded-full" />
+                      <Skeleton className="h-8 w-20 rounded-full" />
+                    </div>
                   </div>
-                </div>
-              ))
-            ) : (
-              filteredEvents.map((event, index) => (
-                <div key={event.id} className={focusedIndex === index ? 'ring-2 ring-primary rounded-3xl' : undefined}>
-                  <EventCard event={event} bookmarkedEvents={bookmarkedEvents} toggleBookmark={toggleBookmark} distanceKm={event.distanceKm} />
-                </div>
-              ))
-            )}
-          </div>
+                ))
+              ) : (
+                filteredEvents.map((event, index) => (
+                  <div key={event.id} className={focusedIndex === index ? 'ring-2 ring-primary rounded-3xl' : undefined}>
+                    <EventCard event={event} bookmarkedEvents={bookmarkedEvents} toggleBookmark={toggleBookmark} distanceKm={event.distanceKm} />
+                  </div>
+                ))
+              )}
+            </div>
+          )}
 
           {filteredEvents.length === 0 && (
             <div className="bento-section py-20 text-center">
@@ -578,11 +627,11 @@ function EventCard({ event, bookmarkedEvents, toggleBookmark, distanceKm }: any)
             <Heart className={`w-5 h-5 transition-colors ${isBookmarked ? 'fill-red-500 text-red-500' : 'text-slate-600 dark:text-slate-400 group-hover/bookmark:text-red-400'}`} />
           </button>
 
-          {event.isRecommended && (
+          {event.isTopPick && (
             <div className="absolute bottom-4 left-4">
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xl animate-pulse-slow">
-                <Sparkles className="w-3 h-3" />
-                AI Match
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xl">
+                <Sparkles className="w-3 h-3 fill-white" />
+                {event.aiScore}% Match
               </span>
             </div>
           )}
@@ -594,8 +643,15 @@ function EventCard({ event, bookmarkedEvents, toggleBookmark, distanceKm }: any)
           <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">{event.title}</h3>
         </Link>
 
+        {event.aiReason && (
+          <div className="flex items-start gap-1.5 p-2 bg-amber-50/50 dark:bg-amber-950/20 rounded-lg mb-4 border border-amber-100/50 dark:border-amber-900/20">
+            <Sparkles className="w-3 h-3 text-amber-500 mt-0.5 shrink-0" />
+            <p className="text-[11px] leading-tight font-medium text-amber-900 dark:text-amber-200">"{event.aiReason}"</p>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2 mb-4">
-          {event.isRecommended && <span className="filter-chip active text-[11px]">AI Match</span>}
+          {event.isTopPick && <span className="filter-chip active text-[11px] !bg-amber-500 !text-white !border-amber-600">Top Pick</span>}
           {event.location.isVirtual ? (
             <span className="filter-chip inactive text-[11px]">Virtual</span>
           ) : (

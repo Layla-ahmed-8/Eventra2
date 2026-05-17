@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { createBrowserRouter, createRoutesFromElements, Navigate, Outlet, Route, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, createRoutesFromElements, Navigate, Outlet, Route, RouterProvider, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { useAppStore } from '../store/useAppStore';
 import SessionTimeoutWarning from '../components/business/SessionTimeoutWarning';
@@ -28,6 +28,7 @@ import AccountSuspended from '../pages/public/AccountSuspended';
 
 // Attendee Pages
 import Discover from '../pages/attendee/Discover';
+import MapDiscovery from '../pages/attendee/MapDiscovery';
 import EventDetail from '../pages/attendee/EventDetail';
 import RSVP from '../pages/attendee/RSVP';
 import Calendar from '../pages/attendee/Calendar';
@@ -129,6 +130,7 @@ const router = createBrowserRouter(
       {/* ── Attendee ── */}
       <Route path="/app" element={<Navigate to="/app/discover" replace />} />
       <Route path="/app/discover" element={<RequireAuth role="attendee"><AttendeeLayout><Discover /></AttendeeLayout></RequireAuth>} />
+      <Route path="/app/map" element={<RequireAuth role="attendee"><AttendeeLayout><MapDiscovery /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/search" element={<Navigate to="/app/discover" replace />} />
       <Route path="/app/events/:id" element={<RequireAuth role="attendee"><AttendeeLayout><EventDetail /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/events/:id/rsvp" element={<RequireAuth role="attendee"><AttendeeLayout><RSVP /></AttendeeLayout></RequireAuth>} />

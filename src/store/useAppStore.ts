@@ -7,6 +7,7 @@ import type { Badge, RegisterRequest, RegisterResponse, Booking, XPReason } from
 import { BADGE_DEFINITIONS } from '../constants/badges';
 import { XP_TABLE, POINTS_TABLE, DEFAULT_SYSTEM_CONFIG } from '../constants/config';
 import type { SystemConfig } from '../types';
+import { getRecommendations, RecommendationResponse, UserContext } from '../lib/recommendationEngine';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ interface AppState {
   userCity: string | null;
   userCoordinates: { lat: number; lng: number } | null;
   dismissedRecommendations: string[];
+  aiRecommendations: RecommendationResponse | null;
 
   // ── NOTIFICATIONS (persisted) ────────────────────────────────────────────────
   notifications: Notification[];
@@ -115,6 +117,11 @@ interface AppState {
   toggleTheme: () => void;
   setActiveModal: (modal: string | null) => void;
 
+  // Location
+  updateUserLocation: (lat: number, lng: number, city?: string) => void;
+  setLocationEnabled: (enabled: boolean) => void;
+  refreshRecommendations: () => void;
+
   // Admin
   updateSystemConfig: (config: Partial<SystemConfig>) => void;
 }
@@ -156,6 +163,7 @@ export const useAppStore = create<AppState>()(
       userCity: null,
       userCoordinates: null,
       dismissedRecommendations: [],
+      aiRecommendations: null,
 
       notifications: [],
       theme: 'light',
@@ -192,6 +200,7 @@ export const useAppStore = create<AppState>()(
             unreadCount,
           });
           get().checkStreak();
+          get().refreshRecommendations();
           return true;
         }
         return false;
@@ -695,6 +704,89 @@ export const useAppStore = create<AppState>()(
 
       setActiveModal: (modal) => {
         set({ activeModal: modal });
+      },
+
+      updateUserLocation: (lat, lng, city) => {
+        set({
+          userCoordinates: { lat, lng },
+          userCity: city || null,
+          locationEnabled: true
+        });
+        get().refreshRecommendations();
+      },
+
+      setLocationEnabled: (enabled) => {
+        set({ locationEnabled: enabled });
+      },
+
+      refreshRecommendations: () => {
+        const state = get();
+        if (!state.currentUser) return;
+
+        // Map current state to UserContext for the engine
+        const context: UserContext = {
+          user: {
+            id: state.currentUser.id,
+            name: state.currentUser.name,
+            profile: {
+              interests: state.currentUser.interests || [],
+              preferredCategories: state.currentUser.interests || [], // Use interests as default
+              preferredTimeOfDay: 'any',
+              maxDistanceKm: (state.currentUser as any).radius || 10,
+              pricePreference: 'any'
+            },
+            history: state.currentUser.rsvpedEvents.map(eventId => {
+              const event = state.events.find(e => e.id === eventId);
+              return {
+                eventId,
+                category: event?.category || 'General',
+                attendedAt: event?.date || new Date().toISOString(),
+                rating: 4 // Default rating for RSVPed events
+              };
+            }),
+            social: {
+              friendsAttending: state.events.map(event => ({
+                eventId: event.id,
+                friendCount: event.engagement?.recentAttendees?.length || 0,
+                friendNames: event.engagement?.recentAttendees?.slice(0, 2).map(a => a.name) || []
+              })).filter(s => s.friendCount > 0)
+            }
+          },
+          context: {
+            currentLocation: state.userCoordinates,
+            currentTime: new Date().toISOString(),
+            dayOfWeek: new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date()) as any,
+            timeOfDay: (() => {
+              const hour = new Date().getHours();
+              if (hour >= 5 && hour < 12) return 'morning';
+              if (hour >= 12 && hour < 17) return 'afternoon';
+              if (hour >= 17 && hour < 21) return 'evening';
+              return 'night';
+            })()
+          },
+          events: state.events.map(event => ({
+            id: event.id,
+            title: event.title,
+            category: event.category,
+            subcategory: undefined, // Add if available
+            date: event.date,
+            startTime: '19:00', // Default if missing
+            endTime: '22:00', // Default if missing
+            price: event.price,
+            location: {
+              lat: event.location.lat,
+              lng: event.location.lng,
+              venue: event.location.venue,
+              distanceKm: undefined // Engine will compute
+            },
+            capacity: 100, // Default
+            spotsRemaining: 20, // Default
+            tags: event.engagement?.vibeTags || []
+          }))
+        };
+
+        const recommendations = getRecommendations(context);
+        set({ aiRecommendations: recommendations });
       },
 
       // ── Admin ─────────────────────────────────────────────────────────────────

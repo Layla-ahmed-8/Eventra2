@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Search, Calendar, Ticket, Users, User, Bell, MessageSquare, Award, ChevronLeft, Menu, X, Moon, Sun, LogOut } from 'lucide-react';
+import { Sparkles, Search, Calendar, MapPin, Ticket, Users, User, Bell, MessageSquare, Award, ChevronLeft, Menu, X, Moon, Sun, LogOut } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
@@ -18,9 +18,9 @@ const isAttendeeNavActive = (pathname: string, path: string) => {
 
 const bottomNavItems = [
   { icon: Search, label: 'Discover', path: '/app/discover' },
+  { icon: MapPin, label: 'Map', path: '/app/map' },
   { icon: Ticket, label: 'My Events', path: '/app/my-events' },
-  { icon: Users, label: 'Community', path: '/app/community' },
-  { icon: Award, label: 'Achievements', path: '/app/profile/achievements' },
+  { icon: Award, label: 'Badges', path: '/app/profile/achievements' },
   { icon: User, label: 'Profile', path: '/app/profile' },
 ];
 
@@ -34,6 +34,7 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
 
   const navItems = [
     { path: '/app/discover', icon: Search, label: 'Discover' },
+    { path: '/app/map', icon: MapPin, label: 'Map View' },
     { path: '/app/calendar', icon: Calendar, label: 'Calendar' },
     { path: '/app/my-events', icon: Ticket, label: 'My Events' },
     { path: '/app/community', icon: Users, label: 'Communities' },
