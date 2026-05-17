@@ -1,8 +1,11 @@
 
 import { useMemo, useState } from 'react';
-import { Search, UserX, Award, Eye, Filter, CheckCircle, XCircle } from 'lucide-react';
+import { Search, UserX, Award, Eye, Filter, CheckCircle, XCircle, ShieldCheck, Ban } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { demoToast } from '../../lib/demoFeedback';
+import ConfirmationModal from '../../components/business/ConfirmationModal';
+import VerificationBadge from '../../components/business/VerificationBadge';
+import StatusBadge from '../../components/business/StatusBadge';
 
 const mockUsers = [
   { id: 1, name: 'Sarah Ahmed', email: 'sarah@example.com', role: 'attendee', status: 'active', joined: '2026-01-15', events: 12 },
@@ -12,13 +15,18 @@ const mockUsers = [
   { id: 5, name: 'Yasmine Khaled', email: 'yasmine@example.com', role: 'attendee', status: 'active', joined: '2026-02-28', events: 8 },
 ];
 
-export default function AdminUsers() {
+type UserAction = { type: 'approve' | 'reject' | 'grant_verified' | 'suspend' | 'ban'; id: string; name: string };
 
+export default function AdminUsers() {
   const { organizerRequests, approveOrganizerRequest, rejectOrganizerRequest } = useAppStore();
   const pendingOrganizer = organizerRequests.filter((r) => r.status === 'pending');
   const [showFilters, setShowFilters] = useState(false);
   const [roleFilter, setRoleFilter] = useState<'all' | 'attendee' | 'organizer'>('all');
   const [query, setQuery] = useState('');
+  const [pendingAction, setPendingAction] = useState<UserAction | null>(null);
+  const [verifiedIds, setVerifiedIds] = useState<Set<number>>(new Set());
+  const [userStatuses, setUserStatuses] = useState<Record<number, string>>({});
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const filteredMockUsers = useMemo(() => {
     return mockUsers.filter((u) => {
@@ -70,11 +78,7 @@ export default function AdminUsers() {
                   <button
                     type="button"
                     className="btn-primary text-body-sm inline-flex items-center gap-1"
-                    onClick={() => {
-                      const notes = window.prompt('Optional notes for the applicant (shown in their notification):', 'Welcome to the organizer program.');
-                      if (notes === null) return;
-                      approveOrganizerRequest(req.id, notes || '');
-                    }}
+                    onClick={() => setPendingAction({ type: 'approve', id: req.id, name: req.userName })}
                   >
                     <CheckCircle className="w-4 h-4" />
                     Approve
@@ -82,11 +86,7 @@ export default function AdminUsers() {
                   <button
                     type="button"
                     className="btn-secondary text-body-sm inline-flex items-center gap-1"
-                    onClick={() => {
-                      const notes = window.prompt('Reason for rejection (sent to applicant):', '');
-                      if (notes === null) return;
-                      rejectOrganizerRequest(req.id, notes || 'No additional details.');
-                    }}
+                    onClick={() => setPendingAction({ type: 'reject', id: req.id, name: req.userName })}
                   >
                     <XCircle className="w-4 h-4" />
                     Reject
@@ -173,26 +173,15 @@ export default function AdminUsers() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`status-pill uppercase text-[10px] font-black ${
-                        user.role === 'organizer'
-                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                      }`}
-                    >
-                      {user.role}
-                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <StatusBadge status={user.role === 'organizer' ? 'standard' : 'active'} />
+                      {user.role === 'organizer' && verifiedIds.has(user.id) && (
+                        <VerificationBadge isVerified size="sm" />
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`status-pill uppercase text-[10px] font-black ${
-                        user.status === 'active'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                      }`}
-                    >
-                      {user.status}
-                    </span>
+                    <StatusBadge status={(userStatuses[user.id] ?? user.status) as 'active' | 'suspended' | 'banned'} />
                   </td>
                   <td className="px-4 py-3 text-caption font-medium text-muted-foreground">
                     {new Date(user.joined).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -201,34 +190,31 @@ export default function AdminUsers() {
                   <td className="px-4 py-3 text-body-sm font-bold text-foreground">{user.events}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <button
-                        type="button"
-                        className="btn-ghost p-2"
-                        title="View Profile"
-                        onClick={() => demoToast('User profile', `${user.name} — demo preview only.`)}
-                      >
+                      <button type="button" className="btn-ghost p-2" title="View Profile"
+                        onClick={() => demoToast('User profile', `${user.name} — demo preview only.`)}>
                         <Eye className="w-4 h-4" />
                       </button>
-                      {user.role === 'attendee' && (
-                        <button
-                          type="button"
-                          className="btn-ghost p-2"
-                          title="Grant Organizer"
-                          onClick={() => demoToast('Grant organizer', `Would promote ${user.name} in production.`)}
-                        >
-                          <Award className="w-4 h-4" />
+                      {user.role === 'organizer' && !verifiedIds.has(user.id) && (
+                        <button type="button" className="btn-ghost p-2 text-cyan-600 hover:bg-cyan-50" title="Grant Verified"
+                          disabled={actionLoading === String(user.id) + 'grant_verified'}
+                          onClick={() => setPendingAction({ type: 'grant_verified', id: String(user.id), name: user.name })}>
+                          {actionLoading === String(user.id) + 'grant_verified' ? <span className="btn-spinner !border-cyan-600/30 ![border-top-color:rgb(8,145,178)]" /> : <ShieldCheck className="w-4 h-4" />}
                         </button>
                       )}
-                      <button
-                        type="button"
-                        className="btn-ghost p-2 text-red-500 hover:text-red-600 hover:bg-red-50"
-                        title={user.status === 'active' ? 'Suspend' : 'Activate'}
-                        onClick={() =>
-                          demoToast(user.status === 'active' ? 'User suspended' : 'User activated', user.name)
-                        }
-                      >
-                        <UserX className="w-4 h-4" />
-                      </button>
+                      {(userStatuses[user.id] ?? user.status) !== 'banned' && (
+                        <button type="button" className="btn-ghost p-2 text-orange-500 hover:bg-orange-50" title="Suspend"
+                          disabled={actionLoading === String(user.id) + 'suspend'}
+                          onClick={() => setPendingAction({ type: 'suspend', id: String(user.id), name: user.name })}>
+                          {actionLoading === String(user.id) + 'suspend' ? <span className="btn-spinner !border-orange-500/30 ![border-top-color:rgb(249,115,22)]" /> : <UserX className="w-4 h-4" />}
+                        </button>
+                      )}
+                      {(userStatuses[user.id] ?? user.status) !== 'banned' && (
+                        <button type="button" className="btn-ghost p-2 text-red-600 hover:bg-red-50" title="Ban (permanent)"
+                          disabled={actionLoading === String(user.id) + 'ban'}
+                          onClick={() => setPendingAction({ type: 'ban', id: String(user.id), name: user.name })}>
+                          {actionLoading === String(user.id) + 'ban' ? <span className="btn-spinner !border-red-600/30 ![border-top-color:rgb(220,38,38)]" /> : <Ban className="w-4 h-4" />}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -237,7 +223,90 @@ export default function AdminUsers() {
           </table>
         </div>
       </div>
+
+      {/* Action confirmation modals */}
+      <ConfirmationModal
+        open={pendingAction?.type === 'approve'}
+        onOpenChange={(open) => { if (!open) setPendingAction(null); }}
+        title="Approve Organizer Request"
+        message={`Approve ${pendingAction?.name}'s request to become an organizer? They will be notified and can start creating events.`}
+        confirmLabel="Approve"
+        onConfirm={() => {
+          if (pendingAction) {
+            approveOrganizerRequest(pendingAction.id, 'Welcome to the organizer program!');
+            demoToast('Organizer approved', `${pendingAction.name} has been approved.`);
+          }
+        }}
+      />
+      <ConfirmationModal
+        open={pendingAction?.type === 'reject'}
+        onOpenChange={(open) => { if (!open) setPendingAction(null); }}
+        title="Reject Organizer Request"
+        message={`Reject ${pendingAction?.name}'s organizer request? They will be notified with the reason.`}
+        confirmLabel="Reject"
+        onConfirm={() => {
+          if (pendingAction) {
+            rejectOrganizerRequest(pendingAction.id, 'Your request does not meet our current requirements.');
+            demoToast('Request rejected', `${pendingAction.name}'s request has been rejected.`);
+          }
+        }}
+      />
+      <ConfirmationModal
+        open={pendingAction?.type === 'grant_verified'}
+        onOpenChange={(open) => { if (!open) setPendingAction(null); }}
+        title="Grant Verified Status"
+        message={`Grant Verified Organizer status to ${pendingAction?.name}? They will be able to publish events directly without admin review.`}
+        confirmLabel="Grant Verified"
+        onConfirm={() => {
+          if (pendingAction) {
+            const key = pendingAction.id + 'grant_verified';
+            setActionLoading(key);
+            const numericId = Number(pendingAction.id);
+            setTimeout(() => {
+              setVerifiedIds((prev) => new Set([...prev, numericId]));
+              demoToast('Verified status granted', `${pendingAction.name} is now a Verified Organizer.`);
+              setActionLoading(null);
+            }, 600);
+          }
+        }}
+      />
+      <ConfirmationModal
+        open={pendingAction?.type === 'suspend'}
+        onOpenChange={(open) => { if (!open) setPendingAction(null); }}
+        title="Suspend User"
+        message={`Suspend ${pendingAction?.name}? Their active sessions will be invalidated and they will see a suspension notice on login.`}
+        confirmLabel="Suspend"
+        onConfirm={() => {
+          if (pendingAction) {
+            const key = pendingAction.id + 'suspend';
+            setActionLoading(key);
+            setTimeout(() => {
+              setUserStatuses((prev) => ({ ...prev, [Number(pendingAction.id)]: 'suspended' }));
+              demoToast('User suspended', `${pendingAction.name} has been suspended.`);
+              setActionLoading(null);
+            }, 600);
+          }
+        }}
+      />
+      <ConfirmationModal
+        open={pendingAction?.type === 'ban'}
+        onOpenChange={(open) => { if (!open) setPendingAction(null); }}
+        title="Permanently Ban User"
+        message={`Ban ${pendingAction?.name} permanently? This action is irreversible and cannot be undone.`}
+        confirmLabel="Ban Permanently"
+        destructive
+        onConfirm={() => {
+          if (pendingAction) {
+            const key = pendingAction.id + 'ban';
+            setActionLoading(key);
+            setTimeout(() => {
+              setUserStatuses((prev) => ({ ...prev, [Number(pendingAction.id)]: 'banned' }));
+              demoToast('User banned', `${pendingAction.name} has been permanently banned.`);
+              setActionLoading(null);
+            }, 600);
+          }
+        }}
+      />
     </div>
   );
 }
-

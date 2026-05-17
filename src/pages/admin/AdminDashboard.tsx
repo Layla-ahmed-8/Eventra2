@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { demoToast } from '../../lib/demoFeedback';
+import { formatRelativeTime } from '../../lib/utils';
 import {
   Users, Calendar, TrendingUp, AlertCircle, Activity, DollarSign,
   ShieldAlert, CheckCircle2, ArrowUpRight, ArrowDownRight, Zap,
@@ -61,12 +62,12 @@ const revenueData    = [180, 240, 210, 310, 280, 390, 360, 450, 420, 540, 510, 6
 const eventData      = [28, 35, 31, 42, 38, 48, 44, 55, 51, 62, 58, 70];
 
 const realtimeActivity = [
-  { icon: '👤', action: 'New user registration', user: 'Sarah Ahmed', time: 'Just now', type: 'user' },
-  { icon: '📅', action: 'Event published', user: 'Tech Cairo', time: '2 min ago', type: 'event' },
-  { icon: '💰', action: 'Payment processed', user: 'Mohamed Ali', time: '5 min ago', type: 'payment' },
-  { icon: '🚩', action: 'Event flagged for review', user: 'System AI', time: '8 min ago', type: 'flag' },
-  { icon: '🏢', action: 'New organizer account', user: 'Cairo Events Co', time: '12 min ago', type: 'organizer' },
-  { icon: '🎟️', action: 'Bulk ticket purchase', user: 'Yasmine K.', time: '18 min ago', type: 'payment' },
+  { icon: '👤', action: 'New user registration', user: 'Sarah Ahmed', timestamp: new Date(Date.now() - 0.5 * 60 * 1000).toISOString(), type: 'user' },
+  { icon: '📅', action: 'Event published', user: 'Tech Cairo', timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(), type: 'event' },
+  { icon: '💰', action: 'Payment processed', user: 'Mohamed Ali', timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(), type: 'payment' },
+  { icon: '🚩', action: 'Event flagged for review', user: 'System AI', timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(), type: 'flag' },
+  { icon: '🏢', action: 'New organizer account', user: 'Cairo Events Co', timestamp: new Date(Date.now() - 12 * 60 * 1000).toISOString(), type: 'organizer' },
+  { icon: '🎟️', action: 'Bulk ticket purchase', user: 'Yasmine K.', timestamp: new Date(Date.now() - 18 * 60 * 1000).toISOString(), type: 'payment' },
 ];
 
 const pendingItems = [
@@ -218,7 +219,7 @@ export default function AdminDashboard() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-body-sm font-semibold text-foreground truncate">{activity.action}</p>
-                    <span className="text-caption text-muted-foreground whitespace-nowrap">{activity.time}</span>
+                    <span className="text-caption text-muted-foreground whitespace-nowrap">{formatRelativeTime(activity.timestamp)}</span>
                   </div>
                   <p className="text-caption text-muted-foreground">{activity.user}</p>
                 </div>

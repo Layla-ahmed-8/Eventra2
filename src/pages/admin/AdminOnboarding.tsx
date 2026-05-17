@@ -266,7 +266,7 @@ export default function AdminOnboarding() {
             )}
 
             <button
-              onClick={() => step < TOTAL_STEPS ? setStep(step + 1) : navigate('/login?afterAdminOnboarding=1')}
+              onClick={() => step < TOTAL_STEPS ? setStep(step + 1) : navigate('/admin/dashboard')}
               disabled={!canContinue()}
               className="btn-primary bg-red-500 hover:bg-red-600 border-red-500 px-10 h-14 text-body font-bold shadow-xl shadow-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed group"
             >

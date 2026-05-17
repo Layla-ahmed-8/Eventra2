@@ -219,6 +219,59 @@ export default function OrganizerAnalytics() {
         </div>
       </div>
 
+      {/* AI Insights */}
+      <div className="bento-section">
+        <div className="bento-header">
+          <div className="bento-title-wrapper">
+            <Sparkles className="w-5 h-5 text-purple-500" />
+            <h2 className="bento-title">AI Insights</h2>
+          </div>
+          <span className="badge-ai">Powered by AI</span>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {[
+            {
+              icon: TrendingUp,
+              color: 'text-green-600 dark:text-green-400',
+              bg: 'bg-green-500/10',
+              title: 'Peak Booking Window',
+              body: 'Your events get 3× more RSVPs when published on Thursday evenings. Schedule your next launch for 7–9 PM.',
+            },
+            {
+              icon: Target,
+              color: 'text-primary',
+              bg: 'bg-primary/10',
+              title: 'Audience Fit Score',
+              body: 'Street Food Festival had a 94% audience match. Replicating its category + vibe tags for future events could increase repeat attendance.',
+            },
+            {
+              icon: Users,
+              color: 'text-cyan-600 dark:text-cyan-400',
+              bg: 'bg-cyan-500/10',
+              title: 'Retention Opportunity',
+              body: '38% of attendees who came to Jazz Night have not booked again. A targeted follow-up message could recover ~54 bookings.',
+            },
+            {
+              icon: DollarSign,
+              color: 'text-orange-600 dark:text-orange-400',
+              bg: 'bg-orange-500/10',
+              title: 'Revenue Forecast',
+              body: 'Based on your growth trend, projected revenue for next month is EGP 52–61K — up 15% if you add an early-bird tier.',
+            },
+          ].map((insight) => (
+            <div key={insight.title} className="card-surface p-5 flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-xl ${insight.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                <insight.icon className={`w-5 h-5 ${insight.color}`} />
+              </div>
+              <div>
+                <p className="text-body-sm font-bold text-foreground mb-1">{insight.title}</p>
+                <p className="text-caption text-muted-foreground leading-relaxed">{insight.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Retention & engagement */}
       <div className="grid md:grid-cols-3 gap-5">
         {[

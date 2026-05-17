@@ -18,6 +18,18 @@ export interface User {
   bookmarkedEvents: string[];
   organizerStatus?: 'pending' | 'approved' | 'rejected';
   organizerRequestEventId?: string;
+  phone?: string;
+  coverPhoto?: string;
+  notificationPreferences?: {
+    bookingConfirmation: boolean;
+    eventReminders: boolean;
+    cancellationStatus: boolean;
+    refundStatus: boolean;
+    accountStatusChanges: boolean;
+    eventApprovalUpdates: boolean;
+    newAttendeeBooking: boolean;
+    flaggedContentAlerts: boolean;
+  };
 }
 
 // Demo Account 1: Attendee (Sarah)

@@ -1,13 +1,25 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { shareOrCopyLink } from '../../lib/demoFeedback';
-import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Ticket, BadgeCheck, Sparkles, TrendingUp, Clock, MessageSquare, Bookmark, Zap, Award, Activity } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Copy, Ticket, BadgeCheck, Sparkles, TrendingUp, Clock, MessageSquare, Bookmark, Zap, Award, Activity } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
-  const { events, bookmarkedEvents, toggleBookmark } = useAppStore();
+  const { events, bookmarkedEvents, toggleBookmark, awardXP } = useAppStore();
   const event = events.find((e) => e.id === id);
+  const [sharedEvents, setSharedEvents] = useState<Set<string>>(new Set());
+
+  const handleShare = () => {
+    if (!event) return;
+    shareOrCopyLink(event.title, event.title, `${window.location.origin}/app/events/${event.id}`);
+    if (!sharedEvents.has(event.id)) {
+      setSharedEvents((prev) => new Set(prev).add(event.id));
+      awardXP(10, 'share');
+    }
+  };
 
   if (!event) {
     return (
@@ -59,11 +71,27 @@ export default function EventDetail() {
               type="button"
               className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center transition-all hover:scale-105 border border-border/50"
               aria-label="Share event"
-              onClick={() =>
-                shareOrCopyLink(event.title, event.title, `${window.location.origin}/app/events/${event.id}`)
-              }
+              onClick={handleShare}
             >
               <Share2 className="w-5 h-5 text-muted-foreground" />
+            </button>
+
+            <button
+              type="button"
+              className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center transition-all hover:scale-105 border border-border/50"
+              aria-label="Copy link"
+              onClick={() => {
+                navigator.clipboard
+                  .writeText(window.location.href)
+                  .then(() => toast.success('Link copied!'))
+                  .catch(() => toast.error('Could not copy link'));
+                if (event && !sharedEvents.has(event.id)) {
+                  setSharedEvents((prev) => new Set(prev).add(event.id));
+                  awardXP(10, 'share');
+                }
+              }}
+            >
+              <Copy className="w-5 h-5 text-muted-foreground" />
             </button>
 
             <Link

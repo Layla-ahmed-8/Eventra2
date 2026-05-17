@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { demoToast, downloadTextFile } from '../../lib/demoFeedback';
+import { formatRelativeTime } from '../../lib/utils';
 
 // ── Mini sparkline bar chart ─────────────────────────────────────────────────
 function Sparkline({ data, color = '#7C5CFF' }: { data: number[]; color?: string }) {
@@ -36,11 +37,11 @@ const activeEvents = [
 ];
 
 const recentActivity = [
-  { icon: '🎟️', text: 'New booking for Cairo Jazz Night', sub: 'General Admission × 2', time: '3 min ago', type: 'booking' },
-  { icon: '💬', text: 'New community discussion', sub: 'AI Summit — "What to expect"', time: '18 min ago', type: 'community' },
-  { icon: '💰', text: 'Payment received', sub: 'Street Food Festival — EGP 150', time: '42 min ago', type: 'payment' },
-  { icon: '👤', text: 'New follower', sub: 'Nour Ibrahim started following you', time: '1 hr ago', type: 'follow' },
-  { icon: '🎟️', text: 'New booking for AI Summit', sub: 'Free Admission × 1', time: '2 hrs ago', type: 'booking' },
+  { icon: '🎟️', text: 'New booking for Cairo Jazz Night', sub: 'General Admission × 2', timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString(), type: 'booking' },
+  { icon: '💬', text: 'New community discussion', sub: 'AI Summit — "What to expect"', timestamp: new Date(Date.now() - 18 * 60 * 1000).toISOString(), type: 'community' },
+  { icon: '💰', text: 'Payment received', sub: 'Street Food Festival — EGP 150', timestamp: new Date(Date.now() - 42 * 60 * 1000).toISOString(), type: 'payment' },
+  { icon: '👤', text: 'New follower', sub: 'Nour Ibrahim started following you', timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(), type: 'follow' },
+  { icon: '🎟️', text: 'New booking for AI Summit', sub: 'Free Admission × 1', timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), type: 'booking' },
 ];
 
 const aiInsights = [
@@ -354,7 +355,7 @@ export default function OrganizerDashboard() {
                   <p className="text-body-sm font-semibold text-foreground">{item.text}</p>
                   <p className="text-caption text-muted-foreground">{item.sub}</p>
                 </div>
-                <span className="text-caption text-muted-foreground whitespace-nowrap flex-shrink-0">{item.time}</span>
+                <span className="text-caption text-muted-foreground whitespace-nowrap flex-shrink-0">{formatRelativeTime(item.timestamp)}</span>
               </div>
             ))}
           </div>

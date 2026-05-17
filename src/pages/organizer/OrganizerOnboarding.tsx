@@ -4,7 +4,7 @@ import {
   Sparkles, ShieldCheck, Building2, Users, Image,
   CheckCircle2, ArrowRight, Crown, Zap, BarChart3,
   MessageSquare, Check, Upload, Mail, Phone, FileText,
-  Star, Globe, ChevronRight
+  Star, Globe, ChevronRight, Clock, ArrowLeft
 } from 'lucide-react';
 import Logo from '../../components/Logo';
 

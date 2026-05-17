@@ -1,8 +1,19 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Check, X, Eye } from 'lucide-react';
+import { Check, X, Eye, Calendar } from 'lucide-react';
 import { mockEvents } from '../../data/mockData';
 import { demoToast } from '../../lib/demoFeedback';
+import AIScoreIndicator from '../../components/business/AIScoreIndicator';
+import VerificationBadge from '../../components/business/VerificationBadge';
+import ConfirmationModal from '../../components/business/ConfirmationModal';
+
+// Mock AI risk scores per event (0–100, higher = more risk)
+const AI_RISK_SCORES: Record<string, number> = {
+  'event-001': 72,
+  'event-002': 18,
+  'event-003': 35,
+  'event-004': 12,
+  'event-005': 88,
+};
 
 const FLAGGED_IDS = new Set(['event-001', 'event-005']);
 
@@ -11,6 +22,7 @@ export default function AdminEvents() {
   const [approvedIds, setApprovedIds] = useState<string[]>([]);
   const [, setRejectedIds] = useState<string[]>([]);
   const [tab, setTab] = useState<'all' | 'flagged'>('all');
+  const [confirmAction, setConfirmAction] = useState<{ type: 'approve' | 'reject'; eventId: string; title: string } | null>(null);
 
   const pendingEvents = useMemo(() => {
     return mockEvents.filter((e) => {
@@ -114,9 +126,12 @@ export default function AdminEvents() {
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
                       <div>
                         <h3 className="text-body font-bold text-foreground leading-tight">{event.title}</h3>
-                        <p className="text-caption text-muted-foreground mt-1">
-                          Organizer: <span className="text-foreground font-semibold">{event.organizer.name}</span>
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="text-caption text-muted-foreground">
+                            Organizer: <span className="text-foreground font-semibold">{event.organizer.name}</span>
+                          </p>
+                          <VerificationBadge isVerified={event.organizer.verified} size="sm" />
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         {FLAGGED_IDS.has(event.id) && (
@@ -149,19 +164,31 @@ export default function AdminEvents() {
                       </div>
                     </div>
 
+                    {AI_RISK_SCORES[event.id] !== undefined && (
+                      <div className="mb-4">
+                        <AIScoreIndicator score={AI_RISK_SCORES[event.id]} type="risk" />
+                      </div>
+                    )}
+
                     <div className="flex flex-wrap gap-2 pt-4 border-t border-border/50">
-                      <button type="button" onClick={() => approve(event.id)} className="btn-primary text-body-sm inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700">
+                      <button type="button"
+                        onClick={() => setConfirmAction({ type: 'approve', eventId: event.id, title: event.title })}
+                        className="btn-primary text-body-sm inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700">
                         <Check className="w-4 h-4" />
                         Approve
                       </button>
-                      <button type="button" onClick={() => reject(event.id)} className="btn-secondary text-body-sm inline-flex items-center gap-1.5 text-red-500 hover:text-red-600 hover:border-red-200">
+                      <button type="button"
+                        onClick={() => setConfirmAction({ type: 'reject', eventId: event.id, title: event.title })}
+                        className="btn-secondary text-body-sm inline-flex items-center gap-1.5 text-red-500 hover:text-red-600 hover:border-red-200">
                         <X className="w-4 h-4" />
                         Reject
                       </button>
-                      <Link to={`/app/events/${event.id}`} className="btn-secondary text-body-sm inline-flex items-center gap-1.5 ml-auto">
+                      <button type="button"
+                        onClick={() => demoToast('Event preview', `"${event.title}" — full event view is accessible to attendees.`)}
+                        className="btn-secondary text-body-sm inline-flex items-center gap-1.5 ml-auto">
                         <Eye className="w-4 h-4" />
                         Details
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -199,6 +226,23 @@ export default function AdminEvents() {
           </div>
         )}
       </div>
+
+      <ConfirmationModal
+        open={confirmAction?.type === 'approve'}
+        onOpenChange={(open) => { if (!open) setConfirmAction(null); }}
+        title="Approve Event"
+        message={`Approve "${confirmAction?.title}"? It will be published and visible to all attendees.`}
+        confirmLabel="Approve & Publish"
+        onConfirm={() => { if (confirmAction) approve(confirmAction.eventId); }}
+      />
+      <ConfirmationModal
+        open={confirmAction?.type === 'reject'}
+        onOpenChange={(open) => { if (!open) setConfirmAction(null); }}
+        title="Reject Event"
+        message={`Reject "${confirmAction?.title}"? The organizer will be notified with the reason.`}
+        confirmLabel="Reject"
+        onConfirm={() => { if (confirmAction) reject(confirmAction.eventId); }}
+      />
     </div>
   );
 }

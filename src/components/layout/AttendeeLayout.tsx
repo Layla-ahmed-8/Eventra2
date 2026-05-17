@@ -3,6 +3,26 @@ import { Sparkles, Search, Calendar, Ticket, Users, User, Bell, MessageSquare, A
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
+import MobileBottomNav from './MobileBottomNav';
+import { useBreadcrumbs } from '../../hooks/useBreadcrumbs';
+import {
+  Breadcrumb, BreadcrumbList, BreadcrumbItem,
+  BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator,
+} from '../../app/components/ui/breadcrumb';
+
+const isAttendeeNavActive = (pathname: string, path: string) => {
+  if (pathname === path) return true;
+  if (path === '/app/profile') return false;
+  return pathname.startsWith(`${path}/`);
+};
+
+const bottomNavItems = [
+  { icon: Search, label: 'Discover', path: '/app/discover' },
+  { icon: Ticket, label: 'My Events', path: '/app/my-events' },
+  { icon: Users, label: 'Community', path: '/app/community' },
+  { icon: Award, label: 'Achievements', path: '/app/profile/achievements' },
+  { icon: User, label: 'Profile', path: '/app/profile' },
+];
 
 export default function AttendeeLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -10,6 +30,7 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
   const { currentUser, theme, toggleTheme, logout } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const crumbs = useBreadcrumbs();
 
   const navItems = [
     { path: '/app/discover', icon: Search, label: 'Discover' },
@@ -47,7 +68,7 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
         {/* Navigation */}
         <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+            const isActive = isAttendeeNavActive(location.pathname, item.path);
             return (
               <Link
                 key={item.path}
@@ -149,7 +170,7 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
             </div>
             <nav className="p-4 space-y-2 pb-20 overflow-y-auto max-h-[calc(100vh-200px)]">
               {navItems.map((item) => {
-                const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+                const isActive = isAttendeeNavActive(location.pathname, item.path);
                 return (
                   <Link
                     key={item.path}
@@ -224,9 +245,27 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10 xl:p-12">
+        <main id="main-content" className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-24 lg:pb-10 lg:p-10 xl:p-12">
+          {crumbs.length > 0 && (
+            <Breadcrumb className="mb-4">
+              <BreadcrumbList>
+                {crumbs.map((crumb, i) => (
+                  <span key={i} className="inline-flex items-center gap-1.5">
+                    <BreadcrumbItem>
+                      {crumb.path
+                        ? <BreadcrumbLink asChild><Link to={crumb.path}>{crumb.label}</Link></BreadcrumbLink>
+                        : <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                      }
+                    </BreadcrumbItem>
+                    {i < crumbs.length - 1 && <BreadcrumbSeparator />}
+                  </span>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
+          )}
           {children}
         </main>
+        <MobileBottomNav items={bottomNavItems} />
       </div>
     </div>
   );

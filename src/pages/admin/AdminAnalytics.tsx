@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { TrendingUp, Users, Calendar, DollarSign, ArrowUpRight, Globe, Repeat, Target, Zap } from 'lucide-react';
+import { Skeleton } from '../../app/components/ui/skeleton';
+import { TrendingUp, Users, Calendar, DollarSign, ArrowUpRight, Globe, Repeat, Target, Zap, Sparkles, Activity } from 'lucide-react';
 
 const PERIODS = ['7d', '30d', '6m', '1y'] as const;
 type Period = typeof PERIODS[number];
@@ -78,6 +79,13 @@ const topCities = [
 
 export default function AdminAnalytics() {
   const [period, setPeriod] = useState<Period>('30d');
+  const [chartLoading, setChartLoading] = useState(false);
+
+  const handlePeriodChange = (p: Period) => {
+    setChartLoading(true);
+    setPeriod(p);
+    setTimeout(() => setChartLoading(false), 500);
+  };
 
   return (
     <div className="space-y-6">
@@ -91,7 +99,7 @@ export default function AdminAnalytics() {
           {PERIODS.map(p => (
             <button
               key={p}
-              onClick={() => setPeriod(p)}
+              onClick={() => handlePeriodChange(p)}
               className={`px-3 py-1.5 rounded-lg text-body-sm font-semibold transition-all ${period === p ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
             >
               {p}
@@ -133,12 +141,10 @@ export default function AdminAnalytics() {
             </div>
             <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">{period}</span>
           </div>
-          <BarChart
-            data={userGrowthData[period].data}
-            labels={userGrowthData[period].labels}
-            color="url(#grad1)"
-            height={140}
-          />
+          {chartLoading
+            ? <Skeleton className="rounded-xl" style={{ height: 140 }} />
+            : <BarChart data={userGrowthData[period].data} labels={userGrowthData[period].labels} color="url(#grad1)" height={140} />
+          }
           <svg width="0" height="0">
             <defs>
               <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
@@ -157,12 +163,10 @@ export default function AdminAnalytics() {
             </div>
             <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">{period}</span>
           </div>
-          <BarChart
-            data={revenueData[period].data}
-            labels={revenueData[period].labels}
-            color="url(#grad2)"
-            height={140}
-          />
+          {chartLoading
+            ? <Skeleton className="rounded-xl" style={{ height: 140 }} />
+            : <BarChart data={revenueData[period].data} labels={revenueData[period].labels} color="url(#grad2)" height={140} />
+          }
           <svg width="0" height="0">
             <defs>
               <linearGradient id="grad2" x1="0" y1="0" x2="0" y2="1">

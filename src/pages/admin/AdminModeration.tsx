@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldAlert, ShieldCheck, Search, Flag, CheckCircle2, XCircle, AlertTriangle, Zap } from 'lucide-react';
 import { demoToast, demoInfo } from '../../lib/demoFeedback';
+import EmptyState from '../../components/shared/EmptyState';
 
 
 type ModItem = {
@@ -24,6 +25,7 @@ const seedItems: ModItem[] = [
 export default function AdminModeration() {
   const [items, setItems] = useState<ModItem[]>(seedItems);
   const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -35,6 +37,43 @@ export default function AdminModeration() {
         i.source.toLowerCase().includes(q)
     );
   }, [items, query]);
+
+  const allVisibleSelected = filtered.length > 0 && filtered.every((i) => selected.has(i.id));
+
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((i) => next.delete(i.id));
+        return next;
+      });
+    } else {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((i) => next.add(i.id));
+        return next;
+      });
+    }
+  };
+
+  const bulkApprove = () => {
+    setItems((prev) => prev.filter((i) => !selected.has(i.id)));
+    demoToast(`${selected.size} item${selected.size > 1 ? 's' : ''} approved`, 'Queue updated for this demo session.');
+    setSelected(new Set());
+  };
+
+  const bulkRemove = () => {
+    setItems((prev) => prev.filter((i) => !selected.has(i.id)));
+    demoToast(`${selected.size} item${selected.size > 1 ? 's' : ''} removed`, 'Queue updated for this demo session.');
+    setSelected(new Set());
+  };
 
   const remove = (id: string, action: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
@@ -76,19 +115,65 @@ export default function AdminModeration() {
             </div>
           </div>
 
-          {filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground text-body-sm">
-              {items.length === 0 ? 'Queue is clear. Great work.' : 'No items match your search.'}
+          {/* Bulk action bar */}
+          {filtered.length > 0 && (
+            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border/50">
+              <input
+                type="checkbox"
+                checked={allVisibleSelected}
+                onChange={toggleSelectAll}
+                className="w-4 h-4 rounded accent-primary cursor-pointer"
+              />
+              <span className="text-caption text-muted-foreground font-semibold">
+                {selected.size > 0 ? `${selected.size} selected` : 'Select all'}
+              </span>
+              {selected.size > 0 && (
+                <div className="flex gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={bulkApprove}
+                    className="btn-primary text-body-sm inline-flex items-center gap-1.5 py-1.5 px-3"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Approve Selected
+                  </button>
+                  <button
+                    type="button"
+                    onClick={bulkRemove}
+                    className="btn-secondary text-body-sm inline-flex items-center gap-1.5 py-1.5 px-3 text-red-500 hover:text-red-600 hover:border-red-200"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    Remove Selected
+                  </button>
+                </div>
+              )}
             </div>
+          )}
+
+          {filtered.length === 0 ? (
+            items.length === 0
+              ? <EmptyState icon={ShieldCheck} title="No items to review" description="The moderation queue is clear. Great work." />
+              : <EmptyState icon={Search} title="No matching items" description="Try adjusting your search." />
           ) : (
             <div className="space-y-4">
               {filtered.map((item) => (
-                <div key={item.id} className="card-surface p-5 hover:border-primary/20 transition-all">
+                <div
+                  key={item.id}
+                  className={`card-surface p-5 transition-all ${selected.has(item.id) ? 'border-primary/40 bg-primary/5' : 'hover:border-primary/20'}`}
+                >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-caption text-muted-foreground uppercase tracking-widest font-black">{item.type}</p>
-                      <h3 className="text-body font-bold text-foreground mt-1">{item.title}</h3>
-                      <p className="text-caption text-muted-foreground mt-1">Source: {item.source}</p>
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(item.id)}
+                        onChange={() => toggleSelect(item.id)}
+                        className="w-4 h-4 mt-1 rounded accent-primary cursor-pointer shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-caption text-muted-foreground uppercase tracking-widest font-black">{item.type}</p>
+                        <h3 className="text-body font-bold text-foreground mt-1">{item.title}</h3>
+                        <p className="text-caption text-muted-foreground mt-1">Source: {item.source}</p>
+                      </div>
                     </div>
                     <div className="flex sm:flex-col sm:items-end gap-2">
                       <span
@@ -175,4 +260,3 @@ export default function AdminModeration() {
     </div>
   );
 }
-

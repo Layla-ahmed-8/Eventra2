@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Minus, Plus, CreditCard, Calendar, MapPin, AlertTriangle, CheckCircle2, Zap } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import TicketHoldTimer from '../../components/business/TicketHoldTimer';
+import { DEFAULT_SYSTEM_CONFIG } from '../../constants/config';
 
 export default function RSVP() {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +14,11 @@ export default function RSVP() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [paymentState, setPaymentState] = useState<'idle' | 'processing' | 'error' | 'success'>('idle');
   const [paymentError, setPaymentError] = useState('');
+  const [cardholderName, setCardholderName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [paymentErrors, setPaymentErrors] = useState<{ name?: string; card?: string }>({});
+  const [holdExpiry, setHoldExpiry] = useState<Date | null>(null);
+  const holdCreatedRef = useRef(false);
 
   useEffect(() => {
     if (event) {
@@ -59,8 +66,27 @@ export default function RSVP() {
   const total = subtotal + serviceFee;
   const totalTickets = Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
 
+  // Start hold timer when user selects tickets for the first time
+  useEffect(() => {
+    if (totalTickets > 0 && !holdExpiry && !holdCreatedRef.current && !alreadyRsvped) {
+      holdCreatedRef.current = true;
+      const expiry = new Date(Date.now() + DEFAULT_SYSTEM_CONFIG.ticketHoldTimeoutMinutes * 60 * 1000);
+      setHoldExpiry(expiry);
+    }
+  }, [totalTickets]);
+
+  const handleHoldExpired = useCallback(() => {
+    setHoldExpiry(null);
+    holdCreatedRef.current = false;
+    setQuantities(event ? event.ticketTypes.reduce((acc, t) => ({ ...acc, [t.name]: 0 }), {}) : {});
+  }, [event]);
+
   const handleCheckout = () => {
     if (alreadyRsvped) return;
+    const newErrors: { name?: string; card?: string } = {};
+    if (!cardholderName.trim()) newErrors.name = 'Cardholder name is required';
+    if (!cardNumber.trim()) newErrors.card = 'Card number is required';
+    if (Object.keys(newErrors).length) { setPaymentErrors(newErrors); return; }
     setPaymentState('processing');
     setPaymentError('');
 
@@ -223,8 +249,13 @@ export default function RSVP() {
                     <input
                       type="text"
                       placeholder="Enter full name"
-                      className="input-base w-full"
+                      value={cardholderName}
+                      onChange={(e) => { setCardholderName(e.target.value); setPaymentErrors((p) => ({ ...p, name: '' })); }}
+                      onBlur={(e) => { if (!e.target.value.trim()) setPaymentErrors((p) => ({ ...p, name: 'Cardholder name is required' })); }}
+                      onFocus={() => setPaymentErrors((p) => ({ ...p, name: '' }))}
+                      className={`input-base w-full${paymentErrors.name ? ' input-error' : ''}`}
                     />
+                    {paymentErrors.name && <p className="field-error-msg">{paymentErrors.name}</p>}
                   </div>
                   <div>
                     <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
@@ -234,10 +265,15 @@ export default function RSVP() {
                       <input
                         type="text"
                         placeholder="0000 0000 0000 0000"
-                        className="input-base w-full pr-12"
+                        value={cardNumber}
+                        onChange={(e) => { setCardNumber(e.target.value); setPaymentErrors((p) => ({ ...p, card: '' })); }}
+                        onBlur={(e) => { if (!e.target.value.trim()) setPaymentErrors((p) => ({ ...p, card: 'Card number is required' })); }}
+                        onFocus={() => setPaymentErrors((p) => ({ ...p, card: '' }))}
+                        className={`input-base w-full pr-12${paymentErrors.card ? ' input-error' : ''}`}
                       />
                       <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
                     </div>
+                    {paymentErrors.card && <p className="field-error-msg">{paymentErrors.card}</p>}
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div>
@@ -316,9 +352,16 @@ export default function RSVP() {
                 </div>
               </div>
 
+              {holdExpiry && !alreadyRsvped && paymentState === 'idle' && (
+                <div className="mb-4">
+                  <TicketHoldTimer expiresAt={holdExpiry} onExpire={handleHoldExpired} />
+                </div>
+              )}
+
               <button
                 onClick={handleCheckout}
                 disabled={totalTickets === 0 || paymentState === 'processing' || alreadyRsvped}
+                title={totalTickets === 0 ? 'Select at least one ticket to continue' : undefined}
                 className="btn-primary w-full py-4 text-h4 h-auto shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {paymentState === 'processing' ? (

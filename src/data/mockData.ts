@@ -40,7 +40,8 @@ export type VibeTag =
   | 'Foodie paradise'
   | 'Adventure seekers'
   | 'Music lovers'
-  | 'Community builders';
+  | 'Community builders'
+  | 'Friendly for solo attendees';
 
 export interface ActivitySignal {
   text: string;

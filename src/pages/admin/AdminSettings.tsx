@@ -1,21 +1,23 @@
 import { useState } from 'react';
 import { Save, Mail, Bell, Shield, Palette, Globe } from 'lucide-react';
+import { toast } from 'sonner';
 import { demoToast } from '../../lib/demoFeedback';
+import { useAppStore } from '../../store/useAppStore';
 
 type FeatureFlag = { id: string; name: string; description: string; enabled: boolean };
-
-const initialFeatures: FeatureFlag[] = [
-  { id: 'auto', name: 'Event Auto-Approval', description: 'Automatically approve events from verified organizers', enabled: false },
-  { id: 'ai', name: 'AI Recommendations', description: 'Enable AI-powered event recommendations for users', enabled: true },
-  { id: 'community', name: 'Community Features', description: 'Enable community discussions and forums', enabled: true },
-  { id: 'pay', name: 'Payment Processing', description: 'Enable online payment processing', enabled: true },
-  { id: 'virtual', name: 'Virtual Events', description: 'Allow organizers to create virtual events', enabled: true },
-];
-
 type Integration = { name: string; status: 'connected' | 'disconnected' };
 
 export default function AdminSettings() {
-  const [features, setFeatures] = useState<FeatureFlag[]>(initialFeatures);
+  const { systemConfig, updateSystemConfig } = useAppStore();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [features, setFeatures] = useState<FeatureFlag[]>([
+    { id: 'auto', name: 'Event Auto-Approval', description: 'Automatically approve events from verified organizers', enabled: false },
+    { id: 'ai', name: 'AI Recommendations', description: 'Enable AI-powered event recommendations for users', enabled: systemConfig.aiRecommendationsEnabled },
+    { id: 'community', name: 'Community Features', description: 'Enable community discussions and forums', enabled: true },
+    { id: 'pay', name: 'Payment Processing', description: 'Enable online payment processing', enabled: true },
+    { id: 'virtual', name: 'Virtual Events', description: 'Allow organizers to create virtual events', enabled: true },
+  ]);
   const [integrations, setIntegrations] = useState<Integration[]>([
     { name: 'Google Analytics', status: 'connected' },
     { name: 'Stripe Payment', status: 'connected' },
@@ -23,9 +25,27 @@ export default function AdminSettings() {
     { name: 'Twilio SMS', status: 'disconnected' },
     { name: 'Facebook Events', status: 'disconnected' },
   ]);
+  const [platformName, setPlatformName] = useState(systemConfig.platformName);
+  const [contactEmail, setContactEmail] = useState(systemConfig.contactEmail);
+  const [platformFee, setPlatformFee] = useState(systemConfig.platformFeePercentage);
 
   const toggleFeature = (id: string) => {
     setFeatures((prev) => prev.map((f) => (f.id === id ? { ...f, enabled: !f.enabled } : f)));
+  };
+
+  const handleSave = () => {
+    setIsSaving(true);
+    const aiFlag = features.find((f) => f.id === 'ai');
+    setTimeout(() => {
+      updateSystemConfig({
+        platformName: platformName.trim() || systemConfig.platformName,
+        contactEmail: contactEmail.trim() || systemConfig.contactEmail,
+        platformFeePercentage: platformFee,
+        aiRecommendationsEnabled: aiFlag?.enabled ?? systemConfig.aiRecommendationsEnabled,
+      });
+      toast.success('Settings saved successfully.');
+      setIsSaving(false);
+    }, 1200);
   };
 
   const connectIntegration = (name: string) => {
@@ -46,11 +66,12 @@ export default function AdminSettings() {
         </div>
         <button
           type="button"
-          className="btn-primary flex items-center gap-2"
-          onClick={() => demoToast('Settings saved', 'Preferences stored for this browser session (demo).')}
+          disabled={isSaving}
+          className="btn-primary flex items-center gap-2 disabled:opacity-70"
+          onClick={handleSave}
         >
-          <Save className="w-4 h-4" />
-          Save Changes
+          {isSaving ? <span className="btn-spinner" /> : <Save className="w-4 h-4" />}
+          {isSaving ? 'Saving…' : 'Save Changes'}
         </button>
       </div>
       <div className="grid md:grid-cols-3 gap-6">
@@ -158,11 +179,11 @@ export default function AdminSettings() {
             <div className="space-y-4">
               <div>
                 <label className="block text-body-sm font-semibold text-foreground mb-2">Platform Name</label>
-                <input type="text" defaultValue="Eventra" className="w-full px-4 py-2 input-base" />
+                <input type="text" value={platformName} onChange={(e) => setPlatformName(e.target.value)} className="w-full px-4 py-2 input-base" />
               </div>
               <div>
                 <label className="block text-body-sm font-semibold text-foreground mb-2">Support Email</label>
-                <input type="email" defaultValue="support@eventra.com" className="w-full px-4 py-2 input-base" />
+                <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full px-4 py-2 input-base" />
               </div>
               <div>
                 <label className="block text-body-sm font-semibold text-foreground mb-2">Default Currency</label>
@@ -174,7 +195,7 @@ export default function AdminSettings() {
               </div>
               <div>
                 <label className="block text-body-sm font-semibold text-foreground mb-2">Service Fee (%)</label>
-                <input type="number" defaultValue="3" className="w-full px-4 py-2 input-base" />
+                <input type="number" value={platformFee} onChange={(e) => setPlatformFee(Number(e.target.value))} className="w-full px-4 py-2 input-base" />
               </div>
             </div>
           </div>

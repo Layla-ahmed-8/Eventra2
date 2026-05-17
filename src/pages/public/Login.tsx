@@ -250,9 +250,17 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-caption font-black uppercase tracking-widest text-muted-foreground ml-1">
-                Password
-              </label>
+              <div className="flex items-center justify-between ml-1">
+                <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-caption text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input

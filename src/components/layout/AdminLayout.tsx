@@ -3,6 +3,20 @@ import { LayoutDashboard, Calendar, Users, MessageSquare, BarChart3, Settings, C
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
+import MobileBottomNav from './MobileBottomNav';
+import { useBreadcrumbs } from '../../hooks/useBreadcrumbs';
+import {
+  Breadcrumb, BreadcrumbList, BreadcrumbItem,
+  BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator,
+} from '../../app/components/ui/breadcrumb';
+
+const bottomNavItems = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
+  { icon: Calendar, label: 'Events', path: '/admin/events' },
+  { icon: Users, label: 'Users', path: '/admin/users' },
+  { icon: Settings, label: 'Settings', path: '/admin/settings' },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
+];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -10,6 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { currentUser, theme, toggleTheme, logout } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const crumbs = useBreadcrumbs();
 
   const navItems = [
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -223,9 +238,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10 xl:p-12">
+        <main id="main-content" className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-24 lg:pb-10 lg:p-10 xl:p-12">
+          {crumbs.length > 0 && (
+            <Breadcrumb className="mb-4">
+              <BreadcrumbList>
+                {crumbs.map((crumb, i) => (
+                  <span key={i} className="inline-flex items-center gap-1.5">
+                    <BreadcrumbItem>
+                      {crumb.path
+                        ? <BreadcrumbLink asChild><Link to={crumb.path}>{crumb.label}</Link></BreadcrumbLink>
+                        : <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                      }
+                    </BreadcrumbItem>
+                    {i < crumbs.length - 1 && <BreadcrumbSeparator />}
+                  </span>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
+          )}
           {children}
         </main>
+        <MobileBottomNav items={bottomNavItems} />
       </div>
     </div>
   );

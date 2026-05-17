@@ -1,12 +1,40 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Edit, BarChart, Share2, MoreVertical } from 'lucide-react';
+import { Plus, Search, Edit, BarChart, Share2, MoreVertical, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { demoToast, shareOrCopyLink } from '../../lib/demoFeedback';
 
+type RejectedEvent = {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+  date: string;
+  rejectionReason: string;
+};
+
+const MOCK_REJECTED: RejectedEvent[] = [
+  {
+    id: 'rej-001',
+    title: 'Underground Beats Night',
+    category: 'Music',
+    image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400',
+    date: '2026-06-15',
+    rejectionReason: 'Insufficient event description — please add more details about performers and schedule.',
+  },
+  {
+    id: 'rej-002',
+    title: 'Cairo Startup Pitch Day',
+    category: 'Business',
+    image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400',
+    date: '2026-07-02',
+    rejectionReason: 'Venue address could not be verified. Please update location details.',
+  },
+];
+
 export default function OrganizerEvents() {
   const { events } = useAppStore();
-  const [filter, setFilter] = useState<'all' | 'upcoming' | 'past' | 'draft'>('all');
+  const [filter, setFilter] = useState<'all' | 'upcoming' | 'past' | 'draft' | 'rejected'>('all');
   const [search, setSearch] = useState('');
 
   const rows = useMemo(() => {
@@ -44,6 +72,7 @@ export default function OrganizerEvents() {
               { label: 'Upcoming', value: 'upcoming' as const },
               { label: 'Past', value: 'past' as const },
               { label: 'Drafts', value: 'draft' as const },
+              { label: 'Rejected', value: 'rejected' as const },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -75,8 +104,40 @@ export default function OrganizerEvents() {
           </div>
         )}
 
-        {filter !== 'draft' && (
-          <div className="overflow-x-auto">
+        {filter === 'rejected' && (
+          <div className="space-y-4">
+            {MOCK_REJECTED.map((ev) => (
+              <div key={ev.id} className="card-surface p-5 border-red-200/60 dark:border-red-800/40">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <img src={ev.image} alt={ev.title} className="w-full sm:w-20 h-28 sm:h-14 object-cover rounded-xl border border-border shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="status-pill bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 font-black uppercase text-[10px]">Rejected</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{ev.category}</span>
+                    </div>
+                    <p className="text-body-sm font-bold text-foreground mb-2">{ev.title}</p>
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-200/50 dark:border-red-800/30">
+                      <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                      <p className="text-caption text-red-700 dark:text-red-300">{ev.rejectionReason}</p>
+                    </div>
+                  </div>
+                  <div className="shrink-0 self-center">
+                    <Link
+                      to={`/organizer/events/create?editId=${ev.id}`}
+                      className="btn-primary inline-flex items-center gap-2 whitespace-nowrap"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Edit &amp; Resubmit
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {filter !== 'draft' && filter !== 'rejected' && (
+          <div className="overflow-x-auto p-4">
             <table className="table-surface min-w-[800px]">
               <thead className="bg-secondary border-b border-border">
                 <tr>
@@ -149,7 +210,7 @@ export default function OrganizerEvents() {
             </table>
           </div>
         )}
-        {rows.length === 0 && filter !== 'draft' && (
+        {rows.length === 0 && filter !== 'draft' && filter !== 'rejected' && (
           <div className="p-12 text-center text-body-sm text-muted-foreground font-bold">No events match this filter or search.</div>
         )}
       </div>
