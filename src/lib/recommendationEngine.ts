@@ -177,7 +177,7 @@ export function getRecommendations(input: UserContext): RecommendationResponse {
       }
 
       // 4. PROXIMITY (max 15 pts)
-      if (context.currentLocation) {
+      if (context.currentLocation && event.location.lat && event.location.lng) {
         const distance = event.location.distanceKm ?? calculateDistance(
           context.currentLocation.lat,
           context.currentLocation.lng,

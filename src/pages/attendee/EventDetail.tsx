@@ -5,6 +5,7 @@ import { shareOrCopyLink } from '../../lib/demoFeedback';
 import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Copy, Ticket, BadgeCheck, Sparkles, TrendingUp, Clock, MessageSquare, Bookmark, Zap, Award, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
+import EventVenueSection from '../../components/map/EventVenueSection';
 
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
@@ -166,6 +167,15 @@ export default function EventDetail() {
                     <p className="text-body-sm font-bold text-foreground">{event.rsvpCount} Attending</p>
                     <p className="text-micro text-muted-foreground font-medium">{event.capacity - event.rsvpCount} spots left</p>
                   </div>
+                </div>
+
+                {/* Venue Map & Travel Section */}
+                <div className="mb-12">
+                  <h2 className="text-h2 font-bold text-foreground flex items-center gap-3 mb-4">
+                    Venue & Directions
+                    <div className="h-px flex-1 bg-border/50"></div>
+                  </h2>
+                  <EventVenueSection location={event.location} />
                 </div>
 
                 {/* Organizer Info */}

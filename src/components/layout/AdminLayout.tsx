@@ -238,7 +238,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Page Content */}
-        <main id="main-content" className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-24 lg:pb-10 lg:p-10 xl:p-12">
+        <main id="main-content" className="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-10 xl:p-12">
           {crumbs.length > 0 && (
             <Breadcrumb className="mb-4">
               <BreadcrumbList>

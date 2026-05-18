@@ -74,7 +74,7 @@ function enrichEvent(
     userCoordinates && event.location.lat && event.location.lng
       ? haversineKm(userCoordinates.lat, userCoordinates.lng, event.location.lat, event.location.lng)
       : null;
-  const sameCity = currentCity ? event.location.city.toLowerCase() === currentCity : false;
+  const sameCity = currentCity ? (event.location.city ?? '').toLowerCase() === currentCity : false;
 
   const rec = recommendations?.recommendations.find((r: any) => r.eventId === event.id);
 
@@ -87,8 +87,8 @@ function enrichEvent(
       event.description,
       event.category,
       event.organizer.name,
-      event.location.venue,
-      event.location.city,
+      event.location.venue ?? '',
+      event.location.city ?? '',
       event.tags.join(' '),
     ].join(' ').toLowerCase(),
     aiScore: rec?.score,
