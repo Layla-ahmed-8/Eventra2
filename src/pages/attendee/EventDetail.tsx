@@ -10,6 +10,8 @@ import {
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 import EventVenueSection from '../../components/map/EventVenueSection';
+import { generateGoogleCalendarUrl } from '../../lib/calendar';
+import { cn } from '../../app/components/ui/utils';
 
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
@@ -80,6 +82,17 @@ export default function EventDetail() {
             >
               <Share2 className="w-5 h-5 text-muted-foreground" />
             </button>
+
+            <a
+              href={generateGoogleCalendarUrl(event)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center transition-all hover:scale-105 border border-border/50"
+              aria-label="Add to Calendar"
+              title="Add to Google Calendar"
+            >
+              <Calendar className="w-5 h-5 text-muted-foreground" />
+            </a>
 
             <button
               type="button"
@@ -203,14 +216,24 @@ export default function EventDetail() {
                         </div>
                         
                         <div className="flex flex-col sm:flex-row gap-4">
-                          <button className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl bg-cyan-500 text-white text-sm font-black shadow-xl shadow-cyan-500/20 hover:opacity-90 transition-all group/btn">
+                          <a 
+                            href={event.location.virtualLink || '#'} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl bg-cyan-500 text-white text-sm font-black shadow-xl shadow-cyan-500/20 hover:opacity-90 transition-all group/btn"
+                          >
                             <Play className="w-4 h-4 fill-white" />
                             JOIN SESSION
-                          </button>
-                          <button className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-border text-foreground text-sm font-black hover:bg-secondary transition-all">
+                          </a>
+                          <a 
+                            href={generateGoogleCalendarUrl(event)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-border text-foreground text-sm font-black hover:bg-secondary transition-all"
+                          >
                             <ExternalLink className="w-4 h-4" />
                             ADD TO GOOGLE CAL
-                          </button>
+                          </a>
                         </div>
 
                         <div className="p-4 rounded-xl bg-background/50 border border-border/50 backdrop-blur-sm">
