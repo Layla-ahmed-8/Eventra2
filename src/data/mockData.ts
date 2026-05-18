@@ -3,6 +3,128 @@
 export const categories = [
   'Music', 'Tech', 'Sports', 'Art', 'Food & Drink', 'Business',
   'Health & Wellness', 'Gaming', 'Film', 'Fashion', 'Science', 'Community'
+  {
+    id: 'event-012',
+    title: 'LIVE: Global Product Design Workshop',
+    description: 'JOINING NOW: A live, interactive workshop on modern product design systems. This event is currently active. You can join the session, participate in live polls, and chat with designers worldwide.',
+    image: 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?w=800',
+    category: 'Tech',
+    date: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // Started 30 mins ago
+    endDate: new Date(Date.now() + 90 * 60 * 1000).toISOString(), // Ends in 90 mins
+    location: {
+      venue: 'Eventra Virtual Stage',
+      address: 'Online',
+      city: 'Global',
+      country: 'Virtual',
+      lat: 0,
+      lng: 0,
+      isVirtual: true,
+      virtualLink: 'https://meet.google.com/abc-defg-hij',
+    },
+    organizer: {
+      id: 'org-002',
+      name: 'Tech Cairo',
+      avatar: 'https://i.pravatar.cc/150?img=20',
+      verified: true,
+      followerCount: 8900,
+    },
+    price: 0,
+    ticketTypes: [{ name: 'Live Pass', price: 0, available: 50 }],
+    capacity: 500,
+    rsvpCount: 428,
+    tags: ['live', 'design', 'workshop', 'virtual'],
+    isRecommended: true,
+    relevanceScore: 0.98,
+    communityId: 'comm-002',
+    attendees: [],
+    engagement: {
+      momentumLabel: 'Trending now',
+      atmosphereLabel: 'High-energy crowd expected',
+      vibeTags: ['Tech-forward', 'Networking-friendly', 'Creative crowd'],
+      activitySignals: [
+        { text: '150+ people are currently in the room', icon: '🔴', timestamp: 'Just now' },
+        { text: 'Live chat is highly active', icon: '💬', timestamp: '2 min ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=21', name: 'Omar', interest: 'UX' },
+        { avatar: 'https://i.pravatar.cc/40?img=22', name: 'Hana', interest: 'Design' },
+      ],
+      sharedInterests: ['UX', 'Design', 'Figma', 'Tech'],
+      discussionCount: 156,
+      bookmarkCount: 230,
+      reactionCount: 842,
+      xpReward: 250,
+      identityLabel: 'Live Participant',
+      aiMatchReason: 'This event is happening right now and matches your design interests!',
+      softActivityFeedback: 'The workshop is currently in the breakout session phase',
+    },
+    schedule: [
+      { time: 'Happening Now', title: 'Live Workshop', desc: 'Interactive design session', active: true },
+      { time: 'In 30 Mins', title: 'Q&A Session', desc: 'Direct chat with mentors' },
+      { time: 'In 1 Hour', title: 'Closing Remarks', desc: 'Summary and resources' }
+    ]
+  },
+  {
+    id: 'event-012',
+    title: 'LIVE: Global Product Design Workshop',
+    description: 'JOINING NOW: A live, interactive workshop on modern product design systems. This event is currently active. You can join the session, participate in live polls, and chat with designers worldwide.',
+    image: 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?w=800',
+    category: 'Tech',
+    date: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // Started 30 mins ago
+    endDate: new Date(Date.now() + 90 * 60 * 1000).toISOString(), // Ends in 90 mins
+    location: {
+      venue: 'Eventra Virtual Stage',
+      address: 'Online',
+      city: 'Global',
+      country: 'Virtual',
+      lat: 0,
+      lng: 0,
+      isVirtual: true,
+      virtualLink: 'https://meet.google.com/abc-defg-hij',
+    },
+    organizer: {
+      id: 'org-002',
+      name: 'Tech Cairo',
+      avatar: 'https://i.pravatar.cc/150?img=20',
+      verified: true,
+      followerCount: 8900,
+    },
+    price: 0,
+    ticketTypes: [{ name: 'Live Pass', price: 0, available: 50 }],
+    capacity: 500,
+    rsvpCount: 428,
+    tags: ['live', 'design', 'workshop', 'virtual'],
+    isRecommended: true,
+    relevanceScore: 0.98,
+    communityId: 'comm-002',
+    attendees: [],
+    engagement: {
+      momentumLabel: 'Trending now',
+      atmosphereLabel: 'High-energy crowd expected',
+      vibeTags: ['Tech-forward', 'Networking-friendly', 'Creative crowd'],
+      activitySignals: [
+        { text: '150+ people are currently in the room', icon: '🔴', timestamp: 'Just now' },
+        { text: 'Live chat is highly active', icon: '💬', timestamp: '2 min ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=21', name: 'Omar', interest: 'UX' },
+        { avatar: 'https://i.pravatar.cc/40?img=22', name: 'Hana', interest: 'Design' },
+      ],
+      sharedInterests: ['UX', 'Design', 'Figma', 'Tech'],
+      discussionCount: 156,
+      bookmarkCount: 230,
+      reactionCount: 842,
+      xpReward: 250,
+      identityLabel: 'Live Participant',
+      aiMatchReason: 'This event is happening right now and matches your design interests!',
+      softActivityFeedback: 'The workshop is currently in the breakout session phase',
+    },
+    schedule: [
+      { time: 'Happening Now', title: 'Live Workshop', desc: 'Interactive design session', active: true },
+      { time: 'In 30 Mins', title: 'Q&A Session', desc: 'Direct chat with mentors' },
+      { time: 'In 1 Hour', title: 'Closing Remarks', desc: 'Summary and resources' }
+    ]
+  },
 ];
 
 // Engagement UX types
