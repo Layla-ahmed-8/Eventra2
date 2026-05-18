@@ -266,7 +266,7 @@ export default function MapDiscovery() {
           </div>
 
           {/* Scrollable Feed */}
-          <div className="flex-1 overflow-y-auto px-5 py-6 space-y-5 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto px-5 py-6 space-y-5 custom-scrollbar overscroll-contain">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Nearby Experiences</h3>
               <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{enriched.length} found</span>
