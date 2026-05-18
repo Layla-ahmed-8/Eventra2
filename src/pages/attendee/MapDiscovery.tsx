@@ -12,7 +12,7 @@ import { haversineKm } from '../../utils/distance';
 import { TRAVEL_MODES, formatTravelTime, mapsUrl } from '../../utils/travelTime';
 import { getCategoryPin, getUserLocationPin } from '../../components/map/categoryPins';
 import type { Event } from '../../data/mockData';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../app/components/ui/utils';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
