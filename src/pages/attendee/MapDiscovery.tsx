@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Search, X, MapPin, Users, Heart, ExternalLink,
@@ -13,6 +12,8 @@ import { haversineKm } from '../../utils/distance';
 import { TRAVEL_MODES, formatTravelTime, mapsUrl } from '../../utils/travelTime';
 import { getCategoryPin, getUserLocationPin } from '../../components/map/categoryPins';
 import type { Event } from '../../data/mockData';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../../app/components/ui/utils';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const CAIRO: [number, number] = [30.0444, 31.2357];
@@ -97,6 +98,8 @@ export default function MapDiscovery() {
     });
   }, [filtered, coords]);
 
+  const topPick = enriched.find(e => (e as any).isRecommended) || enriched[0];
+
   // ── Init map ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mapDivRef.current || mapRef.current) return;
@@ -124,7 +127,7 @@ export default function MapDiscovery() {
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    enriched.forEach((ev: Event & { distKm: number | null }) => {
+    enriched.forEach((ev: EnrichedEvent) => {
       const crowd = ev.rsvpCount / ev.capacity > 0.75 ? 'high'
         : ev.rsvpCount / ev.capacity > 0.4 ? 'medium' : 'low';
       const pin = getCategoryPin(ev.category, liveMode, crowd);
@@ -175,197 +178,208 @@ export default function MapDiscovery() {
 
   const mode = TRAVEL_MODES.find(m => m.key === travelMode)!;
 
-  const topPick = enriched.find(e => (e as any).isRecommended);
-
   return (
     <div className="flex h-[calc(100vh-80px)] lg:h-[calc(100vh-40px)] overflow-hidden rounded-2xl border border-border bg-background relative">
 
       {/* ── LEFT PANEL ─────────────────────────────────────────────────── */}
-      <div className={`hidden lg:flex flex-col flex-shrink-0 border-r border-border overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'w-[360px]' : 'w-0 border-none'}`}>
-
-        {/* Header */}
-        <div className="p-4 border-b border-border space-y-3 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search events, venues, areas…"
-                className="w-full pl-9 pr-8 py-2.5 rounded-xl bg-secondary border border-border text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400 transition-all"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-            <button
-              onClick={() => setLiveMode(l => !l)}
-              className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all flex-shrink-0 ${
-                liveMode
-                  ? 'bg-red-500/10 border-red-400/40 text-red-500'
-                  : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Radio className={`w-3.5 h-3.5 ${liveMode ? 'animate-pulse' : ''}`} />
-              Live
-            </button>
-          </div>
-
-          {/* Filter chips */}
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-            {FILTERS.map(f => (
-              <button
-                key={f}
-                onClick={() => setActiveFilter(f)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                  activeFilter === f
-                    ? 'bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-500/20'
-                    : 'bg-secondary border-border text-muted-foreground hover:border-violet-400/40 hover:text-foreground'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* AI Banner */}
-        <div className="mx-4 mt-4 p-3 rounded-xl bg-gradient-to-r from-violet-500/10 to-blue-500/10 border border-violet-500/20 flex-shrink-0">
-          <div className="flex items-start gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-3.5 h-3.5 text-violet-500" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-0.5">AI Pick</p>
-              <p className="text-[12px] text-foreground font-medium leading-snug">
-                {topPick
-                  ? `"${topPick.title}" is trending near you`
-                  : 'Best networking event within 15 min of you'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Event count */}
-        <div className="px-4 pt-3 pb-2 flex items-center justify-between flex-shrink-0">
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            {enriched.length} events
-          </p>
-          {coords && (
-            <span className="text-[11px] text-blue-500 font-semibold flex items-center gap-1">
-              <Navigation className="w-3 h-3" />
-              Sorted by distance
-            </span>
-          )}
-        </div>
-
-        {/* Event list */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
-          {enriched.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <MapPin className="w-10 h-10 text-muted-foreground/30 mb-3" />
-              <p className="text-sm font-semibold text-muted-foreground">No events match your filters</p>
-              <button onClick={() => { setSearch(''); setActiveFilter('All'); }} className="mt-3 text-xs text-violet-500 hover:underline">
-                Clear filters
-              </button>
-            </div>
-          )}
-          {enriched.map(ev => {
-            const isBookmarked = bookmarkedEvents.includes(ev.id);
-            const isSelected = selectedEvent?.id === ev.id;
-            const eta = formatTravelTime(ev.distKm, mode.mps, travelMode);
-            const color = categoryColor(ev.category);
-
-            return (
-              <div
-                key={ev.id}
-                onClick={() => flyToEvent(ev)}
-                className={`rounded-2xl overflow-hidden cursor-pointer transition-all group border ${
-                  isSelected
-                    ? 'ring-2 ring-violet-500 border-violet-500/30 shadow-lg shadow-violet-500/10'
-                    : 'border-border hover:border-violet-400/30 hover:shadow-md'
-                } bg-card`}
-              >
-                {/* Image */}
-                <div className="relative h-32 overflow-hidden">
-                  <img
-                    src={ev.image}
-                    alt={ev.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <span
-                    className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
-                    style={{ background: color }}
-                  >
-                    {ev.category}
-                  </span>
-                  <button
-                    onClick={e => { e.stopPropagation(); toggleBookmark(ev.id); }}
-                    className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
-                  >
-                    <Heart className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-red-400 text-red-400' : 'text-white'}`} />
+      <motion.aside 
+        initial={false}
+        animate={{ width: isSidebarOpen ? 380 : 0 }}
+        className="hidden lg:flex flex-col flex-shrink-0 border-r border-border overflow-hidden bg-background/50 backdrop-blur-xl relative z-20"
+      >
+        <div className="w-[380px] flex flex-col h-full">
+          {/* Header */}
+          <div className="p-5 border-b border-border space-y-4 flex-shrink-0 bg-background/80 backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 relative group">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search Zamalek, Jazz, AI..."
+                  className="w-full pl-10 pr-8 py-3 rounded-2xl bg-secondary/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="w-4 h-4" />
                   </button>
-                  {ev.distKm !== null && (
-                    <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/90 text-white text-[10px] font-bold">
-                      <Navigation className="w-2.5 h-2.5" />
-                      {ev.distKm.toFixed(1)} km · {eta}
-                    </div>
-                  )}
-                </div>
+                )}
+              </div>
+              <button
+                onClick={() => setLiveMode(l => !l)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold border transition-all flex-shrink-0",
+                  liveMode
+                    ? "bg-red-500/10 border-red-500/40 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.15)]"
+                    : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <div className={cn("w-2 h-2 rounded-full", liveMode ? "bg-red-500 animate-pulse" : "bg-muted-foreground")} />
+                Live
+              </button>
+            </div>
 
-                {/* Body */}
-                <div className="p-3">
-                  <h4 className="text-[13px] font-bold text-foreground line-clamp-1 mb-1 group-hover:text-violet-500 transition-colors">
-                    {ev.title}
-                  </h4>
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-2">
-                    <MapPin className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate">{ev.location.venue}</span>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+              {FILTERS.map(f => (
+                <button
+                  key={f}
+                  onClick={() => setActiveFilter(f)}
+                  className={cn(
+                    "flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border transition-all whitespace-nowrap",
+                    activeFilter === f
+                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
+                      : "bg-secondary/50 border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  )}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* AI Discovery Layer */}
+          <div className="px-5 pt-5 flex-shrink-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden group"
+            >
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
+              <div className="flex items-start gap-3.5 relative z-10">
+                <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center flex-shrink-0 shadow-inner">
+                  <Sparkles className="w-5 h-5 text-primary fill-primary/20" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[11px] font-black text-primary uppercase tracking-[0.1em]">AI Assistant</span>
+                    <span className="w-1 h-1 rounded-full bg-primary/40" />
+                    <span className="text-[11px] font-bold text-muted-foreground">Nearby Recommendation</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <Users className="w-3 h-3" />
-                      {ev.rsvpCount} going
-                    </div>
-                    <span className="text-[12px] font-black" style={{ color }}>
-                      {ev.price === 0 ? 'FREE' : `EGP ${ev.price}`}
-                    </span>
-                  </div>
+                  <p className="text-[13px] text-foreground font-bold leading-tight">
+                    {topPick
+                      ? `"${topPick.title}" is trending among designers within 10 min walk.`
+                      : 'Scanning your preferences for nearby hidden gems...'}
+                  </p>
                 </div>
               </div>
-            );
-          })}
+            </motion.div>
+          </div>
+
+          {/* Scrollable Feed */}
+          <div className="flex-1 overflow-y-auto px-5 py-6 space-y-5 custom-scrollbar">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Nearby Experiences</h3>
+              <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{enriched.length} found</span>
+            </div>
+            
+            {enriched.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
+                <div className="w-20 h-20 rounded-[2.5rem] bg-secondary flex items-center justify-center mb-6">
+                  <MapPin className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-bold text-muted-foreground">No events found here</p>
+                <button onClick={() => { setSearch(''); setActiveFilter('All'); }} className="mt-4 text-xs text-primary font-bold hover:underline">
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <AnimatePresence mode="popLayout">
+                {enriched.map(ev => {
+                  const isSelected = selectedEvent?.id === ev.id;
+                  const eta = formatTravelTime(ev.distKm, mode.mps, travelMode);
+                  return (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      key={ev.id}
+                      onClick={() => flyToEvent(ev)}
+                      className={cn(
+                        "group relative rounded-[2rem] overflow-hidden cursor-pointer transition-all duration-500 border p-1",
+                        isSelected
+                          ? "bg-primary/5 border-primary/40 shadow-2xl shadow-primary/10 ring-1 ring-primary/20"
+                          : "bg-card border-border hover:border-primary/30 hover:shadow-xl hover:translate-y-[-2px]"
+                      )}
+                    >
+                      <div className="relative h-40 rounded-[1.75rem] overflow-hidden">
+                        <img src={ev.image} alt="" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
+                        
+                        <div className="absolute top-3 left-3 flex gap-2">
+                          <span className="px-3 py-1.5 rounded-xl text-[10px] font-black text-white backdrop-blur-md border border-white/20 shadow-xl" style={{ background: categoryColor(ev.category) }}>
+                            {ev.category.toUpperCase()}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={e => { e.stopPropagation(); toggleBookmark(ev.id); }}
+                          className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-black/60 transition-all active:scale-90"
+                        >
+                          <Heart className={cn("w-4.5 h-4.5", bookmarkedEvents.includes(ev.id) ? "fill-red-500 text-red-500" : "text-white")} />
+                        </button>
+
+                        <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                          {ev.distKm !== null && (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-white text-[10px] font-black border border-white/20 shadow-2xl">
+                              <ModeIcon k={travelMode} />
+                              {ev.distKm.toFixed(1)}KM · {eta.toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-4 pt-3">
+                        <div className="flex justify-between items-start gap-2 mb-2">
+                          <h4 className="text-[15px] font-black text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+                            {ev.title}
+                          </h4>
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground whitespace-nowrap bg-secondary/50 px-2 py-0.5 rounded-lg">
+                            <Users className="w-3 h-3" />
+                            {ev.rsvpCount}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
+                          <MapPin className="w-3.5 h-3.5 text-primary" />
+                          <span className="truncate">{ev.location.venue}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            )}
+          </div>
         </div>
-      </div>
+      </motion.aside>
 
-      {/* ── MAP PANEL ──────────────────────────────────────────────────── */}
-      <div className="flex-1 relative overflow-hidden">
+      {/* ── MAP CANVAS ──────────────────────────────────────────────────── */}
+      <main className="flex-1 relative overflow-hidden">
+        {/* Map Container */}
+        <div ref={mapDivRef} className="w-full h-full z-0" />
 
-        {/* Mobile search bar */}
-        <div className="lg:hidden absolute top-3 left-3 right-3 z-[1000]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        {/* Mobile Search & Filters Overlay */}
+        <div className="lg:hidden absolute top-4 left-4 right-4 z-[1000] space-y-3 pointer-events-none">
+          <div className="relative pointer-events-auto">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search events…"
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-background/90 backdrop-blur-md border border-border text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+              placeholder="Discover events..."
+              className="w-full pl-10 pr-4 py-3 rounded-2xl bg-background/90 backdrop-blur-xl border border-border text-sm shadow-2xl shadow-black/10 focus:outline-none"
             />
           </div>
-          {/* Mobile filter chips */}
-          <div className="flex gap-1.5 mt-2 overflow-x-auto pb-0.5">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar pointer-events-auto">
             {FILTERS.map(f => (
               <button
                 key={f}
                 onClick={() => setActiveFilter(f)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm transition-all ${
+                className={cn(
+                  "flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border shadow-xl transition-all",
                   activeFilter === f
-                    ? 'bg-violet-600 border-violet-600 text-white'
-                    : 'bg-background/90 backdrop-blur-md border-border text-muted-foreground'
-                }`}
+                    ? "bg-primary border-primary text-white"
+                    : "bg-background/90 backdrop-blur-xl border-border text-muted-foreground"
+                )}
               >
                 {f}
               </button>
@@ -373,178 +387,117 @@ export default function MapDiscovery() {
           </div>
         </div>
 
-        {/* Map canvas */}
-        <div ref={mapDivRef} className="w-full h-full" />
-
-        {/* Travel mode switcher — floating bottom-left */}
-        <div className="absolute bottom-4 left-4 z-[1000] flex gap-1.5 p-1.5 rounded-2xl bg-background/90 backdrop-blur-md border border-border shadow-xl">
-          {(['walk', 'car', 'bike', 'transit', 'taxi'] as TravelKey[]).map((k: TravelKey) => (
-            <button
-              key={k}
-              onClick={() => setTravelMode(k)}
-              title={k}
-              className={`flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl text-[10px] font-semibold transition-all ${
-                travelMode === k
-                  ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/30'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-              }`}
-            >
-              <ModeIcon k={k} />
-              <span className="capitalize">{k === 'transit' ? 'Bus' : k === 'taxi' ? 'Taxi' : k}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Floating controls — right side */}
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-[1000] flex flex-col gap-2">
+        {/* Floating Controls Overlay */}
+        <div className="absolute right-5 top-1/2 -translate-y-1/2 z-[1000] flex flex-col gap-3">
           <button
             onClick={() => setIsSidebarOpen(s => !s)}
-            className="w-9 h-9 rounded-xl bg-background/90 backdrop-blur-md border border-border shadow-lg flex items-center justify-center text-muted-foreground hover:text-violet-600 hover:border-violet-400/40 transition-all hidden lg:flex"
-            title={isSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+            className="hidden lg:flex w-12 h-12 rounded-2xl bg-background/90 backdrop-blur-xl border border-border shadow-2xl items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 transition-all group"
+            title={isSidebarOpen ? 'Maximize Map' : 'Show Panel'}
           >
-            {isSidebarOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
+            {isSidebarOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />}
           </button>
+          
+          <div className="h-px w-8 bg-border/50 mx-auto" />
+
           {[
-            { icon: <LocateFixed className="w-4 h-4" />, action: locateMe, title: 'My location' },
-            { icon: <ZoomIn className="w-4 h-4" />, action: () => mapRef.current?.zoomIn(), title: 'Zoom in' },
-            { icon: <ZoomOut className="w-4 h-4" />, action: () => mapRef.current?.zoomOut(), title: 'Zoom out' },
+            { icon: <LocateFixed className="w-5 h-5" />, action: locateMe, title: 'My Location' },
+            { icon: <ZoomIn className="w-5 h-5" />, action: () => mapRef.current?.zoomIn(), title: 'Zoom In' },
+            { icon: <ZoomOut className="w-5 h-5" />, action: () => mapRef.current?.zoomOut(), title: 'Zoom Out' },
           ].map((btn, i) => (
             <button
               key={i}
               onClick={btn.action}
+              className="w-12 h-12 rounded-2xl bg-background/90 backdrop-blur-xl border border-border shadow-2xl flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 transition-all active:scale-95"
               title={btn.title}
-              className="w-9 h-9 rounded-xl bg-background/90 backdrop-blur-md border border-border shadow-lg flex items-center justify-center text-muted-foreground hover:text-violet-600 hover:border-violet-400/40 transition-all"
             >
               {btn.icon}
             </button>
           ))}
         </div>
 
-        {/* Live mode toggle — top right */}
-        <button
-          onClick={() => setLiveMode(l => !l)}
-          className={`lg:hidden absolute top-3 right-3 z-[1001] flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border shadow-lg transition-all ${
-            liveMode
-              ? 'bg-red-500/90 border-red-400 text-white'
-              : 'bg-background/90 backdrop-blur-md border-border text-muted-foreground'
-          }`}
-        >
-          <Radio className={`w-3.5 h-3.5 ${liveMode ? 'animate-pulse' : ''}`} />
-          Live
-        </button>
-
-        {/* Location denied banner */}
-        {denied && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-medium shadow-lg backdrop-blur-md">
-            <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-            Location unavailable —
-            <button onClick={request} className="underline font-bold hover:text-amber-900 dark:hover:text-amber-200">
-              Enable
+        {/* Travel Mode Switcher - Glassmorphism Floating */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex gap-1 p-1.5 rounded-[2rem] bg-background/80 backdrop-blur-2xl border border-border shadow-[0_20px_50px_rgba(0,0,0,0.2)]">
+          {(['walk', 'car', 'bike', 'transit', 'taxi'] as TravelKey[]).map((k) => (
+            <button
+              key={k}
+              onClick={() => setTravelMode(k)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-black transition-all",
+                travelMode === k
+                  ? "bg-primary text-white shadow-lg shadow-primary/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              )}
+            >
+              <ModeIcon k={k} />
+              <span className="hidden sm:inline uppercase tracking-widest text-[10px]">
+                {k === 'transit' ? 'Bus' : k}
+              </span>
             </button>
-          </div>
-        )}
-
-        {/* Selected event preview card */}
-        {selectedEvent && (
-          <div className="absolute bottom-20 lg:bottom-4 left-1/2 -translate-x-1/2 z-[1000] w-[300px] max-w-[calc(100vw-32px)]">
-            <div className="rounded-2xl overflow-hidden shadow-2xl border border-border bg-card/95 backdrop-blur-xl">
-              {/* Image */}
-              <div className="relative h-36 overflow-hidden">
-                <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-                <span
-                  className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
-                  style={{ background: categoryColor(selectedEvent.category) }}
-                >
-                  {selectedEvent.category}
-                </span>
-                {(() => {
-                  const d = coords
-                    ? haversineKm(coords.lat, coords.lng, selectedEvent.location.lat, selectedEvent.location.lng)
-                    : null;
-                  const eta = formatTravelTime(d, mode.mps, travelMode);
-                  return d !== null ? (
-                    <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/90 text-white text-[10px] font-bold">
-                      <Navigation className="w-2.5 h-2.5" />
-                      {d.toFixed(1)} km · {eta}
-                    </div>
-                  ) : null;
-                })()}
-              </div>
-
-              {/* Content */}
-              <div className="p-3">
-                <h3 className="text-[13px] font-bold text-foreground line-clamp-1 mb-1">{selectedEvent.title}</h3>
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-3">
-                  <MapPin className="w-3 h-3" />
-                  <span className="truncate">{selectedEvent.location.venue}</span>
-                  <span>·</span>
-                  <Users className="w-3 h-3" />
-                  <span>{selectedEvent.rsvpCount}</span>
-                </div>
-                <div className="flex gap-2">
-                  <Link
-                    to={`/app/events/${selectedEvent.id}`}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-white text-[12px] font-semibold transition-opacity hover:opacity-90"
-                    style={{ background: `linear-gradient(135deg, #6C4CF1, #8B6CF7)` }}
-                  >
-                    View Event <ExternalLink className="w-3 h-3" />
-                  </Link>
-                  <button
-                    onClick={() => toggleBookmark(selectedEvent.id)}
-                    className="w-9 h-9 rounded-xl border border-border flex items-center justify-center hover:bg-secondary transition-colors"
-                  >
-                    <Heart className={`w-4 h-4 ${bookmarkedEvents.includes(selectedEvent.id) ? 'fill-red-400 text-red-400' : 'text-muted-foreground'}`} />
-                  </button>
-                  <a
-                    href={mapsUrl(selectedEvent.location.lat, selectedEvent.location.lng, TRAVEL_MODES.find(m => m.key === travelMode)?.googleMode ?? 'driving')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-xl border border-border flex items-center justify-center hover:bg-secondary transition-colors"
-                  >
-                    <Navigation className="w-4 h-4 text-muted-foreground" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Mobile bottom event strip */}
-        <div className="lg:hidden absolute bottom-0 left-0 right-0 z-[999]">
-          <div className="flex gap-3 overflow-x-auto px-4 pb-4 pt-2 scrollbar-none">
-            {enriched.slice(0, 8).map(ev => (
-              <button
-                key={ev.id}
-                onClick={() => flyToEvent(ev)}
-                className={`flex-shrink-0 w-48 rounded-xl overflow-hidden border shadow-lg bg-card/95 backdrop-blur-md text-left transition-all ${
-                  selectedEvent?.id === ev.id ? 'ring-2 ring-violet-500 border-violet-500/30' : 'border-border'
-                }`}
-              >
-                <div className="relative h-24 overflow-hidden">
-                  <img src={ev.image} alt={ev.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  {ev.distKm !== null && (
-                    <span className="absolute bottom-1.5 left-1.5 text-[10px] font-bold text-white bg-blue-500/90 px-1.5 py-0.5 rounded-full">
-                      {ev.distKm.toFixed(1)} km
-                    </span>
-                  )}
-                </div>
-                <div className="p-2">
-                  <p className="text-[11px] font-bold text-foreground line-clamp-1">{ev.title}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{ev.location.venue}</p>
-                </div>
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
-      </div>
+
+        {/* Selected Event Preview Overlay */}
+        <AnimatePresence>
+          {selectedEvent && (
+            <motion.div
+              initial={{ opacity: 0, y: 100, scale: 0.9, x: '-50%' }}
+              animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
+              exit={{ opacity: 0, y: 100, scale: 0.9, x: '-50%' }}
+              className="absolute bottom-24 lg:bottom-24 left-1/2 z-[1001] w-[340px] max-w-[calc(100vw-40px)]"
+            >
+              <div className="bg-background/90 backdrop-blur-2xl rounded-[2.5rem] border border-white/20 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.4)] overflow-hidden">
+                <div className="relative h-44">
+                  <img src={selectedEvent.image} alt="" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                  <button
+                    onClick={() => setSelectedEvent(null)}
+                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 hover:bg-black/60"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                    <div className="space-y-1">
+                      <span className="px-3 py-1 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-xl">
+                        {selectedEvent.category}
+                      </span>
+                      <h3 className="text-lg font-black text-white leading-tight drop-shadow-lg">{selectedEvent.title}</h3>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-primary" />
+                      {selectedEvent.location.venue}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5" />
+                      {selectedEvent.rsvpCount} GOING
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Link
+                      to={`/app/events/${selectedEvent.id}`}
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-[1.25rem] bg-primary text-white text-xs font-black shadow-xl shadow-primary/20 hover:opacity-90 transition-opacity"
+                    >
+                      GET TICKETS <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                    <a
+                      href={mapsUrl(selectedEvent.location.lat, selectedEvent.location.lng, mode.googleMode)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-14 h-14 rounded-[1.25rem] border border-border bg-secondary/30 flex items-center justify-center hover:bg-secondary transition-colors group"
+                    >
+                      <Navigation className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
     </div>
   );
 }
