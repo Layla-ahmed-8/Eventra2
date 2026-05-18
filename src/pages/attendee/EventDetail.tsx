@@ -298,39 +298,34 @@ export default function EventDetail() {
                 )}
 
                 {/* Event Schedule */}
-                <div className="mb-12">
-                  <h2 className="text-h2 font-bold text-foreground flex items-center gap-3 mb-6">
-                    Event Schedule
-                    <div className="h-px flex-1 bg-border/50"></div>
-                  </h2>
-                  <div className="space-y-0 relative before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-px before:bg-border/60">
-                    {[
-                      { time: '9:00 AM', title: 'Registration & Coffee', desc: 'Check-in and networking', active: true },
-                      { time: '10:00 AM', title: 'Keynote: The Future of AI', desc: 'Dr. Sarah Chen' },
-                      { time: '11:30 AM', title: 'Panel Discussion', desc: 'Industry leaders share insights' },
-                      { time: '1:00 PM', title: 'Lunch & Networking', desc: 'Catered lunch provided' },
-                      { time: '2:30 PM', title: 'Breakout Sessions', desc: 'Choose your track' },
-                      { time: '5:00 PM', title: 'Closing Remarks', desc: 'Key takeaways and networking' }
-                    ].map((item, idx) => (
-                      <div key={idx} className="relative pl-14 pb-8 group last:pb-0">
-                        <div className={`absolute left-0 top-1 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 z-10 ${
-                          item.active 
-                            ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110" 
-                            : "bg-secondary/80 text-muted-foreground border border-border/50 group-hover:border-primary/40 group-hover:text-primary"
-                        }`}>
-                          <Clock className="w-5 h-5" />
+                {event.schedule && event.schedule.length > 0 && (
+                  <div className="mb-12">
+                    <h2 className="text-h2 font-bold text-foreground flex items-center gap-3 mb-6">
+                      Event Schedule
+                      <div className="h-px flex-1 bg-border/50"></div>
+                    </h2>
+                    <div className="space-y-0 relative before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-px before:bg-border/60">
+                      {event.schedule.map((item: any, idx: number) => (
+                        <div key={idx} className="relative pl-14 pb-8 group last:pb-0">
+                          <div className={`absolute left-0 top-1 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 z-10 ${
+                            item.active 
+                              ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110" 
+                              : "bg-secondary/80 text-muted-foreground border border-border/50 group-hover:border-primary/40 group-hover:text-primary"
+                          }`}>
+                            <Clock className="w-5 h-5" />
+                          </div>
+                          <div className="space-y-1">
+                            <p className={`text-body-sm font-black uppercase tracking-widest ${item.active ? "text-primary" : "text-muted-foreground"}`}>
+                              {item.time}
+                            </p>
+                            <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{item.title}</h4>
+                            <p className="text-body-sm text-muted-foreground font-medium">{item.desc}</p>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <p className={`text-body-sm font-black uppercase tracking-widest ${item.active ? "text-primary" : "text-muted-foreground"}`}>
-                            {item.time}
-                          </p>
-                          <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{item.title}</h4>
-                          <p className="text-body-sm text-muted-foreground font-medium">{item.desc}</p>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2.5">

@@ -72,6 +72,13 @@ export interface EngagementData {
   softActivityFeedback: string; // "New conversations happening"
 }
 
+export interface ScheduleItem {
+  time: string;
+  title: string;
+  desc: string;
+  active?: boolean;
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -111,6 +118,7 @@ export interface Event {
   communityId: string;
   attendees: any[];
   engagement: EngagementData;
+  schedule?: ScheduleItem[];
 }
 
 export const mockEvents: Event[] = [
@@ -173,13 +181,19 @@ export const mockEvents: Event[] = [
       reactionCount: 91,
       xpReward: 120,
       badgeUnlock: 'Music Lover',
-      identityLabel: 'Music Lover',
-      aiMatchReason: 'You may connect well with attendees who love jazz and live music experiences',
-      softActivityFeedback: 'People are planning their evening together',
-    }
+    identityLabel: 'Music Lover',
+    aiMatchReason: 'You may connect well with attendees who love jazz and live music experiences',
+    softActivityFeedback: 'People are planning their evening together',
   },
-  {
-    id: 'event-002',
+  schedule: [
+    { time: '7:00 PM', title: 'Doors Open', desc: 'Pre-show drinks and seating', active: true },
+    { time: '8:00 PM', title: 'Opening Act', desc: 'Acoustic jazz set by The Trio' },
+    { time: '9:30 PM', title: 'Main Performance', desc: 'The Cairo Jazz Collective' },
+    { time: '11:00 PM', title: 'Late Night Social', desc: 'DJ set and networking' }
+  ]
+},
+{
+  id: 'event-002',
     title: 'AI & Machine Learning Summit 2026',
     description: 'Join industry leaders, researchers, and developers for a full-day conference on the latest developments in AI and ML. Featuring keynote speakers from top tech companies, hands-on workshops, and networking opportunities.',
     image: 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?w=800',
@@ -237,7 +251,14 @@ export const mockEvents: Event[] = [
       identityLabel: 'Tech Explorer',
       aiMatchReason: 'You may connect well with attendees interested in AI + startups',
       softActivityFeedback: 'Community members are actively preparing for this summit',
-    }
+    },
+    schedule: [
+      { time: '9:00 AM', title: 'Registration', desc: 'Welcome coffee and badges', active: true },
+      { time: '10:00 AM', title: 'Keynote', desc: 'The Future of Generative AI' },
+      { time: '11:30 AM', title: 'Panel Discussion', desc: 'AI in the Middle East' },
+      { time: '1:00 PM', title: 'Lunch Break', desc: 'Networking lunch' },
+      { time: '2:30 PM', title: 'Workshops', desc: 'Hands-on ML sessions' }
+    ]
   },
   {
     id: 'event-003',
@@ -751,18 +772,22 @@ export const mockEvents: Event[] = [
       recentAttendees: [
         { avatar: 'https://i.pravatar.cc/40?img=21', name: 'Omar', interest: 'UX' },
         { avatar: 'https://i.pravatar.cc/40?img=22', name: 'Hana', interest: 'Design' },
-        { avatar: 'https://i.pravatar.cc/40?img=23', name: 'Youssef', interest: 'Figma' },
       ],
-      sharedInterests: ['UX', 'Design', 'Tech', 'Figma'],
-      discussionCount: 48,
-      bookmarkCount: 76,
-      reactionCount: 142,
-      xpReward: 160,
-      badgeUnlock: 'Digital Creator',
-      identityLabel: 'Design Thinker',
-      aiMatchReason: 'Matches your interest in Tech and creative tools',
-      softActivityFeedback: 'Participants are setting up their Figma workspaces',
+      sharedInterests: ['UX', 'Design', 'Figma', 'Tech'],
+      discussionCount: 42,
+      bookmarkCount: 85,
+      reactionCount: 156,
+      xpReward: 150,
+      identityLabel: 'Design Specialist',
+      aiMatchReason: 'Advanced design masterclass matching your professional interests',
+      softActivityFeedback: 'Designers are sharing their portfolios',
     },
+    schedule: [
+      { time: '6:00 PM', title: 'Welcome & Intro', desc: 'Overview of the masterclass', active: true },
+      { time: '6:30 PM', title: 'Advanced Research', desc: 'Quantitative vs Qualitative' },
+      { time: '7:30 PM', title: 'Prototyping Workshop', desc: 'Figma best practices' },
+      { time: '8:30 PM', title: 'Q&A Panel', desc: 'Meet the industry experts' }
+    ]
   },
   {
     id: 'event-013',
