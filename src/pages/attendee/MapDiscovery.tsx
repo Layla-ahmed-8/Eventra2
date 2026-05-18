@@ -5,6 +5,8 @@ import {
   Search, X, MapPin, Users, Heart, ExternalLink,
   Navigation, LocateFixed, ZoomIn, ZoomOut, Sparkles,
   Car, Footprints, Bike, Bus, TrendingUp, Radio,
+  Calendar, Clock, Star, Info, ChevronRight, Bookmark,
+  Share2, Map as MapIcon
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useLocation } from '../../hooks/useLocation';
@@ -18,6 +20,12 @@ import { cn } from '../../app/components/ui/utils';
 // ── Constants ─────────────────────────────────────────────────────────────────
 const CAIRO: [number, number] = [30.0444, 31.2357];
 const FILTERS = ['All', 'Music', 'Tech', 'Food', 'Art', 'Sports', 'Free', 'Today'];
+const TIME_OPTIONS = [
+  { label: 'Now', value: 'now' },
+  { label: 'Tonight', value: 'tonight' },
+  { label: 'Weekend', value: 'weekend' },
+  { label: 'All Time', value: 'all' },
+];
 type TravelKey = 'walk' | 'car' | 'bike' | 'transit' | 'taxi';
 
 function categoryColor(cat: string) {
@@ -50,6 +58,9 @@ export default function MapDiscovery() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [liveMode, setLiveMode]       = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [timeRange, setTimeRange]     = useState('all');
+  const [planner, setPlanner]         = useState<string[]>([]);
+  const [view, setView]               = useState<'feed' | 'detail'>('feed');
 
   const mapRef       = useRef<L.Map | null>(null);
   const mapDivRef    = useRef<HTMLDivElement>(null);
@@ -70,6 +81,22 @@ export default function MapDiscovery() {
         }
         if (activeFilter === 'Food') return e.category === 'Food & Drink';
         return e.category === activeFilter;
+      })
+      .filter(e => {
+        if (timeRange === 'all') return true;
+        const date = new Date(e.date);
+        const now = new Date();
+        if (timeRange === 'now') {
+          return date.toDateString() === now.toDateString() && date.getHours() >= now.getHours() - 1 && date.getHours() <= now.getHours() + 2;
+        }
+        if (timeRange === 'tonight') {
+          return date.toDateString() === now.toDateString() && date.getHours() >= 17;
+        }
+        if (timeRange === 'weekend') {
+          const day = date.getDay();
+          return day === 5 || day === 6 || day === 0; // Fri, Sat, Sun
+        }
+        return true;
       })
       .filter(e => {
         if (!search.trim()) return true;
@@ -174,6 +201,7 @@ export default function MapDiscovery() {
   const flyToEvent = (ev: Event) => {
     mapRef.current?.flyTo([ev.location.lat, ev.location.lng], 16, { duration: 0.8 });
     setSelectedEvent(ev);
+    setView('detail');
   };
 
   const mode = TRAVEL_MODES.find(m => m.key === travelMode)!;
@@ -187,169 +215,320 @@ export default function MapDiscovery() {
         animate={{ width: isSidebarOpen ? 380 : 0 }}
         className="hidden lg:flex flex-col flex-shrink-0 border-r border-border overflow-hidden bg-background/50 backdrop-blur-xl relative z-20"
       >
-        <div className="w-[380px] flex flex-col h-full">
-          {/* Header */}
-          <div className="p-5 border-b border-border space-y-4 flex-shrink-0 bg-background/80 backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 relative group">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search Zamalek, Jazz, AI..."
-                  className="w-full pl-10 pr-8 py-3 rounded-2xl bg-secondary/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                />
-                {search && (
-                  <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={() => setLiveMode(l => !l)}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold border transition-all flex-shrink-0",
-                  liveMode
-                    ? "bg-red-500/10 border-red-500/40 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.15)]"
-                    : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground"
-                )}
+        <div className="w-[380px] flex flex-col h-full relative">
+          <AnimatePresence mode="wait">
+            {view === 'feed' ? (
+              <motion.div
+                key="feed"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex flex-col h-full"
               >
-                <div className={cn("w-2 h-2 rounded-full", liveMode ? "bg-red-500 animate-pulse" : "bg-muted-foreground")} />
-                Live
-              </button>
-            </div>
-
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
-              {FILTERS.map(f => (
-                <button
-                  key={f}
-                  onClick={() => setActiveFilter(f)}
-                  className={cn(
-                    "flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border transition-all whitespace-nowrap",
-                    activeFilter === f
-                      ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
-                      : "bg-secondary/50 border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                  )}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* AI Discovery Layer */}
-          <div className="px-5 pt-5 flex-shrink-0">
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden group"
-            >
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
-              <div className="flex items-start gap-3.5 relative z-10">
-                <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center flex-shrink-0 shadow-inner">
-                  <Sparkles className="w-5 h-5 text-primary fill-primary/20" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[11px] font-black text-primary uppercase tracking-[0.1em]">AI Assistant</span>
-                    <span className="w-1 h-1 rounded-full bg-primary/40" />
-                    <span className="text-[11px] font-bold text-muted-foreground">Nearby Recommendation</span>
-                  </div>
-                  <p className="text-[13px] text-foreground font-bold leading-tight">
-                    {topPick
-                      ? `"${topPick.title}" is trending among designers within 10 min walk.`
-                      : 'Scanning your preferences for nearby hidden gems...'}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Scrollable Feed */}
-          <div className="flex-1 overflow-y-auto px-5 py-6 space-y-5 custom-scrollbar overscroll-contain">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Nearby Experiences</h3>
-              <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{enriched.length} found</span>
-            </div>
-            
-            {enriched.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
-                <div className="w-20 h-20 rounded-[2.5rem] bg-secondary flex items-center justify-center mb-6">
-                  <MapPin className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <p className="text-sm font-bold text-muted-foreground">No events found here</p>
-                <button onClick={() => { setSearch(''); setActiveFilter('All'); }} className="mt-4 text-xs text-primary font-bold hover:underline">
-                  Clear Filters
-                </button>
-              </div>
-            ) : (
-              <AnimatePresence mode="popLayout">
-                {enriched.map(ev => {
-                  const isSelected = selectedEvent?.id === ev.id;
-                  const eta = formatTravelTime(ev.distKm, mode.mps, travelMode);
-                  return (
-                    <motion.div
-                      layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      key={ev.id}
-                      onClick={() => flyToEvent(ev)}
+                {/* Header */}
+                <div className="p-5 border-b border-border space-y-4 flex-shrink-0 bg-background/80 backdrop-blur-md">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 relative group">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                      <input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search Zamalek, Jazz, AI..."
+                        className="w-full pl-10 pr-8 py-3 rounded-2xl bg-secondary/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                      />
+                      {search && (
+                        <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setLiveMode(l => !l)}
                       className={cn(
-                        "group relative rounded-[2rem] overflow-hidden cursor-pointer transition-all duration-500 border p-1",
-                        isSelected
-                          ? "bg-primary/5 border-primary/40 shadow-2xl shadow-primary/10 ring-1 ring-primary/20"
-                          : "bg-card border-border hover:border-primary/30 hover:shadow-xl hover:translate-y-[-2px]"
+                        "flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold border transition-all flex-shrink-0",
+                        liveMode
+                          ? "bg-red-500/10 border-red-500/40 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.15)]"
+                          : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground"
                       )}
                     >
-                      <div className="relative h-40 rounded-[1.75rem] overflow-hidden">
-                        <img src={ev.image} alt="" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
-                        
-                        <div className="absolute top-3 left-3 flex gap-2">
-                          <span className="px-3 py-1.5 rounded-xl text-[10px] font-black text-white backdrop-blur-md border border-white/20 shadow-xl" style={{ background: categoryColor(ev.category) }}>
-                            {ev.category.toUpperCase()}
-                          </span>
-                        </div>
+                      <div className={cn("w-2 h-2 rounded-full", liveMode ? "bg-red-500 animate-pulse" : "bg-muted-foreground")} />
+                      Live
+                    </button>
+                  </div>
 
-                        <button
-                          onClick={e => { e.stopPropagation(); toggleBookmark(ev.id); }}
-                          className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-black/60 transition-all active:scale-90"
-                        >
-                          <Heart className={cn("w-4.5 h-4.5", bookmarkedEvents.includes(ev.id) ? "fill-red-500 text-red-500" : "text-white")} />
-                        </button>
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+                    {FILTERS.map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setActiveFilter(f)}
+                        className={cn(
+                          "flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border transition-all whitespace-nowrap",
+                          activeFilter === f
+                            ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
+                            : "bg-secondary/50 border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                        )}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-                        <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                          {ev.distKm !== null && (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-white text-[10px] font-black border border-white/20 shadow-2xl">
-                              <ModeIcon k={travelMode} />
-                              {ev.distKm.toFixed(1)}KM · {eta.toUpperCase()}
-                            </div>
-                          )}
-                        </div>
+                {/* AI Discovery Layer */}
+                <div className="px-5 pt-5 flex-shrink-0">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden group"
+                  >
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
+                    <div className="flex items-start gap-3.5 relative z-10">
+                      <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center flex-shrink-0 shadow-inner">
+                        <Sparkles className="w-5 h-5 text-primary fill-primary/20" />
                       </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[11px] font-black text-primary uppercase tracking-[0.1em]">AI Assistant</span>
+                          <span className="w-1 h-1 rounded-full bg-primary/40" />
+                          <span className="text-[11px] font-bold text-muted-foreground">Nearby Recommendation</span>
+                        </div>
+                        <p className="text-[13px] text-foreground font-bold leading-tight">
+                          {topPick
+                            ? `"${topPick.title}" is trending among designers within 10 min walk.`
+                            : 'Scanning your preferences for nearby hidden gems...'}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
 
-                      <div className="p-4 pt-3">
-                        <div className="flex justify-between items-start gap-2 mb-2">
-                          <h4 className="text-[15px] font-black text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
-                            {ev.title}
-                          </h4>
-                          <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground whitespace-nowrap bg-secondary/50 px-2 py-0.5 rounded-lg">
-                            <Users className="w-3 h-3" />
-                            {ev.rsvpCount}
+                {/* Scrollable Feed */}
+                <div className="flex-1 overflow-y-auto px-5 py-6 space-y-5 custom-scrollbar overscroll-contain">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">Nearby Experiences</h3>
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{enriched.length} found</span>
+                  </div>
+                  
+                  {enriched.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
+                      <div className="w-20 h-20 rounded-[2.5rem] bg-secondary flex items-center justify-center mb-6">
+                        <MapPin className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm font-bold text-muted-foreground">No events found here</p>
+                      <button onClick={() => { setSearch(''); setActiveFilter('All'); }} className="mt-4 text-xs text-primary font-bold hover:underline">
+                        Clear Filters
+                      </button>
+                    </div>
+                  ) : (
+                    <AnimatePresence mode="popLayout">
+                      {enriched.map(ev => {
+                        const isSelected = selectedEvent?.id === ev.id;
+                        const eta = formatTravelTime(ev.distKm, mode.mps, travelMode);
+                        return (
+                          <motion.div
+                            layout
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            key={ev.id}
+                            onClick={() => flyToEvent(ev)}
+                            className={cn(
+                              "group relative rounded-[2rem] overflow-hidden cursor-pointer transition-all duration-500 border p-1",
+                              isSelected
+                                ? "bg-primary/5 border-primary/40 shadow-2xl shadow-primary/10 ring-1 ring-primary/20"
+                                : "bg-card border-border hover:border-primary/30 hover:shadow-xl hover:translate-y-[-2px]"
+                            )}
+                          >
+                            <div className="relative h-40 rounded-[1.75rem] overflow-hidden">
+                              <img src={ev.image} alt="" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80" />
+                              
+                              <div className="absolute top-3 left-3 flex gap-2">
+                                <span className="px-3 py-1.5 rounded-xl text-[10px] font-black text-white backdrop-blur-md border border-white/20 shadow-xl" style={{ background: categoryColor(ev.category) }}>
+                                  {ev.category.toUpperCase()}
+                                </span>
+                              </div>
+
+                              <button
+                                onClick={e => { e.stopPropagation(); toggleBookmark(ev.id); }}
+                                className="absolute top-3 right-3 w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-black/60 transition-all active:scale-90"
+                              >
+                                <Heart className={cn("w-4.5 h-4.5", bookmarkedEvents.includes(ev.id) ? "fill-red-500 text-red-500" : "text-white")} />
+                              </button>
+
+                              <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                                {ev.distKm !== null && (
+                                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-white text-[10px] font-black border border-white/20 shadow-2xl">
+                                    <ModeIcon k={travelMode} />
+                                    {ev.distKm.toFixed(1)}KM · {eta.toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="p-4 pt-3">
+                              <div className="flex justify-between items-start gap-2 mb-2">
+                                <h4 className="text-[15px] font-black text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+                                  {ev.title}
+                                </h4>
+                                <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground whitespace-nowrap bg-secondary/50 px-2 py-0.5 rounded-lg">
+                                  <Users className="w-3 h-3" />
+                                  {ev.rsvpCount}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
+                                <MapPin className="w-3.5 h-3.5 text-primary" />
+                                <span className="truncate">{ev.location.venue}</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  )}
+                </div>
+
+                {/* Time Exploration Slider - Desktop Sidebar */}
+                <div className="p-5 border-t border-border bg-background/80 backdrop-blur-md">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Time Exploration</span>
+                    <Clock className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <div className="flex p-1 bg-secondary/50 rounded-2xl border border-border">
+                    {TIME_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setTimeRange(opt.value)}
+                        className={cn(
+                          "flex-1 py-2 text-[10px] font-bold rounded-xl transition-all",
+                          timeRange === opt.value
+                            ? "bg-background text-primary shadow-sm border border-border"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="detail"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="flex flex-col h-full bg-background"
+              >
+                {selectedEvent && (
+                  <>
+                    <div className="relative h-64 flex-shrink-0">
+                      <img src={selectedEvent.image} alt="" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                      <button 
+                        onClick={() => setView('feed')}
+                        className="absolute top-5 left-5 w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 hover:bg-black/60 transition-all"
+                      >
+                        <ChevronRight className="w-5 h-5 rotate-180" />
+                      </button>
+                      <div className="absolute bottom-5 left-5 right-5">
+                        <span className="px-3 py-1 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest mb-2 inline-block">
+                          {selectedEvent.category}
+                        </span>
+                        <h2 className="text-2xl font-black text-white leading-tight">{selectedEvent.title}</h2>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                      {/* Quick Stats */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 rounded-3xl bg-secondary/30 border border-border space-y-1">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Attendance</p>
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-primary" />
+                            <span className="text-lg font-black">{selectedEvent.rsvpCount}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
-                          <MapPin className="w-3.5 h-3.5 text-primary" />
-                          <span className="truncate">{ev.location.venue}</span>
+                        <div className="p-4 rounded-3xl bg-secondary/30 border border-border space-y-1">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Price</p>
+                          <div className="flex items-center gap-2">
+                            <Star className="w-4 h-4 text-orange-500" />
+                            <span className="text-lg font-black">{selectedEvent.price === 0 ? 'Free' : `EGP ${selectedEvent.price}`}</span>
+                          </div>
                         </div>
                       </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+
+                      {/* Details Section */}
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-4 p-4 rounded-3xl bg-secondary/20 border border-border/50">
+                          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <MapPin className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Location</p>
+                            <p className="text-sm font-bold text-foreground truncate">{selectedEvent.location.venue}</p>
+                            <p className="text-xs text-muted-foreground truncate">{selectedEvent.location.address}, {selectedEvent.location.city}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-4 p-4 rounded-3xl bg-secondary/20 border border-border/50">
+                          <div className="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                            <Calendar className="w-5 h-5 text-orange-500" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Date & Time</p>
+                            <p className="text-sm font-bold text-foreground">
+                              {new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Starts at 19:00 (7 PM)</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                          <Info className="w-4 h-4 text-primary" />
+                          About Event
+                        </h3>
+                        <p className="text-[13px] leading-relaxed text-muted-foreground font-medium">
+                          {selectedEvent.description || "Join us for an immersive experience at one of the city's most vibrant venues. Network with peers and enjoy a curated selection of activities."}
+                        </p>
+                      </div>
+
+                      {/* Transit Options */}
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                          <Navigation className="w-4 h-4 text-primary" />
+                          Transit Access
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {TRAVEL_MODES.slice(0, 4).map(m => (
+                            <div key={m.key} className="p-3 rounded-2xl bg-secondary/20 border border-border/50 flex items-center gap-3">
+                              <span className="text-lg">{m.iconEmoji}</span>
+                              <span className="text-[11px] font-bold">{formatTravelTime(selectedEvent.distKm, m.mps)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-6 border-t border-border bg-background/80 backdrop-blur-md flex gap-3 flex-shrink-0">
+                      <Link
+                        to={`/app/events/${selectedEvent.id}`}
+                        className="flex-1 flex items-center justify-center gap-2 py-4 rounded-[1.5rem] bg-primary text-white text-xs font-black shadow-xl shadow-primary/20 hover:opacity-90 transition-all active:scale-95"
+                      >
+                        BOOK NOW <ChevronRight className="w-4 h-4" />
+                      </Link>
+                      <button className="w-14 h-14 rounded-[1.5rem] border border-border flex items-center justify-center hover:bg-secondary transition-all active:scale-95">
+                        <Share2 className="w-5 h-5 text-muted-foreground" />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </motion.aside>
 
