@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { shareOrCopyLink } from '../../lib/demoFeedback';
-import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Copy, Ticket, BadgeCheck, Sparkles, TrendingUp, Clock, MessageSquare, Bookmark, Zap, Award, Activity } from 'lucide-react';
+import { 
+  ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Copy, Ticket, 
+  BadgeCheck, Sparkles, TrendingUp, Clock, MessageSquare, Bookmark, 
+  Zap, Award, Activity, Video, ExternalLink, Play, Globe
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 import EventVenueSection from '../../components/map/EventVenueSection';
@@ -152,11 +156,17 @@ export default function EventDetail() {
 
                   <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
                     <div className="icon-box bg-cyan-500/10 text-cyan-500 mb-4">
-                      <MapPin className="w-5 h-5" />
+                      {event.location.isVirtual ? <Video className="w-5 h-5" /> : <MapPin className="w-5 h-5" />}
                     </div>
-                    <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest mb-1">Where</p>
-                    <p className="text-body-sm font-bold text-foreground truncate">{event.location.venue}</p>
-                    <p className="text-micro text-muted-foreground font-medium truncate">{event.location.city}</p>
+                    <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                      {event.location.isVirtual ? 'Platform' : 'Where'}
+                    </p>
+                    <p className="text-body-sm font-bold text-foreground truncate">
+                      {event.location.isVirtual ? 'Virtual Event' : event.location.venue}
+                    </p>
+                    <p className="text-micro text-muted-foreground font-medium truncate">
+                      {event.location.isVirtual ? 'Zoom / Google Meet' : event.location.city}
+                    </p>
                   </div>
 
                   <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
@@ -169,13 +179,59 @@ export default function EventDetail() {
                   </div>
                 </div>
 
-                {/* Venue Map & Travel Section */}
+                {/* Venue Map & Travel Section / Virtual Link Section */}
                 <div className="mb-12">
                   <h2 className="text-h2 font-bold text-foreground flex items-center gap-3 mb-4">
-                    Venue & Directions
+                    {event.location.isVirtual ? 'Virtual Access' : 'Venue & Directions'}
                     <div className="h-px flex-1 bg-border/50"></div>
                   </h2>
-                  <EventVenueSection location={event.location} />
+                  
+                  {event.location.isVirtual ? (
+                    <div className="p-8 rounded-[2rem] bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 relative overflow-hidden group">
+                      <div className="absolute right-[-20px] top-[-20px] opacity-10 group-hover:rotate-12 transition-transform duration-700">
+                        <Globe className="w-40 h-40 text-cyan-500" />
+                      </div>
+                      <div className="relative z-10 space-y-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center text-cyan-600 shadow-inner">
+                            <Video className="w-7 h-7" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-foreground">Join Online</h3>
+                            <p className="text-body-sm text-muted-foreground font-medium">Link will be active 15 mins before start</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <button className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl bg-cyan-500 text-white text-sm font-black shadow-xl shadow-cyan-500/20 hover:opacity-90 transition-all group/btn">
+                            <Play className="w-4 h-4 fill-white" />
+                            JOIN SESSION
+                          </button>
+                          <button className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-border text-foreground text-sm font-black hover:bg-secondary transition-all">
+                            <ExternalLink className="w-4 h-4" />
+                            ADD TO GOOGLE CAL
+                          </button>
+                        </div>
+
+                        <div className="p-4 rounded-xl bg-background/50 border border-border/50 backdrop-blur-sm">
+                          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Technical Requirements</p>
+                          <div className="flex flex-wrap gap-4">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" /> High-speed Internet
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" /> Webcam & Mic
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" /> Latest Browser
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <EventVenueSection location={event.location} />
+                  )}
                 </div>
 
                 {/* Organizer Info */}
@@ -240,6 +296,41 @@ export default function EventDetail() {
                     </div>
                   </div>
                 )}
+
+                {/* Event Schedule */}
+                <div className="mb-12">
+                  <h2 className="text-h2 font-bold text-foreground flex items-center gap-3 mb-6">
+                    Event Schedule
+                    <div className="h-px flex-1 bg-border/50"></div>
+                  </h2>
+                  <div className="space-y-0 relative before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-px before:bg-border/60">
+                    {[
+                      { time: '9:00 AM', title: 'Registration & Coffee', desc: 'Check-in and networking', active: true },
+                      { time: '10:00 AM', title: 'Keynote: The Future of AI', desc: 'Dr. Sarah Chen' },
+                      { time: '11:30 AM', title: 'Panel Discussion', desc: 'Industry leaders share insights' },
+                      { time: '1:00 PM', title: 'Lunch & Networking', desc: 'Catered lunch provided' },
+                      { time: '2:30 PM', title: 'Breakout Sessions', desc: 'Choose your track' },
+                      { time: '5:00 PM', title: 'Closing Remarks', desc: 'Key takeaways and networking' }
+                    ].map((item, idx) => (
+                      <div key={idx} className="relative pl-14 pb-8 group last:pb-0">
+                        <div className={`absolute left-0 top-1 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 z-10 ${
+                          item.active 
+                            ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110" 
+                            : "bg-secondary/80 text-muted-foreground border border-border/50 group-hover:border-primary/40 group-hover:text-primary"
+                        }`}>
+                          <Clock className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className={`text-body-sm font-black uppercase tracking-widest ${item.active ? "text-primary" : "text-muted-foreground"}`}>
+                            {item.time}
+                          </p>
+                          <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{item.title}</h4>
+                          <p className="text-body-sm text-muted-foreground font-medium">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2.5">
