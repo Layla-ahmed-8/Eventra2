@@ -60,6 +60,16 @@ interface AppState {
   userCoordinates: { lat: number; lng: number } | null;
   dismissedRecommendations: string[];
   aiRecommendations: RecommendationResponse | null;
+  personalEvents: Array<{
+    id: string;
+    title: string;
+    description: string;
+    date: string;
+    endDate: string;
+    location: string;
+    type: 'personal' | 'reminder';
+    category?: string;
+  }>;
 
   // ── NOTIFICATIONS (persisted) ────────────────────────────────────────────────
   notifications: Notification[];
@@ -93,6 +103,8 @@ interface AppState {
   rsvpEventFull: (eventId: string, ticketTypeId: string, quantity: number) => Promise<Booking | null>;
   cancelBooking: (bookingId: string) => Promise<void>;
   dismissRecommendation: (eventId: string) => void;
+  addPersonalEvent: (event: Omit<AppState['personalEvents'][0], 'id'>) => void;
+  removePersonalEvent: (eventId: string) => void;
 
   // Gamification
   awardXP: (amount: number, reason: string) => void;
@@ -164,6 +176,7 @@ export const useAppStore = create<AppState>()(
       userCoordinates: null,
       dismissedRecommendations: [],
       aiRecommendations: null,
+      personalEvents: [],
 
       notifications: [],
       theme: 'light',
@@ -525,6 +538,21 @@ export const useAppStore = create<AppState>()(
       dismissRecommendation: (eventId) => {
         set((state) => ({
           dismissedRecommendations: [...state.dismissedRecommendations, eventId],
+        }));
+      },
+
+      addPersonalEvent: (event) => {
+        set((state) => ({
+          personalEvents: [
+            ...state.personalEvents,
+            { ...event, id: `personal-${Date.now()}` },
+          ],
+        }));
+      },
+
+      removePersonalEvent: (eventId) => {
+        set((state) => ({
+          personalEvents: state.personalEvents.filter((e) => e.id !== eventId),
         }));
       },
 
