@@ -6,19 +6,22 @@ import {
   ChevronRight,
   Clock3,
   MapPin,
+  Plus,
   Sparkles,
   Ticket,
   TrendingUp,
   Users,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import CalendarAddEventModal from '../../components/calendar/CalendarAddEventModal';
 
 export default function Calendar() {
-  const { events, rsvpedEvents, bookings } = useAppStore();
+  const { events, rsvpedEvents, bookings, personalEvents } = useAppStore();
   const [view, setView] = useState<'month' | 'week'>('month');
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [eventFilter, setEventFilter] = useState<'all' | 'upcoming' | 'virtual' | 'in-person'>('all');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const userEvents = useMemo(() => {
     return events
@@ -99,11 +102,13 @@ export default function Calendar() {
     const isCurrentMonth = cell.getMonth() === monthDate.getMonth();
     const isToday = isoDate === today.toISOString().slice(0, 10);
     const eventsOnDay = filteredEvents.filter((event) => event.date.slice(0, 10) === isoDate);
+    const personalOnDay = personalEvents.filter((e) => e.date.slice(0, 10) === isoDate);
 
-    return { cell, isoDate, isCurrentMonth, isToday, eventsOnDay };
+    return { cell, isoDate, isCurrentMonth, isToday, eventsOnDay, personalOnDay };
   });
 
   return (
+    <>
     <div className="space-y-2.5">
       <div className="hero-surface p-2 md:p-2.5 space-y-1.5">
         <div className="flex flex-col gap-1.5 lg:flex-row lg:items-end lg:justify-between">
@@ -179,6 +184,14 @@ export default function Calendar() {
               <button onClick={() => setMonthOffset((value) => value + 1)} className="btn-ghost px-3 py-2">
                 <ChevronRight className="w-4 h-4" />
               </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="btn-secondary px-3 py-2 flex items-center gap-1.5 text-sm"
+                title="Add personal event"
+              >
+                <Plus className="w-4 h-4" />
+                Add Event
+              </button>
               <div className="flex gap-1 p-1 bg-secondary/50 rounded-2xl inline-flex border border-border/50">
                 {[
                   { key: 'month', label: 'Month' },
@@ -204,7 +217,7 @@ export default function Calendar() {
                     {day}
                   </div>
                 ))}
-                {monthCells.map(({ cell, isoDate, isCurrentMonth, isToday, eventsOnDay }) => {
+                {monthCells.map(({ cell, isoDate, isCurrentMonth, isToday, eventsOnDay, personalOnDay }) => {
                   const isSelected = selectedDate === isoDate;
                   return (
                     <button
@@ -218,7 +231,7 @@ export default function Calendar() {
                           ? 'bg-primary/10 border-primary shadow-lg shadow-primary/10 ring-2 ring-primary/15'
                           : isToday
                           ? 'bg-primary border-primary shadow-lg shadow-primary/20 scale-[1.01] z-10'
-                          : eventsOnDay.length > 0
+                          : eventsOnDay.length > 0 || personalOnDay.length > 0
                           ? 'bg-primary/5 border-primary/20 hover:border-primary/40'
                           : 'border-border/50 hover:bg-secondary/50'
                       }`}
@@ -228,9 +241,12 @@ export default function Calendar() {
                         {eventsOnDay.slice(0, 2).map((event) => (
                           <div key={event.id} className={`h-1.5 rounded-full ${isToday ? 'bg-white/70' : 'bg-primary/60'}`} />
                         ))}
-                        {eventsOnDay.length > 2 && (
+                        {personalOnDay.slice(0, 1).map((pe) => (
+                          <div key={pe.id} className={`h-1.5 rounded-full ${isToday ? 'bg-white/50' : 'bg-cyan-400/70'}`} />
+                        ))}
+                        {eventsOnDay.length + personalOnDay.length > 2 && (
                           <div className={`text-[10px] font-bold ${isToday ? 'text-white/80' : 'text-primary'}`}>
-                            +{eventsOnDay.length - 2} more
+                            +{eventsOnDay.length + personalOnDay.length - 2} more
                           </div>
                         )}
                       </div>
@@ -372,5 +388,13 @@ export default function Calendar() {
         </div>
       </div>
     </div>
+
+    {showAddModal && (
+      <CalendarAddEventModal
+        onClose={() => setShowAddModal(false)}
+        initialDate={selectedDate ?? undefined}
+      />
+    )}
+    </>
   );
 }

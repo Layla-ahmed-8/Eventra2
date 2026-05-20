@@ -5,6 +5,7 @@ import { shareOrCopyLink } from '../../lib/demoFeedback';
 import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Copy, Ticket, CheckCircle2, BadgeCheck, Sparkles, TrendingUp, Clock, MessageSquare, Bookmark, Zap, Award, Activity, MessagesSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
+import EventVenueSection from '../../components/map/EventVenueSection';
 
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
@@ -346,6 +347,19 @@ export default function EventDetail() {
                   {alreadyRsvped ? 'Already reserved. You can view ticket details any time.' : 'Powered by Eventra Secure Checkout'}
                 </p>
               </div>
+
+              {/* Venue Map */}
+              <EventVenueSection
+                location={{
+                  venue: event.location.venue,
+                  address: event.location.address,
+                  city: event.location.city,
+                  lat: event.location.lat,
+                  lng: event.location.lng,
+                  isVirtual: event.location.isVirtual,
+                  virtualLink: event.location.virtualLink,
+                }}
+              />
 
               {/* Quick Action Activity */}
               <div className="bento-section">

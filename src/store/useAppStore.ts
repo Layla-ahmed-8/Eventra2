@@ -13,6 +13,20 @@ import type { ManagedUser } from '../data/adminUsersData';
 import { initialEventMessages } from '../data/eventChatData';
 import { initialDirectMessages, initialBroadcastMessages } from '../data/messagesData';
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+export interface PersonalEvent {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  endDate: string;
+  location: string;
+  type: 'personal' | 'reminder';
+  category: string;
+  createdAt: string;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 export function getXPForLevel(level: number): number {
@@ -95,6 +109,9 @@ interface AppState {
 
   // ── REGISTERED USERS (persisted) ────────────────────────────────────────────
   registeredUsers: User[];
+
+  // ── PERSONAL CALENDAR EVENTS (persisted) ────────────────────────────────────
+  personalEvents: PersonalEvent[];
 
   // ── ACTIONS ─────────────────────────────────────────────────────────────────
 
@@ -189,6 +206,10 @@ interface AppState {
   sendAdminMessageToUser: (userId: string, userName: string, subject: string, body: string) => void;
   forcePasswordReset: (userId: string, userName: string) => void;
 
+  // Personal calendar events
+  addPersonalEvent: (event: Omit<PersonalEvent, 'id' | 'createdAt'>) => void;
+  removePersonalEvent: (eventId: string) => void;
+
   // Direct messaging
   sendDirectMessage: (receiverId: string, receiverName: string, receiverRole: 'attendee' | 'organizer' | 'admin', content: string) => void;
   sendBroadcastMessage: (subject: string, content: string, targetRole: 'attendee' | 'organizer') => void;
@@ -228,6 +249,7 @@ export const useAppStore = create<AppState>()(
 
       onboardingCompleted: false,
       registeredUsers: [],
+      personalEvents: [],
 
       userBehaviorType: 'passive',
       engagementActions: 0,
@@ -1356,6 +1378,20 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
+      // ── Personal Calendar Events ──────────────────────────────────────────────
+      addPersonalEvent: (event) => {
+        const newEvent: PersonalEvent = {
+          ...event,
+          id: `personal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({ personalEvents: [...state.personalEvents, newEvent] }));
+      },
+
+      removePersonalEvent: (eventId) => {
+        set((state) => ({ personalEvents: state.personalEvents.filter((e) => e.id !== eventId) }));
+      },
+
       // ── User Management ───────────────────────────────────────────────────────
 
       suspendUser: (userId, reason, suspendUntil) => {
@@ -1535,6 +1571,7 @@ export const useAppStore = create<AppState>()(
         discussionCount: state.discussionCount,
         onboardingCompleted: state.onboardingCompleted,
         registeredUsers: state.registeredUsers,
+        personalEvents: state.personalEvents,
         interests: state.interests,
         locationEnabled: state.locationEnabled,
         userCity: state.userCity,

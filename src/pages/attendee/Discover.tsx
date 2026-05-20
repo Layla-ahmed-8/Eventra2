@@ -17,6 +17,7 @@ import { categories } from '../../data/mockData';
 import AISearchModal from '../../components/AISearchModal';
 import { Skeleton } from '../../app/components/ui/skeleton';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { getRecommendations } from '../../lib/recommendationEngine';
 
 type SortMode = 'recommended' | 'nearest' | 'popular' | 'price-low' | 'price-high';
 type ModeFilter = 'all' | 'virtual' | 'in-person';
@@ -82,7 +83,7 @@ function enrichEvent(event: any, userRadius: number, currentCity: string | null,
 }
 
 export default function Discover() {
-  const { events, bookmarkedEvents, toggleBookmark, recordBrowse, currentUser, locationEnabled, userCoordinates, interests } = useAppStore();
+  const { events, bookmarkedEvents, toggleBookmark, recordBrowse, currentUser, locationEnabled, userCoordinates, interests, rsvpedEvents } = useAppStore();
 
   useEffect(() => {
     recordBrowse();
@@ -111,6 +112,51 @@ export default function Discover() {
   const enrichedEvents = useMemo<EnrichedEvent[]>(() => {
     return events.map((event) => enrichEvent(event, userRadius, currentCity, userCoordinates));
   }, [events, currentCity, userCoordinates, userRadius]);
+
+  const scoreMap = useMemo(() => {
+    const now = new Date();
+    const hour = now.getHours();
+    const timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night' =
+      hour >= 5 && hour < 12 ? 'morning' : hour >= 12 && hour < 17 ? 'afternoon' : hour >= 17 && hour < 21 ? 'evening' : 'night';
+    const result = getRecommendations({
+      user: {
+        id: currentUser?.id ?? 'guest',
+        name: currentUser?.name,
+        profile: {
+          interests: interests,
+          preferredCategories: interests,
+          preferredTimeOfDay: 'any',
+          maxDistanceKm: userRadius,
+          pricePreference: 'any',
+        },
+        history: rsvpedEvents.map((eid) => {
+          const ev = events.find((e) => e.id === eid);
+          return { eventId: eid, category: ev?.category ?? '', attendedAt: ev?.date ?? now.toISOString(), rating: null };
+        }),
+        social: { friendsAttending: [] },
+      },
+      context: {
+        currentLocation: userCoordinates,
+        currentTime: now.toISOString(),
+        dayOfWeek: now.toLocaleDateString('en-US', { weekday: 'long' }),
+        timeOfDay,
+      },
+      events: events.map((e) => ({
+        id: e.id,
+        title: e.title,
+        category: e.category,
+        date: e.date,
+        startTime: new Date(e.date).toTimeString().slice(0, 5),
+        endTime: '',
+        price: e.price === 0 ? null : e.price,
+        location: { lat: e.location.lat, lng: e.location.lng, venue: e.location.venue },
+        capacity: e.capacity,
+        spotsRemaining: e.capacity - e.rsvpCount,
+        tags: e.tags,
+      })),
+    });
+    return new Map(result.recommendations.map((r) => [r.eventId, r]));
+  }, [currentUser, interests, userCoordinates, userRadius, rsvpedEvents, events]);
 
   const filteredEvents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -146,13 +192,9 @@ export default function Discover() {
           return b.price - a.price;
         case 'recommended':
         default: {
-          const aMatchesInterests = interests.length > 0 && interests.includes(a.category);
-          const bMatchesInterests = interests.length > 0 && interests.includes(b.category);
-          if (aMatchesInterests !== bMatchesInterests) return aMatchesInterests ? -1 : 1;
-          if (a.isRecommended !== b.isRecommended) return a.isRecommended ? -1 : 1;
-          if (a.distanceKm !== null && b.distanceKm !== null && a.distanceKm !== b.distanceKm) {
-            return a.distanceKm - b.distanceKm;
-          }
+          const aScore = scoreMap.get(a.id)?.score ?? 0;
+          const bScore = scoreMap.get(b.id)?.score ?? 0;
+          if (aScore !== bScore) return bScore - aScore;
           return b.rsvpCount - a.rsvpCount;
         }
       }
@@ -164,7 +206,12 @@ export default function Discover() {
     k: () => setFocusedIndex((i) => Math.max(i - 1, 0)),
   });
 
-  const recommended = useMemo(() => enrichedEvents.filter((event) => event.isRecommended).slice(0, 4), [enrichedEvents]);
+  const recommended = useMemo(() => {
+    return [...enrichedEvents]
+      .sort((a, b) => (scoreMap.get(b.id)?.score ?? 0) - (scoreMap.get(a.id)?.score ?? 0))
+      .filter((e) => (scoreMap.get(e.id)?.topPick) ?? e.isRecommended)
+      .slice(0, 4);
+  }, [enrichedEvents, scoreMap]);
   const trending = useMemo(() => [...enrichedEvents].sort((a, b) => b.rsvpCount - a.rsvpCount).slice(0, 4), [enrichedEvents]);
   const nearby = useMemo(
     () =>
@@ -463,7 +510,14 @@ export default function Discover() {
             ) : (
               filteredEvents.map((event, index) => (
                 <div key={event.id} className={focusedIndex === index ? 'ring-2 ring-primary rounded-3xl' : undefined}>
-                  <EventCard event={event} bookmarkedEvents={bookmarkedEvents} toggleBookmark={toggleBookmark} distanceKm={event.distanceKm} />
+                  <EventCard
+                    event={event}
+                    bookmarkedEvents={bookmarkedEvents}
+                    toggleBookmark={toggleBookmark}
+                    distanceKm={event.distanceKm}
+                    aiReason={scoreMap.get(event.id)?.reason ?? null}
+                    aiScore={scoreMap.get(event.id)?.score ?? null}
+                  />
                 </div>
               ))
             )}
@@ -510,6 +564,8 @@ export default function Discover() {
                   bookmarkedEvents={bookmarkedEvents}
                   toggleBookmark={toggleBookmark}
                   distanceKm={event.distanceKm}
+                  aiReason={scoreMap.get(event.id)?.reason ?? null}
+                  aiScore={scoreMap.get(event.id)?.score ?? null}
                 />
               ))}
             </div>
@@ -532,7 +588,15 @@ export default function Discover() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {recommended.map((event) => (
-                <EventCard key={event.id} event={event} bookmarkedEvents={bookmarkedEvents} toggleBookmark={toggleBookmark} distanceKm={event.distanceKm} />
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  bookmarkedEvents={bookmarkedEvents}
+                  toggleBookmark={toggleBookmark}
+                  distanceKm={event.distanceKm}
+                  aiReason={scoreMap.get(event.id)?.reason ?? null}
+                  aiScore={scoreMap.get(event.id)?.score ?? null}
+                />
               ))}
             </div>
           </div>
@@ -554,7 +618,15 @@ export default function Discover() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {trending.map((event) => (
-                <EventCard key={event.id} event={event} bookmarkedEvents={bookmarkedEvents} toggleBookmark={toggleBookmark} distanceKm={event.distanceKm} />
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  bookmarkedEvents={bookmarkedEvents}
+                  toggleBookmark={toggleBookmark}
+                  distanceKm={event.distanceKm}
+                  aiReason={scoreMap.get(event.id)?.reason ?? null}
+                  aiScore={null}
+                />
               ))}
             </div>
           </div>
@@ -565,8 +637,9 @@ export default function Discover() {
   );
 }
 
-function EventCard({ event, bookmarkedEvents, toggleBookmark, distanceKm }: any) {
+function EventCard({ event, bookmarkedEvents, toggleBookmark, distanceKm, aiReason, aiScore }: any) {
   const isBookmarked = bookmarkedEvents.includes(event.id);
+  const isTopPick = aiScore !== null && aiScore >= 55;
 
   return (
     <div className="group card-surface overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.02]">
@@ -599,11 +672,11 @@ function EventCard({ event, bookmarkedEvents, toggleBookmark, distanceKm }: any)
             <Heart className={`w-5 h-5 transition-colors ${isBookmarked ? 'fill-red-500 text-red-500' : 'text-slate-600 dark:text-slate-400 group-hover/bookmark:text-red-400'}`} />
           </button>
 
-          {event.isRecommended && (
+          {isTopPick && (
             <div className="absolute bottom-4 left-4">
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xl animate-pulse-slow">
                 <Sparkles className="w-3 h-3" />
-                AI Match
+                AI Pick
               </span>
             </div>
           )}
@@ -615,8 +688,15 @@ function EventCard({ event, bookmarkedEvents, toggleBookmark, distanceKm }: any)
           <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">{event.title}</h3>
         </Link>
 
+        {aiReason && isTopPick && (
+          <p className="text-[11px] text-primary font-semibold mb-2 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 flex-shrink-0" />
+            {aiReason}
+          </p>
+        )}
+
         <div className="flex flex-wrap gap-2 mb-4">
-          {event.isRecommended && <span className="filter-chip active text-[11px]">AI Match</span>}
+          {isTopPick && <span className="filter-chip active text-[11px]">AI Pick</span>}
           {event.location.isVirtual ? (
             <span className="filter-chip inactive text-[11px]">Virtual</span>
           ) : (
