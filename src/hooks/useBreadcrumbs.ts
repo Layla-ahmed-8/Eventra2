@@ -31,79 +31,67 @@ const ROUTE_MAP: RouteMap = {
     { label: 'Community', path: '/app/community' },
     { label: o.communityName || p.id },
   ],
-  '/app/profile/achievements': () => [
+  '/app/rewards/hub': () => [
     { label: 'Profile', path: '/app/profile' },
-    { label: 'Achievements' },
-  ],
-  '/app/rewards/store': () => [
-    { label: 'Profile', path: '/app/profile' },
-    { label: 'Reward Store' },
+    { label: 'Rewards Hub' },
   ],
   // Organizer
   '/organizer/events/create': () => [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Analytics', path: '/organizer/analytics' },
     { label: 'Events', path: '/organizer/events' },
     { label: 'Create Event' },
   ],
   '/organizer/events/:id/manage': (p, o) => [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Analytics', path: '/organizer/analytics' },
     { label: 'Events', path: '/organizer/events' },
     { label: o.eventTitle || 'Event', path: `/organizer/events/${p.id}/manage` },
     { label: 'Manage' },
   ],
   '/organizer/events/:id/chat': (p, o) => [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Analytics', path: '/organizer/analytics' },
     { label: 'Events', path: '/organizer/events' },
     { label: o.eventTitle || 'Event', path: `/organizer/events/${p.id}/manage` },
     { label: 'Event Chat' },
   ],
   '/organizer/notifications': () => [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Analytics', path: '/organizer/analytics' },
     { label: 'Notifications' },
   ],
-  '/organizer/analytics': () => [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
-    { label: 'Analytics' },
-  ],
   '/organizer/messages': () => [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Analytics', path: '/organizer/analytics' },
     { label: 'Messages' },
   ],
   '/organizer/profile': () => [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Analytics', path: '/organizer/analytics' },
     { label: 'Profile' },
   ],
   // Admin
   '/admin/messages': () => [
-    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Analytics', path: '/admin/analytics' },
     { label: 'Messages' },
   ],
   '/admin/events': () => [
-    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Analytics', path: '/admin/analytics' },
     { label: 'Event Moderation' },
   ],
   '/admin/users': () => [
-    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Analytics', path: '/admin/analytics' },
     { label: 'User Management' },
   ],
   '/admin/community': () => [
-    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Analytics', path: '/admin/analytics' },
     { label: 'Community' },
   ],
   '/admin/moderation': () => [
-    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Analytics', path: '/admin/analytics' },
     { label: 'Moderation Center' },
   ],
-  '/admin/analytics': () => [
-    { label: 'Dashboard', path: '/admin/dashboard' },
-    { label: 'Analytics' },
-  ],
   '/admin/settings': () => [
-    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Analytics', path: '/admin/analytics' },
     { label: 'Settings' },
   ],
   '/admin/audit-logs': () => [
-    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Analytics', path: '/admin/analytics' },
     { label: 'Audit Logs' },
   ],
   // Attendee wallet
@@ -129,7 +117,7 @@ const ROUTE_MAP: RouteMap = {
   ],
   // Organizer wallet
   '/organizer/wallet': () => [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Analytics', path: '/organizer/analytics' },
     { label: 'Wallet' },
   ],
   '/organizer/wallet/withdraw': () => [
@@ -146,7 +134,7 @@ const ROUTE_MAP: RouteMap = {
   ],
   // Admin wallet
   '/admin/wallet': () => [
-    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Analytics', path: '/admin/analytics' },
     { label: 'Wallet' },
   ],
   '/admin/wallet/payouts': () => [

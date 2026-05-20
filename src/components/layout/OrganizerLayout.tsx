@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Plus, BarChart3, MessageSquare, ChevronLeft, Menu, X, Moon, Sun, Crown, LogOut, Wallet, Bell } from 'lucide-react';
+import { BarChart3, Calendar, Plus, MessageSquare, ChevronLeft, Menu, X, Moon, Sun, Crown, LogOut, Wallet, Bell } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
@@ -25,9 +25,9 @@ const isOrganizerNavActive = (pathname: string, path: string) => {
 };
 
 const bottomNavItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/organizer/dashboard' },
-  { icon: Calendar, label: 'My Events', path: '/organizer/events' },
   { icon: BarChart3, label: 'Analytics', path: '/organizer/analytics' },
+  { icon: Calendar, label: 'My Events', path: '/organizer/events' },
+  { icon: MessageSquare, label: 'Messages', path: '/organizer/messages' },
   { icon: Wallet, label: 'Wallet', path: '/organizer/wallet' },
   { icon: Crown, label: 'Profile', path: '/organizer/profile' },
 ];
@@ -42,10 +42,9 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
   const crumbs = useBreadcrumbs();
 
   const navItems = [
-    { path: '/organizer/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/organizer/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/organizer/events', icon: Calendar, label: 'My Events' },
     { path: '/organizer/events/create', icon: Plus, label: 'Create Event' },
-    { path: '/organizer/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/organizer/messages', icon: MessageSquare, label: 'Messages' },
     { path: '/organizer/notifications', icon: Bell, label: 'Notifications' },
     { path: '/organizer/wallet', icon: Wallet, label: 'Wallet' },
@@ -63,11 +62,11 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
         {/* Sidebar Header */}
         <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border/50">
           {sidebarOpen ? (
-            <Link to="/organizer/dashboard" className="flex items-center min-w-0 animate-in fade-in duration-500">
+            <Link to="/organizer/analytics" className="flex items-center min-w-0 animate-in fade-in duration-500">
               <Logo variant="horizontal" className="h-8 w-auto" />
             </Link>
           ) : (
-            <Link to="/organizer/dashboard" className="flex items-center justify-center w-full animate-in zoom-in duration-500">
+            <Link to="/organizer/analytics" className="flex items-center justify-center w-full animate-in zoom-in duration-500">
               <Logo variant="small" className="h-10 w-auto" />
             </Link>
           )}

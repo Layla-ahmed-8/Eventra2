@@ -82,7 +82,7 @@ function enrichEvent(event: any, userRadius: number, currentCity: string | null,
 }
 
 export default function Discover() {
-  const { events, bookmarkedEvents, toggleBookmark, recordBrowse, currentUser, locationEnabled, userCoordinates } = useAppStore();
+  const { events, bookmarkedEvents, toggleBookmark, recordBrowse, currentUser, locationEnabled, userCoordinates, interests } = useAppStore();
 
   useEffect(() => {
     recordBrowse();
@@ -145,15 +145,19 @@ export default function Discover() {
         case 'price-high':
           return b.price - a.price;
         case 'recommended':
-        default:
+        default: {
+          const aMatchesInterests = interests.length > 0 && interests.includes(a.category);
+          const bMatchesInterests = interests.length > 0 && interests.includes(b.category);
+          if (aMatchesInterests !== bMatchesInterests) return aMatchesInterests ? -1 : 1;
           if (a.isRecommended !== b.isRecommended) return a.isRecommended ? -1 : 1;
           if (a.distanceKm !== null && b.distanceKm !== null && a.distanceKm !== b.distanceKm) {
             return a.distanceKm - b.distanceKm;
           }
           return b.rsvpCount - a.rsvpCount;
+        }
       }
     });
-  }, [enrichedEvents, maxPrice, modeFilter, searchQuery, selectedCategories, selectedTags, showNearMeOnly, showOnlyRecommended, sortBy]);
+  }, [enrichedEvents, interests, maxPrice, modeFilter, searchQuery, selectedCategories, selectedTags, showNearMeOnly, showOnlyRecommended, sortBy]);
 
   useKeyboardShortcuts({
     j: () => setFocusedIndex((i) => Math.min(i + 1, filteredEvents.length - 1)),
@@ -411,6 +415,23 @@ export default function Discover() {
             </div>
           </div>
         </div>
+
+        {interests.length === 0 && (
+          <div className="surface-panel p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-primary/20 bg-primary/5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-body-sm font-bold text-foreground">Personalize your feed</p>
+                <p className="text-caption text-muted-foreground">Pick your interests to unlock AI-powered event recommendations.</p>
+              </div>
+            </div>
+            <Link to="/onboarding" className="btn-primary px-5 py-2 h-auto text-body-sm font-bold whitespace-nowrap">
+              Complete Setup
+            </Link>
+          </div>
+        )}
 
         <div id="discover-event-grid" className="space-y-8 scroll-mt-24">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between border-b border-border/50 pb-6">

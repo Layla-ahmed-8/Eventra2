@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { LogIn, Mail, Lock, Users, Briefcase, Shield, Moon, Sun } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { demoAccounts } from '../../data/users';
 import Logo from '../../components/Logo';
 
 export default function Login() {
@@ -13,23 +12,27 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const resolvePostLoginRoute = () => {
+    const { currentUser } = useAppStore.getState();
+    if (!currentUser) return '/app/discover';
+    if (currentUser.role === 'admin') return '/admin/analytics';
+    if (currentUser.role === 'organizer') return currentUser.onboardingCompleted ? '/organizer/analytics' : '/organizer/onboarding';
+    return currentUser.onboardingCompleted ? '/app/discover' : '/onboarding';
+  };
+
+  const clearOnboardingParams = () => {
+    searchParams.delete('afterOnboarding');
+    searchParams.delete('afterOrganizerOnboarding');
+    searchParams.delete('afterAdminOnboarding');
+    setSearchParams(searchParams, { replace: true });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = await login(email, password);
-
     if (success) {
-      searchParams.delete('afterOnboarding');
-      searchParams.delete('afterOrganizerOnboarding');
-      searchParams.delete('afterAdminOnboarding');
-      setSearchParams(searchParams, { replace: true });
-      const user = demoAccounts.find(u => u.email === email);
-      if (user?.role === 'organizer') {
-        navigate('/organizer/dashboard');
-      } else if (user?.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/app/discover');
-      }
+      clearOnboardingParams();
+      navigate(resolvePostLoginRoute());
     } else {
       setError('Invalid email or password');
     }
@@ -39,20 +42,9 @@ export default function Login() {
     setEmail(demoEmail);
     setPassword(demoPassword);
     const success = await login(demoEmail, demoPassword);
-
     if (success) {
-      searchParams.delete('afterOnboarding');
-      searchParams.delete('afterOrganizerOnboarding');
-      searchParams.delete('afterAdminOnboarding');
-      setSearchParams(searchParams, { replace: true });
-      const user = demoAccounts.find(u => u.email === demoEmail);
-      if (user?.role === 'organizer') {
-        navigate('/organizer/dashboard');
-      } else if (user?.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/app/discover');
-      }
+      clearOnboardingParams();
+      navigate(resolvePostLoginRoute());
     }
   };
 

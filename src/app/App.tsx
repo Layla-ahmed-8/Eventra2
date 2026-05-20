@@ -35,11 +35,10 @@ import MyEvents from '../pages/attendee/MyEvents';
 import Community from '../pages/attendee/Community';
 import CommunityDetail from '../pages/attendee/CommunityDetail';
 import Profile from '../pages/attendee/Profile';
-import Achievements from '../pages/attendee/Achievements';
 import Notifications from '../pages/attendee/Notifications';
 import Messages from '../pages/attendee/Messages';
 import OrderSummary from '../pages/attendee/OrderSummary';
-import RewardStore from '../pages/attendee/RewardStore';
+import RewardsHub from '../pages/attendee/RewardsHub';
 import AttendeeWallet from '../pages/attendee/wallet/AttendeeWallet';
 import WalletTransactions from '../pages/attendee/wallet/WalletTransactions';
 import WalletDeposit from '../pages/attendee/wallet/WalletDeposit';
@@ -47,7 +46,6 @@ import WalletWithdraw from '../pages/attendee/wallet/WalletWithdraw';
 import WalletMethods from '../pages/attendee/wallet/WalletMethods';
 
 // Organizer Pages
-import OrganizerDashboard from '../pages/organizer/OrganizerDashboard';
 import OrganizerEvents from '../pages/organizer/OrganizerEvents';
 import CreateEvent from '../pages/organizer/CreateEvent';
 import ManageEvent from '../pages/organizer/ManageEvent';
@@ -63,7 +61,6 @@ import OrganizerWalletTransactions from '../pages/organizer/wallet/OrganizerWall
 import OrganizerWalletMethods from '../pages/organizer/wallet/OrganizerWalletMethods';
 
 // Admin Pages
-import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminEvents from '../pages/admin/AdminEvents';
 import AdminUsers from '../pages/admin/AdminUsers';
 import AdminCommunity from '../pages/admin/AdminCommunity';
@@ -77,13 +74,25 @@ import AdminWallet from '../pages/admin/wallet/AdminWallet';
 import AdminWalletPayouts from '../pages/admin/wallet/AdminWalletPayouts';
 
 // ── Auth guard: redirect to login if not authenticated, or wrong role ────────
-function RequireAuth({ children, role }: { children: React.ReactNode; role?: 'attendee' | 'organizer' | 'admin' }) {
-  const { isAuthenticated, currentUser } = useAppStore();
+function RequireAuth({
+  children,
+  role,
+  skipOnboardingCheck = false,
+}: {
+  children: React.ReactNode;
+  role?: 'attendee' | 'organizer' | 'admin';
+  skipOnboardingCheck?: boolean;
+}) {
+  const { isAuthenticated, currentUser, onboardingCompleted } = useAppStore();
   if (!isAuthenticated || !currentUser) return <Navigate to="/login" replace />;
   if (role && currentUser.role !== role) {
-    if (currentUser.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
-    if (currentUser.role === 'organizer') return <Navigate to="/organizer/dashboard" replace />;
+    if (currentUser.role === 'admin') return <Navigate to="/admin/analytics" replace />;
+    if (currentUser.role === 'organizer') return <Navigate to="/organizer/analytics" replace />;
     return <Navigate to="/app/discover" replace />;
+  }
+  if (!skipOnboardingCheck && !onboardingCompleted) {
+    if (currentUser.role === 'organizer') return <Navigate to="/organizer/onboarding" replace />;
+    if (currentUser.role === 'attendee') return <Navigate to="/onboarding" replace />;
   }
   return <>{children}</>;
 }
@@ -92,8 +101,8 @@ function RequireAuth({ children, role }: { children: React.ReactNode; role?: 'at
 function RedirectIfAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, currentUser } = useAppStore();
   if (isAuthenticated && currentUser) {
-    if (currentUser.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
-    if (currentUser.role === 'organizer') return <Navigate to="/organizer/dashboard" replace />;
+    if (currentUser.role === 'admin') return <Navigate to="/admin/analytics" replace />;
+    if (currentUser.role === 'organizer') return <Navigate to="/organizer/analytics" replace />;
     return <Navigate to="/app/discover" replace />;
   }
   return <>{children}</>;
@@ -138,7 +147,7 @@ const router = createBrowserRouter(
       <Route path="/verify-email/:token" element={<VerifyEmail />} />
       <Route path="/suspended" element={<AccountSuspended />} />
       <Route path="/signup" element={<Navigate to="/register" replace />} />
-      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/onboarding" element={<RequireAuth role="attendee" skipOnboardingCheck><Onboarding /></RequireAuth>} />
 
       {/* ── Attendee ── */}
       <Route path="/app" element={<Navigate to="/app/discover" replace />} />
@@ -154,13 +163,14 @@ const router = createBrowserRouter(
       <Route path="/app/orders/:id" element={<RequireAuth role="attendee"><AttendeeLayout><OrderSummary /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/community" element={<RequireAuth role="attendee"><AttendeeLayout><Community /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/community/:id" element={<RequireAuth role="attendee"><AttendeeLayout><CommunityDetail /></AttendeeLayout></RequireAuth>} />
-      <Route path="/app/rewards" element={<Navigate to="/app/profile/achievements" replace />} />
+      <Route path="/app/rewards" element={<Navigate to="/app/rewards/hub" replace />} />
+      <Route path="/app/rewards/hub" element={<RequireAuth role="attendee"><AttendeeLayout><RewardsHub /></AttendeeLayout></RequireAuth>} />
+      <Route path="/app/rewards/store" element={<Navigate to="/app/rewards/hub" replace />} />
+      <Route path="/app/profile/achievements" element={<Navigate to="/app/rewards/hub" replace />} />
       <Route path="/app/profile" element={<RequireAuth role="attendee"><AttendeeLayout><Profile /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/settings" element={<Navigate to="/app/profile" replace />} />
-      <Route path="/app/profile/achievements" element={<RequireAuth role="attendee"><AttendeeLayout><Achievements /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/notifications" element={<RequireAuth role="attendee"><AttendeeLayout><Notifications /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/messages" element={<RequireAuth role="attendee"><AttendeeLayout><Messages /></AttendeeLayout></RequireAuth>} />
-      <Route path="/app/rewards/store" element={<RequireAuth role="attendee"><AttendeeLayout><RewardStore /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/wallet" element={<RequireAuth role="attendee"><AttendeeLayout><AttendeeWallet /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/wallet/transactions" element={<RequireAuth role="attendee"><AttendeeLayout><WalletTransactions /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/wallet/deposit" element={<RequireAuth role="attendee"><AttendeeLayout><WalletDeposit /></AttendeeLayout></RequireAuth>} />
@@ -168,9 +178,9 @@ const router = createBrowserRouter(
       <Route path="/app/wallet/methods" element={<RequireAuth role="attendee"><AttendeeLayout><WalletMethods /></AttendeeLayout></RequireAuth>} />
 
       {/* ── Organizer ── */}
-      <Route path="/organizer" element={<Navigate to="/organizer/dashboard" replace />} />
-      <Route path="/organizer/onboarding" element={<OrganizerLayout><OrganizerOnboarding /></OrganizerLayout>} />
-      <Route path="/organizer/dashboard" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerDashboard /></OrganizerLayout></RequireAuth>} />
+      <Route path="/organizer" element={<Navigate to="/organizer/analytics" replace />} />
+      <Route path="/organizer/dashboard" element={<Navigate to="/organizer/analytics" replace />} />
+      <Route path="/organizer/onboarding" element={<RequireAuth role="organizer" skipOnboardingCheck><OrganizerOnboarding /></RequireAuth>} />
       <Route path="/organizer/events" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerEvents /></OrganizerLayout></RequireAuth>} />
       <Route path="/organizer/events/create" element={<RequireAuth role="organizer"><OrganizerLayout><CreateEvent /></OrganizerLayout></RequireAuth>} />
       <Route path="/organizer/events/:id/manage" element={<RequireAuth role="organizer"><OrganizerLayout><ManageEvent /></OrganizerLayout></RequireAuth>} />
@@ -186,9 +196,9 @@ const router = createBrowserRouter(
       <Route path="/organizer/wallet/methods" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerWalletMethods /></OrganizerLayout></RequireAuth>} />
 
       {/* ── Admin ── */}
-      <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="/admin" element={<Navigate to="/admin/analytics" replace />} />
+      <Route path="/admin/dashboard" element={<Navigate to="/admin/analytics" replace />} />
       <Route path="/admin/onboarding" element={<AdminLayout><AdminOnboarding /></AdminLayout>} />
-      <Route path="/admin/dashboard" element={<RequireAuth role="admin"><AdminLayout><AdminDashboard /></AdminLayout></RequireAuth>} />
       <Route path="/admin/events" element={<RequireAuth role="admin"><AdminLayout><AdminEvents /></AdminLayout></RequireAuth>} />
       <Route path="/admin/users" element={<RequireAuth role="admin"><AdminLayout><AdminUsers /></AdminLayout></RequireAuth>} />
       <Route path="/admin/community" element={<RequireAuth role="admin"><AdminLayout><AdminCommunity /></AdminLayout></RequireAuth>} />

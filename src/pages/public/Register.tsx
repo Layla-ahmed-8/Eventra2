@@ -1,15 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Users, Briefcase, Mail, Lock, User, MapPin, ArrowLeft, UserPlus } from 'lucide-react';
+import { Users, Briefcase, Mail, Lock, User, ArrowLeft, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 import Logo from '../../components/Logo';
 
 type Role = 'attendee' | 'organizer';
 type Step = 'select' | 'form';
-
-const ATTENDEE_INTERESTS = ['Music', 'Art', 'Technology', 'Food & Drink', 'Sports', 'Business', 'Science', 'Gaming'];
-const ORGANIZER_EVENT_TYPES = ['Conferences', 'Workshops', 'Concerts', 'Meetups', 'Festivals', 'Exhibitions'];
 
 function validateField(name: string, value: string, form: Record<string, string>): string {
   switch (name) {
@@ -27,22 +24,18 @@ export default function Register() {
 
   const [step, setStep] = useState<Step>('select');
   const [role, setRole] = useState<Role>('attendee');
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '', location: '', organization: '', experience: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '', organization: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [selectedEventTypes, setSelectedEventTypes] = useState<string[]>([]);
 
   const selectRole = (newRole: Role) => {
     setRole(newRole);
-    setForm({ name: '', email: '', password: '', confirm: '', location: '', organization: '', experience: '' });
+    setForm({ name: '', email: '', password: '', confirm: '', organization: '' });
     setErrors({});
-    setSelectedInterests([]);
-    setSelectedEventTypes([]);
     setStep('form');
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
   };
 
@@ -55,20 +48,11 @@ export default function Register() {
     setErrors(prev => ({ ...prev, [e.target.name]: '' }));
   };
 
-  const toggleInterest = (interest: string) =>
-    setSelectedInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]);
-
-  const toggleEventType = (type: string) =>
-    setSelectedEventTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
     for (const f of ['name', 'email', 'password', 'confirm'] as const) {
       newErrors[f] = validateField(f, form[f], form);
-    }
-    if (role === 'attendee' && selectedInterests.length < 3) {
-      newErrors.interests = 'Please select at least 3 interests';
     }
     setErrors(newErrors);
     if (Object.values(newErrors).some(Boolean)) return;
@@ -77,7 +61,7 @@ export default function Register() {
     try {
       const result = await register({ name: form.name, email: form.email, phone: '', password: form.password, role });
       if (result.success) {
-        if (role === 'attendee') toast.success('Account created! You earned +50 XP — sign in to get started.');
+        if (role === 'attendee') toast.success('Account created! Sign in to get started.');
         navigate(role === 'organizer' ? '/register/pending' : '/login');
       } else {
         setErrors(prev => ({ ...prev, email: result.message }));
@@ -197,8 +181,8 @@ export default function Register() {
           </h1>
           <p className="text-gray-500 text-sm text-center">
             {isAttendee
-              ? 'Tell us about your interests to get personalized recommendations'
-              : 'Share your organization details to start creating events'}
+              ? 'Quick setup — you\'ll personalize your feed during onboarding'
+              : 'Register your account — we\'ll set up your event profile after approval'}
           </p>
         </div>
 
@@ -262,89 +246,20 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Location</label>
-              <div className="relative">
-                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input
-                  name="location" type="text" placeholder="Cairo, Egypt" value={form.location}
-                  onChange={handleChange}
-                  className={inputBase}
-                />
-              </div>
-            </div>
-
-            {/* Organizer-only fields */}
+            {/* Organizer-only: Organization Name */}
             {!isAttendee && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Organization Name{' '}
-                    <span className="text-gray-400 font-normal">(Optional)</span>
-                  </label>
-                  <div className="relative">
-                    <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    <input
-                      name="organization" type="text" placeholder="Company or Organization" value={form.organization}
-                      onChange={handleChange}
-                      className={`w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none transition-all ${focusRing}`}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Event Organization Experience</label>
-                  <textarea
-                    name="experience"
-                    placeholder="Tell us about your event planning experience..."
-                    value={form.experience}
-                    onChange={handleChange}
-                    rows={4}
-                    className={`w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none transition-all resize-none ${focusRing}`}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Chips */}
-            {isAttendee ? (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  What are your interests?{' '}
-                  <span className="text-gray-400 font-normal">(Select at least 3)</span>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Organization Name{' '}
+                  <span className="text-gray-400 font-normal">(Optional)</span>
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {ATTENDEE_INTERESTS.map(interest => (
-                    <button
-                      key={interest} type="button" onClick={() => toggleInterest(interest)}
-                      className={`px-4 py-2 rounded-full text-sm border transition-all ${
-                        selectedInterests.includes(interest)
-                          ? 'bg-purple-600 text-white border-purple-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
-                      }`}
-                    >
-                      {interest}
-                    </button>
-                  ))}
-                </div>
-                {errors.interests && <p className="field-error-msg mt-2">{errors.interests}</p>}
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">What type of events will you create?</label>
-                <div className="flex flex-wrap gap-2">
-                  {ORGANIZER_EVENT_TYPES.map(type => (
-                    <button
-                      key={type} type="button" onClick={() => toggleEventType(type)}
-                      className={`px-4 py-2 rounded-full text-sm border transition-all ${
-                        selectedEventTypes.includes(type)
-                          ? 'bg-cyan-500 text-white border-cyan-500'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-cyan-400'
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
+                <div className="relative">
+                  <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <input
+                    name="organization" type="text" placeholder="Company or Organization" value={form.organization}
+                    onChange={handleChange}
+                    className={`w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none transition-all ${focusRing}`}
+                  />
                 </div>
               </div>
             )}

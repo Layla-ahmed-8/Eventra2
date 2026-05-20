@@ -1,46 +1,83 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sparkles, ShieldCheck, Building2, Users, Image,
-  CheckCircle2, ArrowRight, Crown, Zap, BarChart3,
-  MessageSquare, Check, Upload, Mail, Phone, FileText,
-  Star, Globe, ChevronRight, Clock, ArrowLeft
+  Sparkles, ShieldCheck, Building2, Users,
+  CheckCircle2, ArrowRight, Crown, Zap,
+  Mail, Phone, FileText, Clock, ArrowLeft,
+  Calendar, Mic2, Ticket, Music, Code, Trophy,
+  Palette, UtensilsCrossed, Globe, Check,
 } from 'lucide-react';
 import Logo from '../../components/Logo';
+import { useAppStore } from '../../store/useAppStore';
 
 const TOTAL_STEPS = 5;
 
+const EVENT_TYPE_OPTIONS = [
+  { id: 'Conferences', icon: Mic2, color: 'from-blue-500 to-indigo-500' },
+  { id: 'Workshops', icon: Code, color: 'from-cyan-500 to-teal-500' },
+  { id: 'Concerts', icon: Music, color: 'from-purple-500 to-pink-500' },
+  { id: 'Meetups', icon: Users, color: 'from-green-500 to-emerald-500' },
+  { id: 'Festivals', icon: Trophy, color: 'from-orange-400 to-yellow-400' },
+  { id: 'Exhibitions', icon: Palette, color: 'from-pink-500 to-rose-500' },
+  { id: 'Sports Events', icon: Trophy, color: 'from-green-400 to-teal-400' },
+  { id: 'Food & Drink', icon: UtensilsCrossed, color: 'from-amber-400 to-orange-400' },
+  { id: 'Networking', icon: Globe, color: 'from-cyan-400 to-blue-400' },
+  { id: 'Corporate', icon: Building2, color: 'from-slate-400 to-blue-500' },
+  { id: 'Cultural', icon: Calendar, color: 'from-fuchsia-500 to-purple-500' },
+  { id: 'Tickets', icon: Ticket, color: 'from-red-400 to-pink-500' },
+];
+
 const stepMeta = [
   { label: 'Identity', icon: Crown },
-  { label: 'Organization', icon: Building2 },
+  { label: 'Event Types', icon: Calendar },
   { label: 'Verification', icon: ShieldCheck },
-  { label: 'Branding', icon: Star },
+  { label: 'Branding', icon: Palette },
   { label: 'Launch', icon: Zap },
+];
+
+const BRAND_COLORS = [
+  '#7C5CFF', '#06B6D4', '#10B981', '#F59E0B',
+  '#EF4444', '#8B5CF6', '#EC4899', '#3B82F6',
 ];
 
 export default function OrganizerOnboarding() {
   const navigate = useNavigate();
+  const { updateProfile, setOnboardingCompleted } = useAppStore();
+
   const [step, setStep] = useState(1);
   const [identityType, setIdentityType] = useState<'solo' | 'brand' | null>(null);
-  const [brandName, setBrandName] = useState('');
-  const [category, setCategory] = useState('');
-  const [teamSize, setTeamSize] = useState(1);
+  const [eventTypes, setEventTypes] = useState<string[]>([]);
   const [verificationMethod, setVerificationMethod] = useState<'phone' | 'email' | 'id'>('email');
   const [tagline, setTagline] = useState('');
   const [brandColor, setBrandColor] = useState('#7C5CFF');
-  const [inviteEmail, setInviteEmail] = useState('');
 
   const pct = Math.round(((step - 1) / (TOTAL_STEPS - 1)) * 100);
 
+  const toggleEventType = (id: string) =>
+    setEventTypes(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
+
   const canContinue = () => {
     if (step === 1) return identityType !== null;
-    if (step === 2) return brandName.trim().length > 0;
+    if (step === 2) return eventTypes.length >= 1;
     return true;
+  };
+
+  const handleNext = async () => {
+    if (step < TOTAL_STEPS) {
+      setStep(step + 1);
+      return;
+    }
+    await updateProfile({
+      organizerType: identityType ?? undefined,
+      eventTypePreferences: eventTypes,
+      brandColor,
+    } as any);
+    setOnboardingCompleted(true);
+    navigate('/organizer/analytics');
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-      {/* Atmospheric background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-500/10 blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
@@ -70,7 +107,7 @@ export default function OrganizerOnboarding() {
               const done = num < step;
               const active = num === step;
               return (
-                <div key={s.label} className="flex flex-col items-center gap-2 group">
+                <div key={s.label} className="flex flex-col items-center gap-2">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 ${
                     done ? 'bg-cyan-500 text-white' :
                     active ? 'bg-cyan-500/20 border-2 border-cyan-500 text-cyan-500 scale-110 shadow-lg shadow-cyan-500/20' :
@@ -92,7 +129,7 @@ export default function OrganizerOnboarding() {
 
           {/* Step 1 — Identity */}
           {step === 1 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div className="text-center">
                 <h2 className="text-h2 font-bold text-foreground mb-2">Choose your identity</h2>
                 <p className="text-body text-muted-foreground">How will you be creating events on Eventra?</p>
@@ -119,7 +156,7 @@ export default function OrganizerOnboarding() {
                     activeBorder: 'border-cyan-500',
                     activeBg: 'bg-cyan-500/5',
                   },
-                ].map((opt) => (
+                ].map(opt => (
                   <button
                     key={opt.id}
                     onClick={() => setIdentityType(opt.id)}
@@ -135,7 +172,7 @@ export default function OrganizerOnboarding() {
                     <h3 className="text-h3 font-bold text-foreground mb-3">{opt.title}</h3>
                     <p className="text-body-sm text-muted-foreground mb-6 leading-relaxed">{opt.desc}</p>
                     <ul className="space-y-3">
-                      {opt.perks.map((p) => (
+                      {opt.perks.map(p => (
                         <li key={p} className="flex items-center gap-3 text-caption font-bold text-muted-foreground">
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${identityType === opt.id ? 'bg-green-500/20' : 'bg-muted'}`}>
                             <Check className={`w-3 h-3 ${identityType === opt.id ? 'text-green-500' : 'text-muted-foreground'}`} />
@@ -150,75 +187,45 @@ export default function OrganizerOnboarding() {
             </div>
           )}
 
-          {/* Step 2 — Organization */}
+          {/* Step 2 — Event Types */}
           {step === 2 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div className="text-center">
-                <h2 className="text-h2 font-bold text-foreground mb-2">Brand Identity</h2>
-                <p className="text-body text-muted-foreground">Tell us about your event brand and audience.</p>
+                <h2 className="text-h2 font-bold text-foreground mb-2">What events will you create?</h2>
+                <p className="text-body text-muted-foreground">Select all the event categories that apply to your work</p>
               </div>
-              <div className="grid sm:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className="text-caption font-black uppercase tracking-widest text-muted-foreground ml-1">
-                    {identityType === 'brand' ? 'Organization Name' : 'Full Name / Alias'} *
-                  </label>
-                  <input
-                    type="text"
-                    value={brandName}
-                    onChange={(e) => setBrandName(e.target.value)}
-                    placeholder={identityType === 'brand' ? 'Eventra Studios' : 'Ahmed Hassan'}
-                    className="input-base w-full h-14"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-caption font-black uppercase tracking-widest text-muted-foreground ml-1">Primary Category</label>
-                  <input
-                    type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="Tech, Music, Wellness..."
-                    className="input-base w-full h-14"
-                  />
-                </div>
-              </div>
-
-              {identityType === 'brand' && (
-                <div className="p-6 rounded-3xl bg-secondary/30 border border-border/50">
-                  <label className="block text-caption font-black uppercase tracking-widest text-muted-foreground mb-4">Team Size</label>
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center bg-background rounded-2xl p-1.5 border border-border shadow-inner">
-                      <button
-                        onClick={() => setTeamSize(Math.max(1, teamSize - 1))}
-                        className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center text-foreground font-bold hover:bg-secondary/80 transition"
-                      >−</button>
-                      <span className="text-h2 font-bold text-foreground w-16 text-center">{teamSize}</span>
-                      <button
-                        onClick={() => setTeamSize(teamSize + 1)}
-                        className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center text-foreground font-bold hover:bg-secondary/80 transition"
-                      >+</button>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {EVENT_TYPE_OPTIONS.map(type => (
+                  <button
+                    key={type.id}
+                    onClick={() => toggleEventType(type.id)}
+                    className={`p-4 rounded-2xl border-2 transition-all duration-300 text-left flex items-center gap-3 ${
+                      eventTypes.includes(type.id)
+                        ? 'border-cyan-500 bg-cyan-500/5 shadow-lg shadow-cyan-500/10 -translate-y-0.5'
+                        : 'border-border bg-secondary/30 hover:border-cyan-500/40'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${type.color} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                      <type.icon className="w-4 h-4 text-white" />
                     </div>
-                    <p className="text-body font-bold text-muted-foreground">Team members collaborating on events</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-caption font-black uppercase tracking-widest text-muted-foreground ml-1">Website (Optional)</label>
-                <div className="relative">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="url"
-                    placeholder="https://yourwebsite.com"
-                    className="input-base w-full pl-12 h-14"
-                  />
-                </div>
+                    <span className="text-body-sm font-bold text-foreground">{type.id}</span>
+                    {eventTypes.includes(type.id) && (
+                      <CheckCircle2 className="w-4 h-4 text-cyan-500 ml-auto flex-shrink-0" />
+                    )}
+                  </button>
+                ))}
               </div>
+              {eventTypes.length > 0 && (
+                <p className="text-caption text-center text-cyan-600 font-bold">
+                  {eventTypes.length} {eventTypes.length === 1 ? 'category' : 'categories'} selected
+                </p>
+              )}
             </div>
           )}
 
           {/* Step 3 — Verification */}
           {step === 3 && (
-            <div className="space-y-8 animate-fade-up">
+            <div className="space-y-8">
               <div className="text-center">
                 <h2 className="text-h2 font-bold text-foreground mb-2">Verify your account</h2>
                 <p className="text-body text-muted-foreground">Choose a method to unlock organizer privileges.</p>
@@ -228,7 +235,7 @@ export default function OrganizerOnboarding() {
                   { id: 'email' as const, icon: Mail, label: 'Email', desc: 'OTP verification', time: '~2 min' },
                   { id: 'phone' as const, icon: Phone, label: 'Phone', desc: 'SMS code', time: '~1 min' },
                   { id: 'id' as const, icon: FileText, label: 'ID Upload', desc: 'Manual review', time: '~24h' },
-                ].map((opt) => (
+                ].map(opt => (
                   <button
                     key={opt.id}
                     onClick={() => setVerificationMethod(opt.id)}
@@ -263,6 +270,135 @@ export default function OrganizerOnboarding() {
             </div>
           )}
 
+          {/* Step 4 — Branding */}
+          {step === 4 && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-h2 font-bold text-foreground mb-2">Brand your profile</h2>
+                <p className="text-body text-muted-foreground">Give your organizer profile a distinctive look</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-caption font-black uppercase tracking-widest text-muted-foreground ml-1">Tagline (Optional)</label>
+                  <input
+                    type="text"
+                    value={tagline}
+                    onChange={e => setTagline(e.target.value)}
+                    placeholder="Creating unforgettable experiences since 2024"
+                    className="input-base w-full h-14"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-caption font-black uppercase tracking-widest text-muted-foreground ml-1">Brand Color</label>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {BRAND_COLORS.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setBrandColor(color)}
+                        style={{ backgroundColor: color }}
+                        className={`w-10 h-10 rounded-2xl transition-all ${brandColor === color ? 'scale-125 shadow-lg ring-4 ring-white ring-offset-2 ring-offset-background' : 'hover:scale-110'}`}
+                      />
+                    ))}
+                    <div className="flex items-center gap-2 ml-2">
+                      <input
+                        type="color"
+                        value={brandColor}
+                        onChange={e => setBrandColor(e.target.value)}
+                        className="w-10 h-10 rounded-xl cursor-pointer border-0 p-1 bg-secondary"
+                      />
+                      <span className="text-caption font-bold text-muted-foreground">Custom</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="p-6 rounded-[2rem] bg-secondary/30 border border-border/50">
+                  <p className="text-caption font-black uppercase tracking-widest text-muted-foreground mb-4">Profile Preview</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ backgroundColor: brandColor }}>
+                      <Crown className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-body font-bold text-foreground">Your Organizer Profile</p>
+                      {tagline && <p className="text-caption text-muted-foreground mt-0.5">{tagline}</p>}
+                      <div className="flex gap-2 mt-2 flex-wrap">
+                        {eventTypes.slice(0, 3).map(t => (
+                          <span key={t} className="px-2 py-0.5 rounded-lg text-micro font-bold text-white" style={{ backgroundColor: brandColor }}>
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5 — Launch */}
+          {step === 5 && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-cyan-500/10 rounded-3xl flex items-center justify-center mx-auto text-cyan-500 mb-4">
+                  <Zap className="w-10 h-10" />
+                </div>
+                <h2 className="text-h2 font-bold text-foreground mb-2">Ready to start organizing!</h2>
+                <p className="text-body text-muted-foreground">Your organizer profile is configured. Here's a summary.</p>
+              </div>
+
+              <div className="p-8 rounded-[2.5rem] bg-secondary/30 border border-border/50 space-y-6">
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-caption font-black uppercase tracking-widest text-muted-foreground mb-2">Identity</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ backgroundColor: brandColor }}>
+                        {identityType === 'brand' ? <Building2 className="w-5 h-5 text-white" /> : <Users className="w-5 h-5 text-white" />}
+                      </div>
+                      <p className="text-body font-bold text-foreground capitalize">
+                        {identityType === 'brand' ? 'Brand & Venue' : 'Solo Creator'}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-caption font-black uppercase tracking-widest text-muted-foreground mb-2">Brand Color</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl shadow" style={{ backgroundColor: brandColor }} />
+                      <span className="text-body font-bold text-foreground uppercase">{brandColor}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border/50">
+                  <p className="text-caption font-black uppercase tracking-widest text-muted-foreground mb-3">Event Types</p>
+                  <div className="flex flex-wrap gap-2">
+                    {eventTypes.length > 0 ? eventTypes.map(t => (
+                      <span key={t} className="px-3 py-1 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-micro font-black uppercase tracking-wider border border-cyan-500/20">
+                        {t}
+                      </span>
+                    )) : (
+                      <span className="text-caption text-muted-foreground">None selected</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border/50 grid sm:grid-cols-3 gap-3">
+                  {[
+                    { icon: Zap, label: 'Create Events', color: 'text-cyan-500' },
+                    { icon: Crown, label: 'Manage Bookings', color: 'text-primary' },
+                    { icon: CheckCircle2, label: 'View Analytics', color: 'text-green-500' },
+                  ].map(f => (
+                    <div key={f.label} className="p-3 rounded-2xl bg-secondary/50 border border-border/30 flex items-center gap-2">
+                      <f.icon className={`w-4 h-4 ${f.color}`} />
+                      <span className="text-caption font-bold text-foreground">{f.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="mt-12 pt-8 border-t border-border/50 flex items-center justify-between">
             {step > 1 ? (
@@ -273,29 +409,22 @@ export default function OrganizerOnboarding() {
                 <ArrowLeft className="w-5 h-5" />
                 Back
               </button>
-            ) : (
-              <div />
-            )}
+            ) : <div />}
 
             <button
-              onClick={() => step < TOTAL_STEPS ? setStep(step + 1) : navigate('/login?afterOrganizerOnboarding=1')}
+              onClick={handleNext}
               disabled={!canContinue()}
               className="btn-primary bg-cyan-500 hover:bg-cyan-600 border-cyan-500 px-10 h-14 text-body font-bold shadow-xl shadow-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed group"
             >
               {step === TOTAL_STEPS ? (
-                <>
-                  Start Organizing <Sparkles className="ml-2 w-5 h-5" />
-                </>
+                <>Start Organizing <Sparkles className="ml-2 w-5 h-5" /></>
               ) : (
-                <>
-                  Continue <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </>
+                <>Continue <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
               )}
             </button>
           </div>
         </div>
 
-        {/* Footer */}
         <p className="mt-12 text-caption font-medium text-muted-foreground flex items-center gap-2">
           Securely powered by <Logo variant="horizontal" className="h-4 w-auto grayscale opacity-50" />
         </p>

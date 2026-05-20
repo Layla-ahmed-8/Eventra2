@@ -20,6 +20,10 @@ export interface User {
   organizerRequestEventId?: string;
   phone?: string;
   coverPhoto?: string;
+  onboardingCompleted?: boolean;
+  organizerType?: 'solo' | 'brand';
+  eventTypePreferences?: string[];
+  brandColor?: string;
   notificationPreferences?: {
     bookingConfirmation: boolean;
     eventReminders: boolean;
@@ -48,7 +52,8 @@ export const sarahAccount: User = {
   xp: 1580,
   badges: ['badge-001', 'badge-002', 'badge-003'],
   rsvpedEvents: ['event-001', 'event-004', 'event-005'],
-  bookmarkedEvents: ['event-002', 'event-013']
+  bookmarkedEvents: ['event-002', 'event-013'],
+  onboardingCompleted: true,
 };
 
 // Demo Account 2: Organizer (Ahmed)
@@ -68,7 +73,8 @@ export const ahmedAccount: User = {
   badges: ['badge-001', 'badge-002', 'badge-003', 'badge-006'],
   rsvpedEvents: ['event-002', 'event-014'],
   bookmarkedEvents: ['event-011'],
-  organizerStatus: 'approved'
+  organizerStatus: 'approved',
+  onboardingCompleted: true,
 };
 
 // Demo Account 3: Admin (Layla)
@@ -87,7 +93,8 @@ export const laylaAccount: User = {
   xp: 5000,
   badges: ['badge-001', 'badge-002', 'badge-003', 'badge-005', 'badge-006'],
   rsvpedEvents: [],
-  bookmarkedEvents: []
+  bookmarkedEvents: [],
+  onboardingCompleted: true,
 };
 
 export const demoAccounts = [sarahAccount, ahmedAccount, laylaAccount];

@@ -90,6 +90,12 @@ interface AppState {
   // ── USER MANAGEMENT (persisted) ──────────────────────────────────────────────
   managedUsers: ManagedUser[];
 
+  // ── ONBOARDING (persisted) ──────────────────────────────────────────────────
+  onboardingCompleted: boolean;
+
+  // ── REGISTERED USERS (persisted) ────────────────────────────────────────────
+  registeredUsers: User[];
+
   // ── ACTIONS ─────────────────────────────────────────────────────────────────
 
   // Auth
@@ -97,6 +103,7 @@ interface AppState {
   logout: () => void;
   register: (data: RegisterRequest) => Promise<RegisterResponse>;
   refreshAccessToken: () => Promise<void>;
+  setOnboardingCompleted: (val: boolean) => void;
 
   // Profile
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -219,6 +226,9 @@ export const useAppStore = create<AppState>()(
       longestStreak: 0,
       lastActivityDate: null,
 
+      onboardingCompleted: false,
+      registeredUsers: [],
+
       userBehaviorType: 'passive',
       engagementActions: 0,
       browseCount: 0,
@@ -247,7 +257,9 @@ export const useAppStore = create<AppState>()(
 
       login: async (email, password) => {
         // TODO: replace with → const { user, accessToken, refreshToken } = await api.post('/auth/login', { email, password });
-        const user = demoAccounts.find((u) => u.email === email && u.password === password);
+        const user =
+          demoAccounts.find((u) => u.email === email && u.password === password) ||
+          get().registeredUsers.find((u) => u.email === email && u.password === password);
         if (user) {
           const base = getNotificationsForUser(user.id);
           const persistedForUser = get().notifications.filter(
@@ -267,6 +279,7 @@ export const useAppStore = create<AppState>()(
             xp: user.xp,
             level: getLevelFromXP(user.xp),
             interests: user.interests,
+            onboardingCompleted: user.onboardingCompleted ?? false,
             notifications,
             unreadCount,
           });
@@ -292,6 +305,7 @@ export const useAppStore = create<AppState>()(
             earnedBadges: [],
             currentStreak: 0,
             interests: [],
+            onboardingCompleted: false,
             dismissedRecommendations: [],
             unreadCount: 0,
             notifications: uid
@@ -302,14 +316,42 @@ export const useAppStore = create<AppState>()(
       },
 
       register: async (data) => {
-        // Demo mock: organizer registration requires admin approval
+        const existing =
+          demoAccounts.find((u) => u.email === data.email) ||
+          get().registeredUsers.find((u) => u.email === data.email);
+        if (existing) {
+          return { success: false, message: 'An account with this email already exists.' };
+        }
+
+        const newUser: User = {
+          id: `user-reg-${Date.now()}`,
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          avatar: `https://i.pravatar.cc/150?u=${data.email}`,
+          role: data.role,
+          interests: [],
+          location: '',
+          radius: 15,
+          joinDate: new Date().toISOString(),
+          level: 1,
+          xp: 0,
+          badges: [],
+          rsvpedEvents: [],
+          bookmarkedEvents: [],
+          onboardingCompleted: false,
+          organizerStatus: data.role === 'organizer' ? 'pending' : undefined,
+        };
+
+        set((state) => ({ registeredUsers: [...state.registeredUsers, newUser] }));
+
         return {
           success: true,
           message: data.role === 'organizer'
             ? 'Your account is under review. You will be notified once approved.'
-            : 'Registration successful! Please check your email to verify your account.',
+            : 'Account created! Sign in to continue.',
           requiresActivation: data.role === 'organizer',
-          userId: `user-${Date.now()}`,
+          userId: newUser.id,
         };
       },
 
@@ -319,6 +361,13 @@ export const useAppStore = create<AppState>()(
 
       extendSession: () => {
         set({ tokenExpiry: Date.now() + 30 * 60 * 1000 });
+      },
+
+      setOnboardingCompleted: (val) => {
+        set((state) => ({
+          onboardingCompleted: val,
+          currentUser: state.currentUser ? { ...state.currentUser, onboardingCompleted: val } : null,
+        }));
       },
 
       // ── Profile ──────────────────────────────────────────────────────────────
@@ -1484,6 +1533,8 @@ export const useAppStore = create<AppState>()(
         engagementActions: state.engagementActions,
         browseCount: state.browseCount,
         discussionCount: state.discussionCount,
+        onboardingCompleted: state.onboardingCompleted,
+        registeredUsers: state.registeredUsers,
         interests: state.interests,
         locationEnabled: state.locationEnabled,
         userCity: state.userCity,

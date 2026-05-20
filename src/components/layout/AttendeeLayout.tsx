@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Search, Calendar, Ticket, Users, User, Bell, MessageSquare, Award, ChevronLeft, Menu, X, Moon, Sun, LogOut, Wallet } from 'lucide-react';
+import { Sparkles, Search, Calendar, Ticket, Users, User, Bell, MessageSquare, ChevronLeft, Menu, X, Moon, Sun, LogOut, Wallet } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
@@ -39,9 +39,8 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
     { path: '/app/my-events', icon: Ticket, label: 'My Events' },
     { path: '/app/community', icon: Users, label: 'Communities' },
     { path: '/app/messages', icon: MessageSquare, label: 'Messages' },
-    { path: '/app/rewards/store', icon: Sparkles, label: 'Rewards' },
+    { path: '/app/rewards/hub', icon: Sparkles, label: 'Rewards Hub' },
     { path: '/app/notifications', icon: Bell, label: 'Notifications' },
-    { path: '/app/profile/achievements', icon: Award, label: 'Achievements' },
     { path: '/app/wallet', icon: Wallet, label: 'Wallet' },
     { path: '/app/profile', icon: User, label: 'Profile' },
   ];

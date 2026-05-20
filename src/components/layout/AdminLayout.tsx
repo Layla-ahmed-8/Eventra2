@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Users, MessageSquare, BarChart3, Settings, ChevronLeft, Menu, X, Shield, Moon, Sun, User, ShieldAlert, LogOut, Wallet } from 'lucide-react';
+import { BarChart3, Calendar, Users, MessageSquare, Settings, ChevronLeft, Menu, X, Shield, Moon, Sun, User, ShieldAlert, LogOut, Wallet } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
@@ -11,11 +11,11 @@ import {
 } from '../../app/components/ui/breadcrumb';
 
 const bottomNavItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
   { icon: Calendar, label: 'Events', path: '/admin/events' },
   { icon: Users, label: 'Users', path: '/admin/users' },
   { icon: Wallet, label: 'Wallet', path: '/admin/wallet' },
-  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
+  { icon: User, label: 'Profile', path: '/admin/profile' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -27,13 +27,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const crumbs = useBreadcrumbs();
 
   const navItems = [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/admin/events', icon: Calendar, label: 'Events' },
     { path: '/admin/moderation', icon: ShieldAlert, label: 'Moderation' },
     { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/community', icon: MessageSquare, label: 'Community' },
     { path: '/admin/messages', icon: MessageSquare, label: 'Messages' },
-    { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/admin/wallet', icon: Wallet, label: 'Wallet' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
     { path: '/admin/profile', icon: User, label: 'My Profile' },
@@ -50,11 +49,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Sidebar Header */}
         <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border/50">
           {sidebarOpen ? (
-            <Link to="/admin/dashboard" className="flex items-center min-w-0 animate-in fade-in duration-500">
+            <Link to="/admin/analytics" className="flex items-center min-w-0 animate-in fade-in duration-500">
               <Logo variant="horizontal" className="h-8 w-auto" />
             </Link>
           ) : (
-            <Link to="/admin/dashboard" className="flex items-center justify-center w-full animate-in zoom-in duration-500">
+            <Link to="/admin/analytics" className="flex items-center justify-center w-full animate-in zoom-in duration-500">
               <Logo variant="small" className="h-10 w-auto" />
             </Link>
           )}
