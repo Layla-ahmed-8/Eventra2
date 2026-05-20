@@ -27,6 +27,7 @@ import AccountSuspended from '../pages/public/AccountSuspended';
 
 // Attendee Pages
 import Discover from '../pages/attendee/Discover';
+import MapDiscovery from '../pages/attendee/MapDiscovery';
 import EventDetail from '../pages/attendee/EventDetail';
 import EventChat from '../pages/attendee/EventChat';
 import RSVP from '../pages/attendee/RSVP';
@@ -152,6 +153,7 @@ const router = createBrowserRouter(
       {/* ── Attendee ── */}
       <Route path="/app" element={<Navigate to="/app/discover" replace />} />
       <Route path="/app/discover" element={<RequireAuth role="attendee"><AttendeeLayout><Discover /></AttendeeLayout></RequireAuth>} />
+      <Route path="/app/map" element={<RequireAuth role="attendee"><AttendeeLayout><MapDiscovery /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/search" element={<Navigate to="/app/discover" replace />} />
       <Route path="/app/events/:id" element={<RequireAuth role="attendee"><AttendeeLayout><EventDetail /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/events/:id/chat" element={<RequireAuth role="attendee"><AttendeeLayout><EventChat /></AttendeeLayout></RequireAuth>} />
