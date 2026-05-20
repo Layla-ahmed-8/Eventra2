@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Search, Calendar, Ticket, Users, User, Bell, MessageSquare, Award, ChevronLeft, Menu, X, Moon, Sun, LogOut } from 'lucide-react';
+import { Sparkles, Search, Calendar, Ticket, Users, User, Bell, MessageSquare, Award, ChevronLeft, Menu, X, Moon, Sun, LogOut, Wallet } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
 import MobileBottomNav from './MobileBottomNav';
+import WalletBalanceBadge from '../business/WalletBalanceBadge';
 import { useBreadcrumbs } from '../../hooks/useBreadcrumbs';
 import {
   Breadcrumb, BreadcrumbList, BreadcrumbItem,
@@ -20,7 +21,7 @@ const bottomNavItems = [
   { icon: Search, label: 'Discover', path: '/app/discover' },
   { icon: Ticket, label: 'My Events', path: '/app/my-events' },
   { icon: Users, label: 'Community', path: '/app/community' },
-  { icon: Award, label: 'Achievements', path: '/app/profile/achievements' },
+  { icon: Wallet, label: 'Wallet', path: '/app/wallet' },
   { icon: User, label: 'Profile', path: '/app/profile' },
 ];
 
@@ -41,6 +42,7 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
     { path: '/app/rewards/store', icon: Sparkles, label: 'Rewards' },
     { path: '/app/notifications', icon: Bell, label: 'Notifications' },
     { path: '/app/profile/achievements', icon: Award, label: 'Achievements' },
+    { path: '/app/wallet', icon: Wallet, label: 'Wallet' },
     { path: '/app/profile', icon: User, label: 'Profile' },
   ];
 
@@ -137,6 +139,7 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
               <div className="flex-1 min-w-0">
                 <p className="text-body-sm font-bold text-sidebar-foreground truncate">{currentUser?.name}</p>
                 <p className="text-micro font-bold text-muted-foreground uppercase tracking-widest">Level {currentUser?.level}</p>
+                <WalletBalanceBadge colorClass="text-purple-500" />
               </div>
             )}
           </Link>

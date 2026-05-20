@@ -3,10 +3,15 @@ import { persist } from 'zustand/middleware';
 import { mockEvents, mockBookings, mockCommunities, Event, UserBehaviorType } from '../data/mockData';
 import { demoAccounts, sarahAccount, ahmedAccount, laylaAccount, User, mockOrganizerRequests, OrganizerRequest } from '../data/users';
 import { getNotificationsForUser, Notification } from '../data/notifications';
-import type { Badge, RegisterRequest, RegisterResponse, Booking, XPReason } from '../types';
+import type { Badge, RegisterRequest, RegisterResponse, Booking, XPReason, UserWallet, WalletTransaction, PayoutRequest, PayoutMethod, EventMessage, DirectMessage, BroadcastMessage, DMThread } from '../types';
 import { BADGE_DEFINITIONS } from '../constants/badges';
 import { XP_TABLE, POINTS_TABLE, DEFAULT_SYSTEM_CONFIG } from '../constants/config';
 import type { SystemConfig } from '../types';
+import { initialWallets, initialWalletTransactions, mockPayoutRequests } from '../data/walletData';
+import { initialManagedUsers } from '../data/adminUsersData';
+import type { ManagedUser } from '../data/adminUsersData';
+import { initialEventMessages } from '../data/eventChatData';
+import { initialDirectMessages, initialBroadcastMessages } from '../data/messagesData';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -70,10 +75,25 @@ interface AppState {
   // ── SYSTEM CONFIG (persisted) ───────────────────────────────────────────────
   systemConfig: SystemConfig;
 
+  // ── WALLET (persisted) ──────────────────────────────────────────────────────
+  wallets: Record<string, UserWallet>;
+  walletTransactions: WalletTransaction[];
+  payoutRequests: PayoutRequest[];
+
+  // ── EVENT CHAT (persisted) ──────────────────────────────────────────────────
+  eventMessages: Record<string, EventMessage[]>;
+
+  // ── DIRECT MESSAGING (persisted) ────────────────────────────────────────────
+  directMessages: DirectMessage[];
+  broadcastMessages: BroadcastMessage[];
+
+  // ── USER MANAGEMENT (persisted) ──────────────────────────────────────────────
+  managedUsers: ManagedUser[];
+
   // ── ACTIONS ─────────────────────────────────────────────────────────────────
 
-  // Auth (legacy sync signature preserved for compat)
-  login: (email: string, password: string) => boolean;
+  // Auth
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (data: RegisterRequest) => Promise<RegisterResponse>;
   refreshAccessToken: () => Promise<void>;
@@ -88,7 +108,7 @@ interface AppState {
   // Events
   toggleBookmark: (eventId: string) => void;
   rsvpEvent: (eventId: string) => void;
-  rsvpEventFull: (eventId: string, ticketTypeId: string, quantity: number) => Promise<Booking | null>;
+  rsvpEventFull: (eventId: string, ticketTypeId: string | undefined, quantity: number, paymentSource?: 'card' | 'wallet') => Promise<Booking | null>;
   cancelBooking: (bookingId: string) => Promise<void>;
   dismissRecommendation: (eventId: string) => void;
 
@@ -117,6 +137,58 @@ interface AppState {
 
   // Admin
   updateSystemConfig: (config: Partial<SystemConfig>) => void;
+
+  // Wallet
+  getWallet: (userId?: string) => UserWallet | null;
+  addFunds: (amount: number, paymentDetails: { brand: string; last4: string }) => void;
+  payWithWallet: (amount: number, bookingId: string) => boolean;
+  refundToWallet: (amount: number, bookingId: string, reason?: string) => void;
+  withdrawFunds: (amount: number) => void;
+  requestPayout: (amount: number, methodId: string) => boolean;
+  approvePayoutRequest: (requestId: string, adminNotes?: string) => void;
+  rejectPayoutRequest: (requestId: string, adminNotes: string) => void;
+  addPayoutMethod: (method: Omit<PayoutMethod, 'id' | 'createdAt'>) => void;
+  removePayoutMethod: (methodId: string) => void;
+  recordOrganizerEarning: (bookingId: string, grossAmount: number, organizerId: string) => void;
+
+  // Event Chat
+  sendEventMessage: (eventId: string, content: string) => void;
+  deleteEventMessage: (eventId: string, messageId: string) => void;
+  getEventMessages: (eventId: string) => EventMessage[];
+
+  // Organizer notifications
+  notifyOrganizerNewBooking: (organizerId: string, eventName: string, attendeeName: string, bookingId: string) => void;
+  notifyOrganizerEventDecision: (organizerId: string, eventName: string, status: 'approved' | 'rejected', reason?: string) => void;
+  notifyOrganizerPayoutUpdate: (organizerId: string, amount: number, status: 'approved' | 'rejected', reason?: string) => void;
+  notifyOrganizerNewChatMessage: (organizerId: string, eventId: string, eventName: string, attendeeName: string, messagePreview: string) => void;
+
+  // Organizer inbox
+  getOrganizerInbox: (organizerId: string) => Array<{
+    attendeeId: string;
+    attendeeName: string;
+    attendeeAvatar?: string;
+    eventId: string;
+    eventName: string;
+    lastMessage: string;
+    lastMessageAt: string;
+    unreadCount: number;
+  }>;
+
+  // User management (admin)
+  suspendUser: (userId: string, reason: string, suspendUntil?: string) => void;
+  unsuspendUser: (userId: string) => void;
+  banUser: (userId: string, reason: string) => void;
+  grantVerifiedStatus: (userId: string) => void;
+  sendAdminMessageToUser: (userId: string, userName: string, subject: string, body: string) => void;
+  forcePasswordReset: (userId: string, userName: string) => void;
+
+  // Direct messaging
+  sendDirectMessage: (receiverId: string, receiverName: string, receiverRole: 'attendee' | 'organizer' | 'admin', content: string) => void;
+  sendBroadcastMessage: (subject: string, content: string, targetRole: 'attendee' | 'organizer') => void;
+  getDirectConversation: (userId: string) => DirectMessage[];
+  getMyDMThreads: () => DMThread[];
+  getMyBroadcasts: () => BroadcastMessage[];
+  markConversationRead: (userId: string) => void;
 }
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -163,12 +235,19 @@ export const useAppStore = create<AppState>()(
       activeModal: null,
       systemConfig: DEFAULT_SYSTEM_CONFIG,
 
+      wallets: initialWallets,
+      walletTransactions: initialWalletTransactions,
+      payoutRequests: mockPayoutRequests,
+      eventMessages: initialEventMessages,
+      directMessages: initialDirectMessages,
+      broadcastMessages: initialBroadcastMessages,
+      managedUsers: initialManagedUsers,
+
       // ── Auth ────────────────────────────────────────────────────────────────
 
-      login: (email, password) => {
-        const user = demoAccounts.find(
-          (u) => u.email === email && u.password === password
-        );
+      login: async (email, password) => {
+        // TODO: replace with → const { user, accessToken, refreshToken } = await api.post('/auth/login', { email, password });
+        const user = demoAccounts.find((u) => u.email === email && u.password === password);
         if (user) {
           const base = getNotificationsForUser(user.id);
           const persistedForUser = get().notifications.filter(
@@ -430,7 +509,7 @@ export const useAppStore = create<AppState>()(
         get().checkStreak();
       },
 
-      rsvpEventFull: async (eventId, ticketTypeId, quantity) => {
+      rsvpEventFull: async (eventId, ticketTypeId, quantity, paymentSource = 'card') => {
         const state = get();
         if (state.rsvpedEvents.includes(eventId)) return null;
 
@@ -451,7 +530,10 @@ export const useAppStore = create<AppState>()(
           discount: 0,
           total: subtotal + serviceFee,
           currency: 'EGP',
-          paymentMethod: { brand: 'Visa', last4: '4242' },
+          paymentMethod: paymentSource === 'wallet'
+            ? { brand: 'Wallet', last4: '' }
+            : { brand: 'Visa', last4: '4242' },
+          paymentSource,
           status: 'confirmed',
           qrData: { bookingId: `EVT-${Date.now()}`, userId: state.currentUser?.id || 'guest', eventId, valid: true },
           bookingRef: `EVT-${Date.now()}`,
@@ -473,6 +555,12 @@ export const useAppStore = create<AppState>()(
             : s.currentUser,
         }));
         get().checkStreak();
+
+        if (subtotal > 0) {
+          const organizerId = 'user-002';
+          get().recordOrganizerEarning(booking.id, subtotal, organizerId);
+        }
+
         return booking;
       },
 
@@ -704,6 +792,673 @@ export const useAppStore = create<AppState>()(
           systemConfig: { ...state.systemConfig, ...config },
         }));
       },
+
+      // ── Wallet ────────────────────────────────────────────────────────────────
+
+      getWallet: (userId) => {
+        const uid = userId ?? get().currentUser?.id;
+        if (!uid) return null;
+        return get().wallets[uid] ?? null;
+      },
+
+      addFunds: (amount, paymentDetails) => {
+        const uid = get().currentUser?.id;
+        if (!uid) return;
+        set((state) => {
+          const wallet = state.wallets[uid] ?? { userId: uid, balance: 0, currency: 'EGP', status: 'active' as const, payoutMethods: [] };
+          const newBalance = wallet.balance + amount;
+          const tx: WalletTransaction = {
+            id: `wt-${Date.now()}`,
+            userId: uid,
+            type: 'deposit',
+            amount,
+            balanceAfter: newBalance,
+            description: `Deposit via ${paymentDetails.brand} ****${paymentDetails.last4}`,
+            createdAt: new Date().toISOString(),
+          };
+          return {
+            wallets: { ...state.wallets, [uid]: { ...wallet, balance: newBalance } },
+            walletTransactions: [tx, ...state.walletTransactions],
+          };
+        });
+      },
+
+      payWithWallet: (amount, bookingId) => {
+        const uid = get().currentUser?.id;
+        if (!uid) return false;
+        const wallet = get().wallets[uid];
+        if (!wallet || wallet.balance < amount) return false;
+        set((state) => {
+          const newBalance = wallet.balance - amount;
+          const tx: WalletTransaction = {
+            id: `wt-${Date.now()}`,
+            userId: uid,
+            type: 'payment',
+            amount: -amount,
+            balanceAfter: newBalance,
+            description: `Payment for booking ${bookingId}`,
+            referenceId: bookingId,
+            createdAt: new Date().toISOString(),
+          };
+          return {
+            wallets: { ...state.wallets, [uid]: { ...wallet, balance: newBalance } },
+            walletTransactions: [tx, ...state.walletTransactions],
+          };
+        });
+        return true;
+      },
+
+      refundToWallet: (amount, bookingId, reason) => {
+        const uid = get().currentUser?.id;
+        if (!uid) return;
+        set((state) => {
+          const wallet = state.wallets[uid] ?? { userId: uid, balance: 0, currency: 'EGP', status: 'active' as const, payoutMethods: [] };
+          const newBalance = wallet.balance + amount;
+          const tx: WalletTransaction = {
+            id: `wt-${Date.now()}`,
+            userId: uid,
+            type: 'refund',
+            amount,
+            balanceAfter: newBalance,
+            description: reason ?? `Refund for booking ${bookingId}`,
+            referenceId: bookingId,
+            createdAt: new Date().toISOString(),
+          };
+          return {
+            wallets: { ...state.wallets, [uid]: { ...wallet, balance: newBalance } },
+            walletTransactions: [tx, ...state.walletTransactions],
+          };
+        });
+      },
+
+      withdrawFunds: (amount) => {
+        const uid = get().currentUser?.id;
+        if (!uid) return;
+        set((state) => {
+          const wallet = state.wallets[uid];
+          if (!wallet || wallet.balance < amount) return state;
+          const newBalance = wallet.balance - amount;
+          const tx: WalletTransaction = {
+            id: `wt-${Date.now()}`,
+            userId: uid,
+            type: 'withdrawal',
+            amount: -amount,
+            balanceAfter: newBalance,
+            description: 'Withdrawal to linked bank account',
+            createdAt: new Date().toISOString(),
+          };
+          return {
+            wallets: { ...state.wallets, [uid]: { ...wallet, balance: newBalance } },
+            walletTransactions: [tx, ...state.walletTransactions],
+          };
+        });
+      },
+
+      requestPayout: (amount, methodId) => {
+        const uid = get().currentUser?.id;
+        if (!uid) return false;
+        const wallet = get().wallets[uid];
+        if (!wallet || wallet.balance < amount) return false;
+        const { systemConfig } = get();
+        if (amount < systemConfig.minPayoutAmount) return false;
+        const method = wallet.payoutMethods.find((m) => m.id === methodId);
+        if (!method) return false;
+
+        const request: PayoutRequest = {
+          id: `pr-${Date.now()}`,
+          organizerId: uid,
+          organizerName: get().currentUser?.name ?? '',
+          amount,
+          methodId,
+          method,
+          status: 'pending',
+          requestedAt: new Date().toISOString(),
+        };
+
+        set((state) => {
+          const newBalance = wallet.balance - amount;
+          const tx: WalletTransaction = {
+            id: `wt-${Date.now()}`,
+            userId: uid,
+            type: 'payout',
+            amount: -amount,
+            balanceAfter: newBalance,
+            description: `Payout requested — ${method.details.bankName ?? method.type}`,
+            referenceId: request.id,
+            createdAt: new Date().toISOString(),
+          };
+          return {
+            wallets: { ...state.wallets, [uid]: { ...wallet, balance: newBalance } },
+            walletTransactions: [tx, ...state.walletTransactions],
+            payoutRequests: [request, ...state.payoutRequests],
+          };
+        });
+        return true;
+      },
+
+      approvePayoutRequest: (requestId, adminNotes) => {
+        set((state) => ({
+          payoutRequests: state.payoutRequests.map((r) =>
+            r.id === requestId
+              ? { ...r, status: 'approved' as const, adminNotes, processedAt: new Date().toISOString() }
+              : r
+          ),
+        }));
+      },
+
+      rejectPayoutRequest: (requestId, adminNotes) => {
+        const { payoutRequests } = get();
+        const request = payoutRequests.find((r) => r.id === requestId);
+        if (!request) return;
+        set((state) => {
+          const wallet = state.wallets[request.organizerId];
+          const newBalance = (wallet?.balance ?? 0) + request.amount;
+          const tx: WalletTransaction = {
+            id: `wt-${Date.now()}`,
+            userId: request.organizerId,
+            type: 'refund',
+            amount: request.amount,
+            balanceAfter: newBalance,
+            description: 'Payout rejected — funds returned',
+            referenceId: requestId,
+            createdAt: new Date().toISOString(),
+          };
+          return {
+            payoutRequests: state.payoutRequests.map((r) =>
+              r.id === requestId
+                ? { ...r, status: 'rejected' as const, adminNotes, processedAt: new Date().toISOString() }
+                : r
+            ),
+            wallets: wallet
+              ? { ...state.wallets, [request.organizerId]: { ...wallet, balance: newBalance } }
+              : state.wallets,
+            walletTransactions: [tx, ...state.walletTransactions],
+          };
+        });
+      },
+
+      addPayoutMethod: (method) => {
+        const uid = get().currentUser?.id;
+        if (!uid) return;
+        const newMethod: PayoutMethod = {
+          ...method,
+          id: `pm-${Date.now()}`,
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => {
+          const wallet = state.wallets[uid];
+          if (!wallet) return state;
+          const updatedMethods = method.isDefault
+            ? [...wallet.payoutMethods.map((m) => ({ ...m, isDefault: false })), newMethod]
+            : [...wallet.payoutMethods, newMethod];
+          return {
+            wallets: { ...state.wallets, [uid]: { ...wallet, payoutMethods: updatedMethods } },
+          };
+        });
+      },
+
+      removePayoutMethod: (methodId) => {
+        const uid = get().currentUser?.id;
+        if (!uid) return;
+        set((state) => {
+          const wallet = state.wallets[uid];
+          if (!wallet) return state;
+          return {
+            wallets: {
+              ...state.wallets,
+              [uid]: { ...wallet, payoutMethods: wallet.payoutMethods.filter((m) => m.id !== methodId) },
+            },
+          };
+        });
+      },
+
+      // ── Event Chat ────────────────────────────────────────────────────────────
+
+      sendEventMessage: (eventId, content) => {
+        const { currentUser, events } = get();
+        if (!currentUser || !content.trim()) return;
+
+        const message: EventMessage = {
+          id: `msg-${Date.now()}`,
+          eventId,
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userAvatar: currentUser.avatar,
+          userRole: currentUser.role as 'attendee' | 'organizer' | 'admin',
+          content: content.trim(),
+          createdAt: new Date().toISOString(),
+        };
+
+        set((state) => ({
+          eventMessages: {
+            ...state.eventMessages,
+            [eventId]: [...(state.eventMessages[eventId] ?? []), message],
+          },
+        }));
+
+        get().awardXP(5, 'chat_message');
+
+        // Notify organizer if the sender is an attendee
+        if (currentUser.role === 'attendee') {
+          const event = events.find((e) => e.id === eventId);
+          if (event) {
+            get().notifyOrganizerNewChatMessage(
+              'user-002',
+              eventId,
+              event.title,
+              currentUser.name,
+              content.trim().slice(0, 60),
+            );
+          }
+        }
+      },
+
+      deleteEventMessage: (eventId, messageId) => {
+        const { currentUser } = get();
+        if (!currentUser || (currentUser.role !== 'organizer' && currentUser.role !== 'admin')) return;
+        set((state) => ({
+          eventMessages: {
+            ...state.eventMessages,
+            [eventId]: (state.eventMessages[eventId] ?? []).filter((m) => m.id !== messageId),
+          },
+        }));
+      },
+
+      getEventMessages: (eventId) => {
+        return get().eventMessages[eventId] ?? [];
+      },
+
+      // ── Organizer notifications ────────────────────────────────────────────────
+
+      notifyOrganizerNewBooking: (organizerId, eventName, attendeeName, bookingId) => {
+        const notification: Notification = {
+          id: `notif-booking-${Date.now()}`,
+          userId: organizerId,
+          type: 'new_booking',
+          title: 'New Booking!',
+          message: `${attendeeName} just booked a ticket for "${eventName}".`,
+          timestamp: new Date().toISOString(),
+          isRead: false,
+          actionUrl: '/organizer/events',
+          icon: '🎟️',
+        };
+        set((state) => {
+          const notifications = [notification, ...state.notifications];
+          const uid = state.currentUser?.id;
+          const unreadCount = notifications.filter((n) => !n.isRead && n.userId === uid).length;
+          return { notifications, unreadCount };
+        });
+      },
+
+      notifyOrganizerEventDecision: (organizerId, eventName, status, reason) => {
+        const notification: Notification = {
+          id: `notif-event-${Date.now()}`,
+          userId: organizerId,
+          type: status === 'approved' ? 'event_approved' : 'event_rejected',
+          title: status === 'approved' ? `Event Approved! ✅` : `Event Needs Revision`,
+          message: status === 'approved'
+            ? `"${eventName}" has been approved and is now live for attendees.`
+            : `"${eventName}" was not approved. ${reason ? `Reason: ${reason}` : 'Please review and resubmit.'}`,
+          timestamp: new Date().toISOString(),
+          isRead: false,
+          actionUrl: '/organizer/events',
+          icon: status === 'approved' ? '✅' : '⚠️',
+        };
+        set((state) => {
+          const notifications = [notification, ...state.notifications];
+          const uid = state.currentUser?.id;
+          const unreadCount = notifications.filter((n) => !n.isRead && n.userId === uid).length;
+          return { notifications, unreadCount };
+        });
+      },
+
+      notifyOrganizerPayoutUpdate: (organizerId, amount, status, reason) => {
+        const notification: Notification = {
+          id: `notif-payout-${Date.now()}`,
+          userId: organizerId,
+          type: status === 'approved' ? 'payout_approved' : 'payout_rejected',
+          title: status === 'approved' ? 'Payout Approved!' : 'Payout Rejected',
+          message: status === 'approved'
+            ? `Your payout of EGP ${amount.toLocaleString()} has been approved and is being processed.`
+            : `Your payout of EGP ${amount.toLocaleString()} was rejected. ${reason ?? 'Please contact support.'}`,
+          timestamp: new Date().toISOString(),
+          isRead: false,
+          actionUrl: '/organizer/wallet',
+          icon: status === 'approved' ? '💰' : '❌',
+        };
+        set((state) => {
+          const notifications = [notification, ...state.notifications];
+          const uid = state.currentUser?.id;
+          const unreadCount = notifications.filter((n) => !n.isRead && n.userId === uid).length;
+          return { notifications, unreadCount };
+        });
+      },
+
+      notifyOrganizerNewChatMessage: (organizerId, eventId, eventName, attendeeName, messagePreview) => {
+        const notification: Notification = {
+          id: `notif-chat-${Date.now()}`,
+          userId: organizerId,
+          type: 'new_chat_message',
+          title: `New message in "${eventName}"`,
+          message: `${attendeeName}: ${messagePreview}`,
+          timestamp: new Date().toISOString(),
+          isRead: false,
+          actionUrl: `/organizer/events/${eventId}/chat`,
+          icon: '💬',
+        };
+        set((state) => {
+          const notifications = [notification, ...state.notifications];
+          const uid = state.currentUser?.id;
+          const unreadCount = notifications.filter((n) => !n.isRead && n.userId === uid).length;
+          return { notifications, unreadCount };
+        });
+      },
+
+      // ── Organizer inbox ───────────────────────────────────────────────────────
+
+      getOrganizerInbox: (organizerId) => {
+        const { eventMessages, events } = get();
+        const threads: Record<string, {
+          attendeeId: string;
+          attendeeName: string;
+          attendeeAvatar?: string;
+          eventId: string;
+          eventName: string;
+          lastMessage: string;
+          lastMessageAt: string;
+          unreadCount: number;
+        }> = {};
+
+        Object.entries(eventMessages).forEach(([eventId, messages]) => {
+          const event = events.find((e) => e.id === eventId);
+          if (!event) return;
+
+          messages
+            .filter((m) => m.userRole === 'attendee')
+            .forEach((m) => {
+              const key = `${m.userId}-${eventId}`;
+              const existing = threads[key];
+              if (!existing || new Date(m.createdAt) > new Date(existing.lastMessageAt)) {
+                threads[key] = {
+                  attendeeId: m.userId,
+                  attendeeName: m.userName,
+                  attendeeAvatar: m.userAvatar,
+                  eventId,
+                  eventName: event.title,
+                  lastMessage: m.content,
+                  lastMessageAt: m.createdAt,
+                  unreadCount: existing ? existing.unreadCount + 1 : 1,
+                };
+              }
+            });
+        });
+
+        return Object.values(threads).sort(
+          (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+        );
+      },
+
+      // ── Direct Messaging ──────────────────────────────────────────────────────
+
+      sendDirectMessage: (receiverId, receiverName, receiverRole, content) => {
+        const { currentUser } = get();
+        if (!currentUser || !content.trim()) return;
+        const convId = [currentUser.id, receiverId].sort().join('--');
+        const msg: DirectMessage = {
+          id: `dm-${Date.now()}`,
+          conversationId: convId,
+          senderId: currentUser.id,
+          senderName: currentUser.name,
+          senderAvatar: currentUser.avatar,
+          senderRole: currentUser.role,
+          receiverId,
+          receiverName,
+          receiverRole,
+          content: content.trim(),
+          timestamp: new Date().toISOString(),
+          isRead: false,
+        };
+        set((state) => ({ directMessages: [...state.directMessages, msg] }));
+      },
+
+      sendBroadcastMessage: (subject, content, targetRole) => {
+        const { currentUser } = get();
+        if (!currentUser || !subject.trim() || !content.trim()) return;
+        const broadcast: BroadcastMessage = {
+          id: `bc-${Date.now()}`,
+          senderId: currentUser.id,
+          senderName: currentUser.name,
+          senderRole: currentUser.role as 'organizer' | 'admin',
+          targetRole,
+          subject: subject.trim(),
+          content: content.trim(),
+          timestamp: new Date().toISOString(),
+          recipientCount: 0,
+        };
+        set((state) => ({ broadcastMessages: [broadcast, ...state.broadcastMessages] }));
+      },
+
+      getDirectConversation: (userId) => {
+        const { currentUser, directMessages } = get();
+        if (!currentUser) return [];
+        const convId = [currentUser.id, userId].sort().join('--');
+        return directMessages
+          .filter((m) => m.conversationId === convId)
+          .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      },
+
+      getMyDMThreads: () => {
+        const { currentUser, directMessages } = get();
+        if (!currentUser) return [];
+        const myMessages = directMessages.filter(
+          (m) => m.senderId === currentUser.id || m.receiverId === currentUser.id
+        );
+        const threadMap = new Map<string, DMThread>();
+        for (const msg of myMessages) {
+          const isSender = msg.senderId === currentUser.id;
+          const partnerId = isSender ? msg.receiverId : msg.senderId;
+          const partnerName = isSender ? msg.receiverName : msg.senderName;
+          const partnerAvatar = isSender ? undefined : msg.senderAvatar;
+          const partnerRole = isSender ? msg.receiverRole : msg.senderRole;
+          const isUnread = !msg.isRead && msg.receiverId === currentUser.id;
+          const existing = threadMap.get(msg.conversationId);
+          if (!existing) {
+            threadMap.set(msg.conversationId, {
+              conversationId: msg.conversationId,
+              partnerId,
+              partnerName,
+              partnerAvatar,
+              partnerRole,
+              lastMessage: msg.content,
+              lastMessageAt: msg.timestamp,
+              unreadCount: isUnread ? 1 : 0,
+            });
+          } else {
+            if (new Date(msg.timestamp) > new Date(existing.lastMessageAt)) {
+              existing.lastMessage = msg.content;
+              existing.lastMessageAt = msg.timestamp;
+            }
+            if (isUnread) existing.unreadCount++;
+          }
+        }
+        return Array.from(threadMap.values()).sort(
+          (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+        );
+      },
+
+      getMyBroadcasts: () => {
+        const { currentUser, broadcastMessages } = get();
+        if (!currentUser) return [];
+        return broadcastMessages
+          .filter((b) => b.targetRole === currentUser.role)
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      },
+
+      markConversationRead: (userId) => {
+        const { currentUser } = get();
+        if (!currentUser) return;
+        const convId = [currentUser.id, userId].sort().join('--');
+        set((state) => ({
+          directMessages: state.directMessages.map((m) =>
+            m.conversationId === convId && m.receiverId === currentUser.id
+              ? { ...m, isRead: true }
+              : m
+          ),
+        }));
+      },
+
+      // ── User Management ───────────────────────────────────────────────────────
+
+      suspendUser: (userId, reason, suspendUntil) => {
+        const thirtyDaysOut = new Date();
+        thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
+        const until = suspendUntil || thirtyDaysOut.toISOString().slice(0, 10);
+        set((state) => ({
+          managedUsers: state.managedUsers.map((u) =>
+            u.id === userId
+              ? { ...u, status: 'suspended' as const, suspendReason: reason, suspendedUntil: until }
+              : u
+          ),
+        }));
+        const notification: Notification = {
+          id: `notif-suspend-${Date.now()}`,
+          userId,
+          type: 'event_update',
+          title: 'Account Suspended',
+          message: `Your account has been suspended. Reason: ${reason}`,
+          timestamp: new Date().toISOString(),
+          isRead: false,
+          icon: '⚠️',
+        };
+        set((state) => {
+          const notifications = [notification, ...state.notifications];
+          const uid = state.currentUser?.id;
+          const unreadCount = notifications.filter((n) => !n.isRead && n.userId === uid).length;
+          return { notifications, unreadCount };
+        });
+      },
+
+      unsuspendUser: (userId) => {
+        set((state) => ({
+          managedUsers: state.managedUsers.map((u) =>
+            u.id === userId
+              ? { ...u, status: 'active' as const, suspendReason: undefined, suspendedUntil: undefined }
+              : u
+          ),
+        }));
+      },
+
+      banUser: (userId, reason) => {
+        set((state) => ({
+          managedUsers: state.managedUsers.map((u) =>
+            u.id === userId ? { ...u, status: 'banned' as const, banReason: reason } : u
+          ),
+        }));
+      },
+
+      grantVerifiedStatus: (userId) => {
+        set((state) => ({
+          managedUsers: state.managedUsers.map((u) =>
+            u.id === userId ? { ...u, isVerified: true } : u
+          ),
+        }));
+      },
+
+      sendAdminMessageToUser: (userId, userName, subject, body) => {
+        const { currentUser, managedUsers } = get();
+        if (!currentUser) return;
+        const notification: Notification = {
+          id: `notif-adminmsg-${Date.now()}`,
+          userId,
+          type: 'admin_message',
+          title: subject,
+          message: body,
+          timestamp: new Date().toISOString(),
+          isRead: false,
+          icon: '📩',
+          actionUrl: '/app/messages',
+        };
+        set((state) => {
+          const notifications = [notification, ...state.notifications];
+          const uid = state.currentUser?.id;
+          const unreadCount = notifications.filter((n) => !n.isRead && n.userId === uid).length;
+          return { notifications, unreadCount };
+        });
+        const targetUser = managedUsers.find((u) => u.id === userId);
+        const receiverRole = (targetUser?.role ?? 'attendee') as 'attendee' | 'organizer' | 'admin';
+        const convId = [currentUser.id, userId].sort().join('--');
+        const dm: DirectMessage = {
+          id: `dm-admin-${Date.now()}`,
+          conversationId: convId,
+          senderId: currentUser.id,
+          senderName: currentUser.name,
+          senderAvatar: currentUser.avatar,
+          senderRole: currentUser.role,
+          receiverId: userId,
+          receiverName: userName,
+          receiverRole,
+          content: `[${subject}]\n${body}`,
+          timestamp: new Date().toISOString(),
+          isRead: false,
+        };
+        set((state) => ({ directMessages: [...state.directMessages, dm] }));
+      },
+
+      forcePasswordReset: (userId, _userName) => {
+        const notification: Notification = {
+          id: `notif-pwreset-${Date.now()}`,
+          userId,
+          type: 'force_password_reset',
+          title: 'Password Reset Required',
+          message: 'An administrator has initiated a password reset. Please check your email for the reset link.',
+          timestamp: new Date().toISOString(),
+          isRead: false,
+          icon: '🔑',
+          actionUrl: '/forgot-password',
+        };
+        set((state) => {
+          const notifications = [notification, ...state.notifications];
+          const uid = state.currentUser?.id;
+          const unreadCount = notifications.filter((n) => !n.isRead && n.userId === uid).length;
+          return { notifications, unreadCount };
+        });
+      },
+
+      recordOrganizerEarning: (bookingId, grossAmount, organizerId) => {
+        const { systemConfig, wallets } = get();
+        const feeRate = systemConfig.platformFeePercentage / 100;
+        const fee = Number((grossAmount * feeRate).toFixed(2));
+        const net = grossAmount - fee;
+        const wallet = wallets[organizerId] ?? { userId: organizerId, balance: 0, currency: 'EGP', status: 'active' as const, payoutMethods: [] };
+        const newBalance = wallet.balance + net;
+        const now = new Date().toISOString();
+        set((state) => {
+          const earningTx: WalletTransaction = {
+            id: `wt-earn-${Date.now()}`,
+            userId: organizerId,
+            type: 'earning',
+            amount: net,
+            balanceAfter: newBalance,
+            description: `Earnings for booking ${bookingId}`,
+            referenceId: bookingId,
+            createdAt: now,
+          };
+          const feeTx: WalletTransaction = {
+            id: `wt-fee-${Date.now() + 1}`,
+            userId: organizerId,
+            type: 'fee',
+            amount: -fee,
+            balanceAfter: newBalance,
+            description: `Platform fee (${systemConfig.platformFeePercentage}%) for booking ${bookingId}`,
+            referenceId: bookingId,
+            createdAt: now,
+          };
+          return {
+            wallets: { ...state.wallets, [organizerId]: { ...wallet, balance: newBalance } },
+            walletTransactions: [feeTx, earningTx, ...state.walletTransactions],
+          };
+        });
+      },
     }),
     {
       name: 'eventra-storage',
@@ -737,6 +1492,13 @@ export const useAppStore = create<AppState>()(
         notifications: state.notifications,
         theme: state.theme,
         systemConfig: state.systemConfig,
+        wallets: state.wallets,
+        walletTransactions: state.walletTransactions,
+        payoutRequests: state.payoutRequests,
+        eventMessages: state.eventMessages,
+        directMessages: state.directMessages,
+        broadcastMessages: state.broadcastMessages,
+        managedUsers: state.managedUsers,
       }),
     }
   )

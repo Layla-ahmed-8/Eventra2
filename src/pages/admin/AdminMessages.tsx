@@ -1,19 +1,36 @@
 import { useRef, useState } from 'react';
-import { Megaphone, MessageSquare, Send, Clock } from 'lucide-react';
+import { Send, Users, Inbox, Radio, MessageSquare } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 import { formatRelativeTime } from '../../lib/utils';
 import type { DMThread } from '../../types';
 
-export default function Messages() {
-  const [activeTab, setActiveTab] = useState<'announcements' | 'messages'>('announcements');
+export default function AdminMessages() {
+  const [activeTab, setActiveTab] = useState<'broadcast' | 'inbox'>('broadcast');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+
   const [selectedThread, setSelectedThread] = useState<DMThread | null>(null);
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { currentUser, getMyBroadcasts, getMyDMThreads, getDirectConversation, sendDirectMessage, markConversationRead } = useAppStore();
+  const {
+    currentUser,
+    getMyDMThreads,
+    getDirectConversation,
+    sendDirectMessage,
+    markConversationRead,
+    sendBroadcastMessage,
+    broadcastMessages,
+  } = useAppStore();
 
-  const broadcasts = getMyBroadcasts();
-  const threads = getMyDMThreads();
+  const inboxThreads = getMyDMThreads();
+  const totalUnread = inboxThreads.reduce((s, t) => s + t.unreadCount, 0);
+
+  const sentBroadcasts = broadcastMessages.filter(
+    (b) => b.senderId === currentUser?.id && b.targetRole === 'organizer'
+  );
 
   const conversation = selectedThread ? getDirectConversation(selectedThread.partnerId) : [];
 
@@ -35,90 +52,133 @@ export default function Messages() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
   };
 
-  const totalUnread = threads.reduce((sum, t) => sum + t.unreadCount, 0);
+  const handleBroadcast = () => {
+    if (!subject.trim() || !message.trim()) {
+      toast.error('Please fill in both subject and message before sending.');
+      return;
+    }
+    setSending(true);
+    setTimeout(() => {
+      sendBroadcastMessage(subject.trim(), message.trim(), 'organizer');
+      setSubject('');
+      setMessage('');
+      setSending(false);
+      toast.success('Broadcast sent to all organizers.');
+    }, 800);
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-h1 font-bold text-foreground">Messages</h1>
-        <p className="text-body text-muted-foreground mt-1">Announcements from organizers and direct conversations</p>
+        <p className="text-body text-muted-foreground mt-1">Broadcast platform announcements to organizers and manage direct conversations</p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-border">
         <button
-          onClick={() => setActiveTab('announcements')}
+          onClick={() => setActiveTab('broadcast')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-body-sm border-b-2 transition-colors ${
-            activeTab === 'announcements'
-              ? 'border-primary text-primary'
+            activeTab === 'broadcast'
+              ? 'border-red-500 text-red-600 dark:text-red-400'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <Megaphone className="w-4 h-4" />
-          Announcements
-          {broadcasts.length > 0 && (
-            <span className="ml-1 text-micro">({broadcasts.length})</span>
-          )}
+          <Radio className="w-4 h-4" />
+          Broadcast
         </button>
         <button
-          onClick={() => setActiveTab('messages')}
+          onClick={() => setActiveTab('inbox')}
           className={`flex items-center gap-2 px-5 py-3 font-bold text-body-sm border-b-2 transition-colors relative ${
-            activeTab === 'messages'
-              ? 'border-primary text-primary'
+            activeTab === 'inbox'
+              ? 'border-red-500 text-red-600 dark:text-red-400'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <MessageSquare className="w-4 h-4" />
-          Messages
+          <Inbox className="w-4 h-4" />
+          Inbox
           {totalUnread > 0 && (
-            <span className="ml-1 min-w-[18px] h-[18px] px-1 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            <span className="ml-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {totalUnread}
             </span>
           )}
         </button>
       </div>
 
-      {/* ── Announcements Tab ── */}
-      {activeTab === 'announcements' && (
-        <div className="space-y-4">
-          {broadcasts.length === 0 ? (
-            <div className="surface-panel p-16 text-center rounded-2xl">
-              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-                <Megaphone className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <p className="text-body font-semibold text-foreground">No announcements yet</p>
-              <p className="text-body-sm text-muted-foreground mt-1">Organizers will post updates here.</p>
+      {/* ── Broadcast Tab ── */}
+      {activeTab === 'broadcast' && (
+        <div className="space-y-6">
+          <div className="surface-panel p-8 space-y-6">
+            <div>
+              <h2 className="text-h2 font-semibold text-foreground mb-2">Broadcast to Organizers</h2>
+              <p className="text-body text-muted-foreground">
+                Send platform-wide announcements, policy updates, or fee changes to all organizers.
+              </p>
             </div>
-          ) : (
-            broadcasts.map((bc) => (
-              <div key={bc.id} className="surface-panel p-6 rounded-2xl space-y-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={`https://i.pravatar.cc/40?u=${bc.senderId}`}
-                      alt={bc.senderName}
-                      className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
-                    />
-                    <div>
-                      <p className="text-body-sm font-bold text-foreground">{bc.senderName}</p>
-                      <p className="text-caption text-muted-foreground uppercase tracking-widest text-[10px]">Organizer</p>
+
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Subject</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 input-base"
+                  placeholder="e.g., Platform Fee Update — June 2026"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Message</label>
+                <textarea
+                  rows={6}
+                  className="w-full px-4 py-3 input-base resize-none"
+                  placeholder="Type your announcement here..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </div>
+
+              <button
+                className="btn-primary flex items-center gap-2 bg-red-500 hover:bg-red-600 disabled:opacity-50"
+                onClick={handleBroadcast}
+                disabled={sending}
+              >
+                {sending ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                {sending ? 'Sending…' : 'Send to All Organizers'}
+              </button>
+            </div>
+          </div>
+
+          {/* Sent history */}
+          {sentBroadcasts.length > 0 && (
+            <div className="surface-panel p-6 space-y-4">
+              <h3 className="text-h3 font-bold text-foreground">Recent Broadcasts</h3>
+              <div className="space-y-3">
+                {sentBroadcasts.map((bc) => (
+                  <div key={bc.id} className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50">
+                    <div className="min-w-0">
+                      <p className="text-body-sm font-bold text-foreground truncate">{bc.subject}</p>
+                      <p className="text-caption text-muted-foreground mt-0.5">{formatRelativeTime(bc.timestamp)}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-caption text-muted-foreground flex-shrink-0">
+                      <Users className="w-3.5 h-3.5" />
+                      {bc.recipientCount || 'All'} organizers
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-caption text-muted-foreground flex-shrink-0">
-                    <Clock className="w-3.5 h-3.5" />
-                    {formatRelativeTime(bc.timestamp)}
-                  </div>
-                </div>
-                <h3 className="text-body font-bold text-foreground">{bc.subject}</h3>
-                <p className="text-body-sm text-muted-foreground leading-relaxed">{bc.content}</p>
+                ))}
               </div>
-            ))
+            </div>
           )}
         </div>
       )}
 
-      {/* ── Messages Tab ── */}
-      {activeTab === 'messages' && (
+      {/* ── Inbox Tab ── */}
+      {activeTab === 'inbox' && (
         <div className="grid lg:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-18rem)] min-h-[500px]">
           {/* Thread list */}
           <div className="surface-panel flex flex-col overflow-hidden rounded-2xl">
@@ -126,18 +186,19 @@ export default function Messages() {
               <p className="text-caption font-black uppercase tracking-widest text-muted-foreground">Conversations</p>
             </div>
             <div className="flex-1 overflow-y-auto divide-y divide-border/50">
-              {threads.length === 0 ? (
+              {inboxThreads.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
                   <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-body-sm">No conversations yet.</p>
+                  <p className="text-body-sm">No messages yet.</p>
+                  <p className="text-caption mt-1">Direct messages from organizers will appear here.</p>
                 </div>
               ) : (
-                threads.map((thread) => (
+                inboxThreads.map((thread) => (
                   <button
                     key={thread.conversationId}
                     onClick={() => handleSelectThread(thread)}
                     className={`w-full p-4 text-left transition-all hover:bg-secondary/40 ${
-                      selectedThread?.conversationId === thread.conversationId ? 'bg-primary/5 border-l-2 border-primary' : ''
+                      selectedThread?.conversationId === thread.conversationId ? 'bg-red-500/5 border-l-2 border-red-500' : ''
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -158,7 +219,7 @@ export default function Messages() {
                         <div className="flex items-center justify-between gap-2 mt-0.5">
                           <p className="text-caption text-muted-foreground line-clamp-1 flex-1">{thread.lastMessage}</p>
                           {thread.unreadCount > 0 && (
-                            <span className="min-w-[18px] h-[18px] px-1 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center flex-shrink-0">
                               {thread.unreadCount}
                             </span>
                           )}
@@ -177,11 +238,10 @@ export default function Messages() {
               <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
                 <MessageSquare className="w-16 h-16 text-muted-foreground/20 mb-4" />
                 <p className="text-body font-semibold text-foreground">Select a conversation</p>
-                <p className="text-body-sm text-muted-foreground mt-1">Choose a thread on the left to start chatting.</p>
+                <p className="text-body-sm text-muted-foreground mt-1">Choose a thread on the left to reply.</p>
               </div>
             ) : (
               <>
-                {/* Header */}
                 <div className="p-4 border-b border-border flex items-center gap-3">
                   <img
                     src={selectedThread.partnerAvatar || `https://i.pravatar.cc/40?u=${selectedThread.partnerId}`}
@@ -194,7 +254,6 @@ export default function Messages() {
                   </div>
                 </div>
 
-                {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                   {conversation.map((msg) => {
                     const isOwn = msg.senderId === currentUser?.id;
@@ -208,7 +267,7 @@ export default function Messages() {
                         <div className={`max-w-[70%] flex flex-col gap-1 ${isOwn ? 'items-end' : 'items-start'}`}>
                           {!isOwn && <span className="text-caption font-bold text-muted-foreground">{msg.senderName}</span>}
                           <div className={`px-4 py-2.5 rounded-2xl text-body-sm leading-relaxed ${
-                            isOwn ? 'bg-primary text-white rounded-br-sm' : 'bg-card border border-border rounded-bl-sm text-foreground'
+                            isOwn ? 'bg-red-500 text-white rounded-br-sm' : 'bg-card border border-border rounded-bl-sm text-foreground'
                           }`}>
                             {msg.content}
                           </div>
@@ -220,19 +279,18 @@ export default function Messages() {
                   <div ref={bottomRef} />
                 </div>
 
-                {/* Input */}
                 <div className="p-3 border-t border-border flex items-center gap-3">
                   <input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                    placeholder={`Message ${selectedThread.partnerName}…`}
+                    placeholder={`Reply to ${selectedThread.partnerName}…`}
                     className="flex-1 input-base text-body-sm"
                   />
                   <button
                     onClick={handleSend}
                     disabled={!input.trim()}
-                    className="btn-primary h-10 px-4 flex-shrink-0 disabled:opacity-40"
+                    className="h-10 px-4 flex-shrink-0 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors disabled:opacity-40 flex items-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                   </button>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, Mail, Bell, Shield, Palette, Globe } from 'lucide-react';
+import { Save, Mail, Bell, Shield, Palette, Globe, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { demoToast } from '../../lib/demoFeedback';
 import { useAppStore } from '../../store/useAppStore';
@@ -28,6 +28,8 @@ export default function AdminSettings() {
   const [platformName, setPlatformName] = useState(systemConfig.platformName);
   const [contactEmail, setContactEmail] = useState(systemConfig.contactEmail);
   const [platformFee, setPlatformFee] = useState(systemConfig.platformFeePercentage);
+  const [minPayout, setMinPayout] = useState(systemConfig.minPayoutAmount ?? 500);
+  const [autoApproveThreshold, setAutoApproveThreshold] = useState(systemConfig.autoApprovePayoutThreshold ?? 2000);
 
   const toggleFeature = (id: string) => {
     setFeatures((prev) => prev.map((f) => (f.id === id ? { ...f, enabled: !f.enabled } : f)));
@@ -42,6 +44,8 @@ export default function AdminSettings() {
         contactEmail: contactEmail.trim() || systemConfig.contactEmail,
         platformFeePercentage: platformFee,
         aiRecommendationsEnabled: aiFlag?.enabled ?? systemConfig.aiRecommendationsEnabled,
+        minPayoutAmount: minPayout,
+        autoApprovePayoutThreshold: autoApproveThreshold,
       });
       toast.success('Settings saved successfully.');
       setIsSaving(false);
@@ -110,6 +114,41 @@ export default function AdminSettings() {
             </div>
           </div>
 
+
+          <div className="surface-panel p-5">
+            <div className="flex items-center gap-3 mb-6">
+              <Wallet className="w-5 h-5 text-[#6C4CF1]" />
+              <h2 className="text-h2 font-semibold text-foreground">Payout Settings</h2>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-body-sm font-semibold text-foreground mb-2">
+                  Minimum Payout Amount (EGP)
+                </label>
+                <input
+                  type="number"
+                  min={100}
+                  value={minPayout}
+                  onChange={(e) => setMinPayout(Number(e.target.value))}
+                  className="w-full px-4 py-2 input-base"
+                />
+                <p className="text-caption text-muted-foreground mt-1">Organizers cannot request payouts below this amount.</p>
+              </div>
+              <div>
+                <label className="block text-body-sm font-semibold text-foreground mb-2">
+                  Auto-Approve Threshold (EGP)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={autoApproveThreshold}
+                  onChange={(e) => setAutoApproveThreshold(Number(e.target.value))}
+                  className="w-full px-4 py-2 input-base"
+                />
+                <p className="text-caption text-muted-foreground mt-1">Payout requests at or below this amount are approved automatically.</p>
+              </div>
+            </div>
+          </div>
 
           <div className="surface-panel p-5">
             <div className="flex items-center gap-3 mb-6">

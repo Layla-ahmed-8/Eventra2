@@ -17,7 +17,6 @@ import AdminLayout from '../components/layout/AdminLayout';
 // Public Pages
 import Landing from '../pages/public/Landing';
 import Login from '../pages/public/Login';
-import Signup from '../pages/public/Signup';
 import Onboarding from '../pages/public/Onboarding';
 import Register from '../pages/public/Register';
 import PendingApproval from '../pages/public/PendingApproval';
@@ -29,6 +28,7 @@ import AccountSuspended from '../pages/public/AccountSuspended';
 // Attendee Pages
 import Discover from '../pages/attendee/Discover';
 import EventDetail from '../pages/attendee/EventDetail';
+import EventChat from '../pages/attendee/EventChat';
 import RSVP from '../pages/attendee/RSVP';
 import Calendar from '../pages/attendee/Calendar';
 import MyEvents from '../pages/attendee/MyEvents';
@@ -40,16 +40,27 @@ import Notifications from '../pages/attendee/Notifications';
 import Messages from '../pages/attendee/Messages';
 import OrderSummary from '../pages/attendee/OrderSummary';
 import RewardStore from '../pages/attendee/RewardStore';
+import AttendeeWallet from '../pages/attendee/wallet/AttendeeWallet';
+import WalletTransactions from '../pages/attendee/wallet/WalletTransactions';
+import WalletDeposit from '../pages/attendee/wallet/WalletDeposit';
+import WalletWithdraw from '../pages/attendee/wallet/WalletWithdraw';
+import WalletMethods from '../pages/attendee/wallet/WalletMethods';
 
 // Organizer Pages
 import OrganizerDashboard from '../pages/organizer/OrganizerDashboard';
 import OrganizerEvents from '../pages/organizer/OrganizerEvents';
 import CreateEvent from '../pages/organizer/CreateEvent';
 import ManageEvent from '../pages/organizer/ManageEvent';
+import OrganizerEventChat from '../pages/organizer/OrganizerEventChat';
 import OrganizerAnalytics from '../pages/organizer/OrganizerAnalytics';
 import OrganizerMessages from '../pages/organizer/OrganizerMessages';
+import OrganizerNotifications from '../pages/organizer/OrganizerNotifications';
 import OrganizerOnboarding from '../pages/organizer/OrganizerOnboarding';
 import OrganizerProfile from '../pages/organizer/OrganizerProfile';
+import OrganizerWallet from '../pages/organizer/wallet/OrganizerWallet';
+import OrganizerWalletWithdraw from '../pages/organizer/wallet/OrganizerWalletWithdraw';
+import OrganizerWalletTransactions from '../pages/organizer/wallet/OrganizerWalletTransactions';
+import OrganizerWalletMethods from '../pages/organizer/wallet/OrganizerWalletMethods';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -61,6 +72,9 @@ import AdminSettings from '../pages/admin/AdminSettings';
 import AdminModeration from '../pages/admin/AdminModeration';
 import AdminOnboarding from '../pages/admin/AdminOnboarding';
 import AdminAuditLogs from '../pages/admin/AdminAuditLogs';
+import AdminMessages from '../pages/admin/AdminMessages';
+import AdminWallet from '../pages/admin/wallet/AdminWallet';
+import AdminWalletPayouts from '../pages/admin/wallet/AdminWalletPayouts';
 
 // ── Auth guard: redirect to login if not authenticated, or wrong role ────────
 function RequireAuth({ children, role }: { children: React.ReactNode; role?: 'attendee' | 'organizer' | 'admin' }) {
@@ -131,6 +145,7 @@ const router = createBrowserRouter(
       <Route path="/app/discover" element={<RequireAuth role="attendee"><AttendeeLayout><Discover /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/search" element={<Navigate to="/app/discover" replace />} />
       <Route path="/app/events/:id" element={<RequireAuth role="attendee"><AttendeeLayout><EventDetail /></AttendeeLayout></RequireAuth>} />
+      <Route path="/app/events/:id/chat" element={<RequireAuth role="attendee"><AttendeeLayout><EventChat /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/events/:id/rsvp" element={<RequireAuth role="attendee"><AttendeeLayout><RSVP /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/checkout/:id" element={<RequireAuth role="attendee"><AttendeeLayout><RSVP /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/calendar" element={<RequireAuth role="attendee"><AttendeeLayout><Calendar /></AttendeeLayout></RequireAuth>} />
@@ -146,6 +161,11 @@ const router = createBrowserRouter(
       <Route path="/app/notifications" element={<RequireAuth role="attendee"><AttendeeLayout><Notifications /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/messages" element={<RequireAuth role="attendee"><AttendeeLayout><Messages /></AttendeeLayout></RequireAuth>} />
       <Route path="/app/rewards/store" element={<RequireAuth role="attendee"><AttendeeLayout><RewardStore /></AttendeeLayout></RequireAuth>} />
+      <Route path="/app/wallet" element={<RequireAuth role="attendee"><AttendeeLayout><AttendeeWallet /></AttendeeLayout></RequireAuth>} />
+      <Route path="/app/wallet/transactions" element={<RequireAuth role="attendee"><AttendeeLayout><WalletTransactions /></AttendeeLayout></RequireAuth>} />
+      <Route path="/app/wallet/deposit" element={<RequireAuth role="attendee"><AttendeeLayout><WalletDeposit /></AttendeeLayout></RequireAuth>} />
+      <Route path="/app/wallet/withdraw" element={<RequireAuth role="attendee"><AttendeeLayout><WalletWithdraw /></AttendeeLayout></RequireAuth>} />
+      <Route path="/app/wallet/methods" element={<RequireAuth role="attendee"><AttendeeLayout><WalletMethods /></AttendeeLayout></RequireAuth>} />
 
       {/* ── Organizer ── */}
       <Route path="/organizer" element={<Navigate to="/organizer/dashboard" replace />} />
@@ -154,10 +174,16 @@ const router = createBrowserRouter(
       <Route path="/organizer/events" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerEvents /></OrganizerLayout></RequireAuth>} />
       <Route path="/organizer/events/create" element={<RequireAuth role="organizer"><OrganizerLayout><CreateEvent /></OrganizerLayout></RequireAuth>} />
       <Route path="/organizer/events/:id/manage" element={<RequireAuth role="organizer"><OrganizerLayout><ManageEvent /></OrganizerLayout></RequireAuth>} />
+      <Route path="/organizer/events/:id/chat" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerEventChat /></OrganizerLayout></RequireAuth>} />
       <Route path="/organizer/analytics" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerAnalytics /></OrganizerLayout></RequireAuth>} />
       <Route path="/organizer/messages" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerMessages /></OrganizerLayout></RequireAuth>} />
+      <Route path="/organizer/notifications" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerNotifications /></OrganizerLayout></RequireAuth>} />
       <Route path="/organizer/reports" element={<Navigate to="/organizer/analytics" replace />} />
       <Route path="/organizer/profile" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerProfile /></OrganizerLayout></RequireAuth>} />
+      <Route path="/organizer/wallet" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerWallet /></OrganizerLayout></RequireAuth>} />
+      <Route path="/organizer/wallet/withdraw" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerWalletWithdraw /></OrganizerLayout></RequireAuth>} />
+      <Route path="/organizer/wallet/transactions" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerWalletTransactions /></OrganizerLayout></RequireAuth>} />
+      <Route path="/organizer/wallet/methods" element={<RequireAuth role="organizer"><OrganizerLayout><OrganizerWalletMethods /></OrganizerLayout></RequireAuth>} />
 
       {/* ── Admin ── */}
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -170,6 +196,9 @@ const router = createBrowserRouter(
       <Route path="/admin/analytics" element={<RequireAuth role="admin"><AdminLayout><AdminAnalytics /></AdminLayout></RequireAuth>} />
       <Route path="/admin/settings" element={<RequireAuth role="admin"><AdminLayout><AdminSettings /></AdminLayout></RequireAuth>} />
       <Route path="/admin/audit-logs" element={<RequireAuth role="admin"><AdminLayout><AdminAuditLogs /></AdminLayout></RequireAuth>} />
+      <Route path="/admin/messages" element={<RequireAuth role="admin"><AdminLayout><AdminMessages /></AdminLayout></RequireAuth>} />
+      <Route path="/admin/wallet" element={<RequireAuth role="admin"><AdminLayout><AdminWallet /></AdminLayout></RequireAuth>} />
+      <Route path="/admin/wallet/payouts" element={<RequireAuth role="admin"><AdminLayout><AdminWalletPayouts /></AdminLayout></RequireAuth>} />
       <Route path="/admin/audit-log" element={<Navigate to="/admin/audit-logs" replace />} />
       <Route path="/admin/fraud" element={<Navigate to="/admin/users" replace />} />
       <Route path="/admin/ai-health" element={<Navigate to="/admin/analytics" replace />} />

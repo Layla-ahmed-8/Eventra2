@@ -13,6 +13,11 @@ const ROUTE_MAP: RouteMap = {
     { label: 'Discover', path: '/app/discover' },
     { label: o.eventTitle || p.id },
   ],
+  '/app/events/:id/chat': (p, o) => [
+    { label: 'Discover', path: '/app/discover' },
+    { label: o.eventTitle || p.id, path: `/app/events/${p.id}` },
+    { label: 'Event Chat' },
+  ],
   '/app/events/:id/rsvp': (p, o) => [
     { label: 'Discover', path: '/app/discover' },
     { label: o.eventTitle || p.id, path: `/app/events/${p.id}` },
@@ -46,6 +51,16 @@ const ROUTE_MAP: RouteMap = {
     { label: o.eventTitle || 'Event', path: `/organizer/events/${p.id}/manage` },
     { label: 'Manage' },
   ],
+  '/organizer/events/:id/chat': (p, o) => [
+    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Events', path: '/organizer/events' },
+    { label: o.eventTitle || 'Event', path: `/organizer/events/${p.id}/manage` },
+    { label: 'Event Chat' },
+  ],
+  '/organizer/notifications': () => [
+    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Notifications' },
+  ],
   '/organizer/analytics': () => [
     { label: 'Dashboard', path: '/organizer/dashboard' },
     { label: 'Analytics' },
@@ -59,6 +74,10 @@ const ROUTE_MAP: RouteMap = {
     { label: 'Profile' },
   ],
   // Admin
+  '/admin/messages': () => [
+    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Messages' },
+  ],
   '/admin/events': () => [
     { label: 'Dashboard', path: '/admin/dashboard' },
     { label: 'Event Moderation' },
@@ -86,6 +105,53 @@ const ROUTE_MAP: RouteMap = {
   '/admin/audit-logs': () => [
     { label: 'Dashboard', path: '/admin/dashboard' },
     { label: 'Audit Logs' },
+  ],
+  // Attendee wallet
+  '/app/wallet': () => [
+    { label: 'Profile', path: '/app/profile' },
+    { label: 'Wallet' },
+  ],
+  '/app/wallet/transactions': () => [
+    { label: 'Wallet', path: '/app/wallet' },
+    { label: 'Transaction History' },
+  ],
+  '/app/wallet/deposit': () => [
+    { label: 'Wallet', path: '/app/wallet' },
+    { label: 'Add Funds' },
+  ],
+  '/app/wallet/withdraw': () => [
+    { label: 'Wallet', path: '/app/wallet' },
+    { label: 'Withdraw' },
+  ],
+  '/app/wallet/methods': () => [
+    { label: 'Wallet', path: '/app/wallet' },
+    { label: 'Payment Methods' },
+  ],
+  // Organizer wallet
+  '/organizer/wallet': () => [
+    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: 'Wallet' },
+  ],
+  '/organizer/wallet/withdraw': () => [
+    { label: 'Wallet', path: '/organizer/wallet' },
+    { label: 'Request Payout' },
+  ],
+  '/organizer/wallet/transactions': () => [
+    { label: 'Wallet', path: '/organizer/wallet' },
+    { label: 'Transaction History' },
+  ],
+  '/organizer/wallet/methods': () => [
+    { label: 'Wallet', path: '/organizer/wallet' },
+    { label: 'Payout Methods' },
+  ],
+  // Admin wallet
+  '/admin/wallet': () => [
+    { label: 'Dashboard', path: '/admin/dashboard' },
+    { label: 'Wallet' },
+  ],
+  '/admin/wallet/payouts': () => [
+    { label: 'Wallet', path: '/admin/wallet' },
+    { label: 'Payout Requests' },
   ],
 };
 

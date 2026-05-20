@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { shareOrCopyLink } from '../../lib/demoFeedback';
-import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Copy, Ticket, BadgeCheck, Sparkles, TrendingUp, Clock, MessageSquare, Bookmark, Zap, Award, Activity } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Copy, Ticket, CheckCircle2, BadgeCheck, Sparkles, TrendingUp, Clock, MessageSquare, Bookmark, Zap, Award, Activity, MessagesSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
-  const { events, bookmarkedEvents, toggleBookmark, awardXP } = useAppStore();
+  const { events, bookmarkedEvents, toggleBookmark, awardXP, rsvpedEvents } = useAppStore();
   const event = events.find((e) => e.id === id);
   const [sharedEvents, setSharedEvents] = useState<Set<string>>(new Set());
 
@@ -39,6 +39,7 @@ export default function EventDetail() {
   }
 
   const isBookmarked = bookmarkedEvents.includes(event.id);
+  const alreadyRsvped = rsvpedEvents.includes(event.id);
   const similarEvents = events.filter(e => e.category === event.category && e.id !== event.id).slice(0, 3);
 
   return (
@@ -95,16 +96,44 @@ export default function EventDetail() {
             </button>
 
             <Link
-              to={`/app/events/${event.id}/rsvp`}
-              className="btn-primary h-11 px-6 shadow-lg shadow-primary/20"
+              to={`/app/events/${event.id}/chat`}
+              className="btn-secondary h-11 px-4 flex items-center gap-2"
             >
-              Get Tickets
+              <MessagesSquare className="w-4 h-4" />
+              Event Chat
+            </Link>
+
+            <Link
+              to={alreadyRsvped ? `/app/orders/${event.id}` : `/app/events/${event.id}/rsvp`}
+              className={alreadyRsvped ? 'btn-secondary h-11 px-6 flex items-center gap-2' : 'btn-primary h-11 px-6 flex items-center gap-2 shadow-lg shadow-primary/20'}
+            >
+              <Ticket className="w-4 h-4" />
+              {alreadyRsvped ? 'View Ticket' : 'Get Tickets'}
             </Link>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-10">
+        {alreadyRsvped && (
+          <div className="mb-8 bento-section border-green-500/20 bg-green-500/5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+              <div className="flex items-start gap-3">
+                <div className="icon-box bg-green-500/10 text-green-600">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-h3 font-bold text-foreground">Booking Confirmed</p>
+                  <p className="text-muted-foreground">You already have a ticket for this event. Check your orders for details.</p>
+                </div>
+              </div>
+              <Link to={`/app/orders/${event.id}`} className="btn-primary h-11 px-5">
+                View Ticket
+              </Link>
+            </div>
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-12 gap-10">
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-10">
@@ -232,7 +261,7 @@ export default function EventDetail() {
                 )}
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-2.5">
+                <div className="flex flex-wrap gap-2.5 mb-12">
                   {event.tags.map((tag) => (
                     <span
                       key={tag}
@@ -241,6 +270,42 @@ export default function EventDetail() {
                       #{tag}
                     </span>
                   ))}
+                </div>
+
+                {/* Event Community & Chat */}
+                <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-primary/10 via-background to-purple-500/5 border border-primary/20">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="icon-box bg-primary/20 text-primary scale-125">
+                      <MessagesSquare className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-h3 font-bold text-foreground">Event Community</h3>
+                      <p className="text-body-sm text-muted-foreground">Chat with the organizer and fellow attendees</p>
+                    </div>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4 mb-6">
+                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-background/50 border border-primary/15">
+                      <Users className="w-5 h-5 text-primary flex-shrink-0" />
+                      <div>
+                        <p className="text-body-sm font-bold text-foreground">{event.rsvpCount} attendees</p>
+                        <p className="text-micro text-muted-foreground">in this event</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-background/50 border border-purple-500/15">
+                      <MessageSquare className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-body-sm font-bold text-foreground">Live chat</p>
+                        <p className="text-micro text-muted-foreground">ask questions, share updates</p>
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    to={`/app/events/${event.id}/chat`}
+                    className="btn-primary w-full py-4 h-auto text-h4 justify-center shadow-lg shadow-primary/20"
+                  >
+                    <MessagesSquare className="w-5 h-5" />
+                    Join Event Chat
+                  </Link>
                 </div>
               </div>
             </div>
@@ -251,12 +316,12 @@ export default function EventDetail() {
             <div className="sticky top-28 space-y-8">
               {/* Ticket Selection Preview */}
               <div className="bento-section">
-                <h3 className="text-h3 font-bold text-foreground mb-6">Select Tickets</h3>
+                <h3 className="text-h3 font-bold text-foreground mb-6">{alreadyRsvped ? 'Your Booking' : 'Select Tickets'}</h3>
                 <div className="space-y-4 mb-8">
                   {event.ticketTypes.map((ticket, index) => (
                     <div
                       key={index}
-                      className="p-5 rounded-2xl bg-secondary/30 border border-border/50 hover:border-primary/40 transition-all group"
+                      className={`p-5 rounded-2xl bg-secondary/30 border border-border/50 transition-all group ${alreadyRsvped ? '' : 'hover:border-primary/40'}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <p className="font-bold text-foreground group-hover:text-primary transition-colors">{ticket.name}</p>
@@ -272,13 +337,13 @@ export default function EventDetail() {
                   ))}
                 </div>
                 <Link
-                  to={`/app/events/${event.id}/rsvp`}
-                  className="btn-primary w-full py-4 text-h4 h-auto shadow-xl shadow-primary/25"
+                  to={alreadyRsvped ? `/app/orders/${event.id}` : `/app/events/${event.id}/rsvp`}
+                  className={alreadyRsvped ? 'btn-secondary w-full py-4 text-h4 h-auto' : 'btn-primary w-full py-4 text-h4 h-auto shadow-xl shadow-primary/25'}
                 >
-                  Reserve Your Spot
+                  {alreadyRsvped ? 'View Your Ticket' : 'Reserve Your Spot'}
                 </Link>
                 <p className="mt-4 text-center text-micro text-muted-foreground">
-                  Powered by Eventra Secure Checkout
+                  {alreadyRsvped ? 'Already reserved. You can view ticket details any time.' : 'Powered by Eventra Secure Checkout'}
                 </p>
               </div>
 

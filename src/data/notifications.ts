@@ -3,7 +3,7 @@
 export interface Notification {
   id: string;
   userId: string;
-  type: 'event_reminder' | 'rsvp_confirmed' | 'badge_earned' | 'community_reply' | 'ai_recommendation' | 'organizer_request' | 'organizer_approved' | 'organizer_rejected' | 'event_update';
+  type: 'event_reminder' | 'rsvp_confirmed' | 'badge_earned' | 'community_reply' | 'ai_recommendation' | 'organizer_request' | 'organizer_approved' | 'organizer_rejected' | 'event_update' | 'new_booking' | 'event_approved' | 'event_rejected' | 'payout_approved' | 'payout_rejected' | 'new_chat_message' | 'admin_message' | 'force_password_reset';
   title: string;
   message: string;
   timestamp: string;

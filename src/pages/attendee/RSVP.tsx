@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Minus, Plus, CreditCard, Calendar, MapPin, AlertTriangle, CheckCircle2, Zap } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, CreditCard, Calendar, MapPin, AlertTriangle, CheckCircle2, Zap, Wallet } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 import TicketHoldTimer from '../../components/business/TicketHoldTimer';
 import { DEFAULT_SYSTEM_CONFIG } from '../../constants/config';
@@ -8,7 +9,7 @@ import { DEFAULT_SYSTEM_CONFIG } from '../../constants/config';
 export default function RSVP() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { events, rsvpEvent, rsvpedEvents } = useAppStore();
+  const { events, rsvpEvent, rsvpedEvents, rsvpEventFull, getWallet, payWithWallet, notifyOrganizerNewBooking, currentUser } = useAppStore();
   const event = id ? events.find((e) => e.id === id) : undefined;
 
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -18,7 +19,11 @@ export default function RSVP() {
   const [cardNumber, setCardNumber] = useState('');
   const [paymentErrors, setPaymentErrors] = useState<{ name?: string; card?: string }>({});
   const [holdExpiry, setHoldExpiry] = useState<Date | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'wallet'>('card');
   const holdCreatedRef = useRef(false);
+
+  const wallet = getWallet();
+  const walletBalance = wallet?.balance ?? 0;
 
   useEffect(() => {
     if (event) {
@@ -81,20 +86,46 @@ export default function RSVP() {
     setQuantities(event ? event.ticketTypes.reduce((acc, t) => ({ ...acc, [t.name]: 0 }), {}) : {});
   }, [event]);
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (alreadyRsvped) return;
-    const newErrors: { name?: string; card?: string } = {};
-    if (!cardholderName.trim()) newErrors.name = 'Cardholder name is required';
-    if (!cardNumber.trim()) newErrors.card = 'Card number is required';
-    if (Object.keys(newErrors).length) { setPaymentErrors(newErrors); return; }
+
+    if (selectedPaymentMethod === 'card') {
+      const newErrors: { name?: string; card?: string } = {};
+      if (!cardholderName.trim()) newErrors.name = 'Cardholder name is required';
+      if (!cardNumber.trim()) newErrors.card = 'Card number is required';
+      if (Object.keys(newErrors).length) { setPaymentErrors(newErrors); return; }
+    }
+
+    if (selectedPaymentMethod === 'wallet' && walletBalance < total) {
+      toast.error('Insufficient wallet balance', { description: 'Please add funds or pay by card.' });
+      return;
+    }
+
     setPaymentState('processing');
     setPaymentError('');
 
-    setTimeout(() => {
-      rsvpEvent(event.id);
+    setTimeout(async () => {
+      const booking = await rsvpEventFull(
+        event.id,
+        event.ticketTypes[0]?.name,
+        totalTickets,
+        selectedPaymentMethod,
+      );
+
+      if (booking && selectedPaymentMethod === 'wallet') {
+        payWithWallet(total, booking.id);
+      }
+
+      if (!booking) {
+        rsvpEvent(event.id);
+      }
+
+      if (booking && currentUser) {
+        notifyOrganizerNewBooking('user-002', event.title, currentUser.name, booking.id);
+      }
+
       setPaymentState('success');
 
-      // Confetti celebration
       import('canvas-confetti').then((confetti) => {
         confetti.default({
           particleCount: 150,
@@ -241,63 +272,99 @@ export default function RSVP() {
                   </div>
                 )}
 
-                <div className="grid gap-6">
-                  <div>
-                    <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
-                      Cardholder Name
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter full name"
-                      value={cardholderName}
-                      onChange={(e) => { setCardholderName(e.target.value); setPaymentErrors((p) => ({ ...p, name: '' })); }}
-                      onBlur={(e) => { if (!e.target.value.trim()) setPaymentErrors((p) => ({ ...p, name: 'Cardholder name is required' })); }}
-                      onFocus={() => setPaymentErrors((p) => ({ ...p, name: '' }))}
-                      className={`input-base w-full${paymentErrors.name ? ' input-error' : ''}`}
-                    />
-                    {paymentErrors.name && <p className="field-error-msg">{paymentErrors.name}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
-                      Card Number
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="0000 0000 0000 0000"
-                        value={cardNumber}
-                        onChange={(e) => { setCardNumber(e.target.value); setPaymentErrors((p) => ({ ...p, card: '' })); }}
-                        onBlur={(e) => { if (!e.target.value.trim()) setPaymentErrors((p) => ({ ...p, card: 'Card number is required' })); }}
-                        onFocus={() => setPaymentErrors((p) => ({ ...p, card: '' }))}
-                        className={`input-base w-full pr-12${paymentErrors.card ? ' input-error' : ''}`}
-                      />
-                      <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
-                    </div>
-                    {paymentErrors.card && <p className="field-error-msg">{paymentErrors.card}</p>}
-                  </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
-                        Expiry Date
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="MM/YY"
-                        className="input-base w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
-                        CVV
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="123"
-                        className="input-base w-full"
-                      />
-                    </div>
-                  </div>
+                {/* Payment method toggle */}
+                <div className="flex gap-3 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPaymentMethod('card')}
+                    className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all font-bold text-body-sm ${
+                      selectedPaymentMethod === 'card'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/40'
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    Credit Card
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPaymentMethod('wallet')}
+                    disabled={walletBalance < total}
+                    className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all font-bold text-body-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedPaymentMethod === 'wallet'
+                        ? 'border-purple-500 bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                        : 'border-border text-muted-foreground hover:border-purple-400'
+                    }`}
+                  >
+                    <Wallet className="w-4 h-4" />
+                    Wallet {wallet ? `(EGP ${walletBalance.toLocaleString()})` : ''}
+                  </button>
                 </div>
+
+                {selectedPaymentMethod === 'wallet' ? (
+                  <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-body-sm text-muted-foreground">Wallet Balance</span>
+                      <span className="text-h4 font-bold text-foreground">EGP {walletBalance.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-body-sm text-muted-foreground">After payment</span>
+                      <span className={`text-body-sm font-bold ${walletBalance - total < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                        EGP {(walletBalance - total).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    <div>
+                      <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
+                        Cardholder Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter full name"
+                        value={cardholderName}
+                        onChange={(e) => { setCardholderName(e.target.value); setPaymentErrors((p) => ({ ...p, name: '' })); }}
+                        onBlur={(e) => { if (!e.target.value.trim()) setPaymentErrors((p) => ({ ...p, name: 'Cardholder name is required' })); }}
+                        onFocus={() => setPaymentErrors((p) => ({ ...p, name: '' }))}
+                        className={`input-base w-full${paymentErrors.name ? ' input-error' : ''}`}
+                      />
+                      {paymentErrors.name && <p className="field-error-msg">{paymentErrors.name}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
+                        Card Number
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="0000 0000 0000 0000"
+                          value={cardNumber}
+                          onChange={(e) => { setCardNumber(e.target.value); setPaymentErrors((p) => ({ ...p, card: '' })); }}
+                          onBlur={(e) => { if (!e.target.value.trim()) setPaymentErrors((p) => ({ ...p, card: 'Card number is required' })); }}
+                          onFocus={() => setPaymentErrors((p) => ({ ...p, card: '' }))}
+                          className={`input-base w-full pr-12${paymentErrors.card ? ' input-error' : ''}`}
+                        />
+                        <CreditCard className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
+                      </div>
+                      {paymentErrors.card && <p className="field-error-msg">{paymentErrors.card}</p>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
+                          Expiry Date
+                        </label>
+                        <input type="text" placeholder="MM/YY" className="input-base w-full" />
+                      </div>
+                      <div>
+                        <label className="block text-caption font-bold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
+                          CVV
+                        </label>
+                        <input type="text" placeholder="123" className="input-base w-full" />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

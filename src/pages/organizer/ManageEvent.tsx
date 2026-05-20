@@ -4,7 +4,7 @@ import {
   ArrowLeft, Users, BarChart, MessageSquare, QrCode, Download, DollarSign,
   Eye, ArrowUpRight, CheckCircle2, Search, Ticket, MapPin, CalendarDays,
   Share2, Copy, Filter, RefreshCw, Megaphone, Heart, MessageCircle,
-  Sparkles, UserCheck2, Clock3, TrendingUp
+  Sparkles, UserCheck2, Clock3, TrendingUp, MessagesSquare
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
@@ -31,7 +31,7 @@ const ticketFilterOptions = ['All', 'VIP', 'GA'] as const;
 export default function ManageEvent() {
   const { id } = useParams<{ id: string }>();
   const { awardXP } = useAppStore();
-  const [activeTab, setActiveTab] = useState<'attendees' | 'analytics' | 'community' | 'checkin'>('attendees');
+  const [activeTab, setActiveTab] = useState<'attendees' | 'analytics' | 'community' | 'checkin' | 'chat'>('attendees');
   const [checkedIn, setCheckedIn] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [ticketFilter, setTicketFilter] = useState<(typeof ticketFilterOptions)[number]>('All');
@@ -178,6 +178,7 @@ export default function ManageEvent() {
           { key: 'analytics', label: 'Analytics', icon: BarChart },
           { key: 'community', label: 'Community', icon: MessageSquare },
           { key: 'checkin', label: 'Check-in', icon: QrCode },
+          { key: 'chat', label: 'Event Chat', icon: MessagesSquare },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -361,10 +362,19 @@ export default function ManageEvent() {
                     <h2 className="text-h2 font-bold text-foreground">Event Community</h2>
                     <p className="mt-1 text-body-sm text-muted-foreground">Keep attendees informed with announcements and reactions.</p>
                   </div>
-                  <button className="btn-primary inline-flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Post update
-                  </button>
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/organizer/events/${id}/chat`}
+                      className="btn-secondary inline-flex items-center gap-2 text-body-sm"
+                    >
+                      <MessagesSquare className="h-4 w-4" />
+                      Event Chat
+                    </Link>
+                    <button className="btn-primary inline-flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Post update
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -451,6 +461,25 @@ export default function ManageEvent() {
                   })}
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'chat' && (
+            <div className="surface-panel p-6 text-center space-y-4 rounded-2xl">
+              <div className="icon-box icon-box-cyan mx-auto scale-125">
+                <MessagesSquare className="h-5 w-5" />
+              </div>
+              <h2 className="text-h2 font-bold text-foreground">Event Chat</h2>
+              <p className="text-body text-muted-foreground max-w-md mx-auto">
+                View and moderate the live event chat. Reply to attendee questions directly.
+              </p>
+              <Link
+                to={`/organizer/events/${id}/chat`}
+                className="btn-primary inline-flex items-center gap-2"
+              >
+                <MessagesSquare className="w-4 h-4" />
+                Open Event Chat
+              </Link>
             </div>
           )}
         </div>

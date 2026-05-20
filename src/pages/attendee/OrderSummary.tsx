@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Download, Share2, QrCode } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Download, Share2, QrCode, Wallet } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { demoToast, downloadTextFile, shareOrCopyLink } from '../../lib/demoFeedback';
 
@@ -202,7 +202,19 @@ export default function OrderSummary() {
                   </span>
                 </div>
 
-                {booking.paymentMethod && (
+                {booking.paymentMethod?.brand === 'Wallet' ? (
+                  <div className="mt-4 pt-4 border-t flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                      <Wallet className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Paid with Eventra Wallet</p>
+                      <p className="text-sm text-gray-500">
+                        {new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+                ) : booking.paymentMethod ? (
                   <div className="mt-4 pt-4 border-t">
                     <p className="text-sm text-gray-600">
                       Paid with {booking.paymentMethod.brand} ending in{' '}
@@ -216,7 +228,7 @@ export default function OrderSummary() {
                       })}
                     </p>
                   </div>
-                )}
+                ) : null}
               </div>
             ) : (
               <div className="bg-white rounded-2xl shadow-sm p-6">

@@ -13,9 +13,9 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(email, password);
+    const success = await login(email, password);
 
     if (success) {
       searchParams.delete('afterOnboarding');
@@ -23,7 +23,6 @@ export default function Login() {
       searchParams.delete('afterAdminOnboarding');
       setSearchParams(searchParams, { replace: true });
       const user = demoAccounts.find(u => u.email === email);
-      // Redirect based on role
       if (user?.role === 'organizer') {
         navigate('/organizer/dashboard');
       } else if (user?.role === 'admin') {
@@ -36,10 +35,10 @@ export default function Login() {
     }
   };
 
-  const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
+  const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
     setEmail(demoEmail);
     setPassword(demoPassword);
-    const success = login(demoEmail, demoPassword);
+    const success = await login(demoEmail, demoPassword);
 
     if (success) {
       searchParams.delete('afterOnboarding');

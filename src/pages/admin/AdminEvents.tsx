@@ -5,6 +5,7 @@ import { demoToast } from '../../lib/demoFeedback';
 import AIScoreIndicator from '../../components/business/AIScoreIndicator';
 import VerificationBadge from '../../components/business/VerificationBadge';
 import ConfirmationModal from '../../components/business/ConfirmationModal';
+import { useAppStore } from '../../store/useAppStore';
 
 // Mock AI risk scores per event (0–100, higher = more risk)
 const AI_RISK_SCORES: Record<string, number> = {
@@ -18,6 +19,7 @@ const AI_RISK_SCORES: Record<string, number> = {
 const FLAGGED_IDS = new Set(['event-001', 'event-005']);
 
 export default function AdminEvents() {
+  const { notifyOrganizerEventDecision } = useAppStore();
   const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set(mockEvents.slice(0, 5).map((e) => e.id)));
   const [approvedIds, setApprovedIds] = useState<string[]>([]);
   const [, setRejectedIds] = useState<string[]>([]);
@@ -38,23 +40,27 @@ export default function AdminEvents() {
   );
 
   const approve = (id: string) => {
+    const event = mockEvents.find((e) => e.id === id);
     setPendingIds((prev) => {
       const n = new Set(prev);
       n.delete(id);
       return n;
     });
     setApprovedIds((prev) => (prev.includes(id) ? prev : [id, ...prev]));
-    demoToast('Event approved', 'It is now visible to attendees in this demo.');
+    if (event) notifyOrganizerEventDecision('user-002', event.title, 'approved');
+    demoToast('Event approved', 'Organizer has been notified.');
   };
 
   const reject = (id: string) => {
+    const event = mockEvents.find((e) => e.id === id);
     setPendingIds((prev) => {
       const n = new Set(prev);
       n.delete(id);
       return n;
     });
     setRejectedIds((prev) => (prev.includes(id) ? prev : [id, ...prev]));
-    demoToast('Event rejected', 'Organizer would be notified in a production build.');
+    if (event) notifyOrganizerEventDecision('user-002', event.title, 'rejected', 'Does not meet community guidelines.');
+    demoToast('Event rejected', 'Organizer has been notified.');
   };
 
   return (

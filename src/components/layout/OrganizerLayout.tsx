@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Plus, BarChart3, MessageSquare, Settings, ChevronLeft, Menu, X, Moon, Sun, Crown, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, Plus, BarChart3, MessageSquare, ChevronLeft, Menu, X, Moon, Sun, Crown, LogOut, Wallet, Bell } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
 import MobileBottomNav from './MobileBottomNav';
+import WalletBalanceBadge from '../business/WalletBalanceBadge';
 import { useBreadcrumbs } from '../../hooks/useBreadcrumbs';
 import {
   Breadcrumb, BreadcrumbList, BreadcrumbItem,
@@ -27,14 +28,15 @@ const bottomNavItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/organizer/dashboard' },
   { icon: Calendar, label: 'My Events', path: '/organizer/events' },
   { icon: BarChart3, label: 'Analytics', path: '/organizer/analytics' },
-  { icon: MessageSquare, label: 'Messages', path: '/organizer/messages' },
+  { icon: Wallet, label: 'Wallet', path: '/organizer/wallet' },
   { icon: Crown, label: 'Profile', path: '/organizer/profile' },
 ];
 
 export default function OrganizerLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, theme, toggleTheme, logout } = useAppStore();
+  const { currentUser, theme, toggleTheme, logout, notifications } = useAppStore();
+  const unreadCount = notifications.filter((n) => n.userId === currentUser?.id && !n.isRead).length;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const crumbs = useBreadcrumbs();
@@ -45,6 +47,8 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
     { path: '/organizer/events/create', icon: Plus, label: 'Create Event' },
     { path: '/organizer/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/organizer/messages', icon: MessageSquare, label: 'Messages' },
+    { path: '/organizer/notifications', icon: Bell, label: 'Notifications' },
+    { path: '/organizer/wallet', icon: Wallet, label: 'Wallet' },
     { path: '/organizer/profile', icon: Crown, label: 'My Profile' },
   ];
 
@@ -83,8 +87,22 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
                     : 'text-sidebar-foreground hover:bg-sidebar-accent hover:translate-x-1'
                 }`}
               >
-                <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                {sidebarOpen && <span className="font-bold text-body-sm tracking-wide">{item.label}</span>}
+                <div className="relative flex-shrink-0">
+                  <item.icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                  {item.path === '/organizer/notifications' && unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </div>
+                {sidebarOpen && (
+                  <span className="font-bold text-body-sm tracking-wide flex-1">{item.label}</span>
+                )}
+                {sidebarOpen && item.path === '/organizer/notifications' && unreadCount > 0 && (
+                  <span className="ml-auto min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
                 {!sidebarOpen && (
                   <div className="absolute left-full ml-4 px-3 py-2 bg-sidebar-accent border border-sidebar-border text-sidebar-foreground text-caption font-bold rounded-xl whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl">
                     {item.label}
@@ -141,6 +159,7 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
               <div className="flex-1 min-w-0">
                 <p className="text-body-sm font-bold text-sidebar-foreground truncate">{currentUser?.name}</p>
                 <p className="text-micro font-bold text-muted-foreground uppercase tracking-widest">Organizer</p>
+                <WalletBalanceBadge colorClass="text-cyan-500" />
               </div>
             )}
           </Link>
@@ -239,13 +258,23 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
             <Menu className="w-6 h-6" />
           </button>
           <Logo variant="horizontal" className="h-6 w-auto" />
-          <Link to="/organizer/profile">
-            <img
-              src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
-              alt={currentUser?.name}
-              className="w-10 h-10 rounded-xl object-cover ring-2 ring-cyan-500/20"
-            />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/organizer/notifications" className="relative w-10 h-10 rounded-xl bg-sidebar-accent flex items-center justify-center border border-sidebar-border/50">
+              <Bell className="w-5 h-5 text-sidebar-foreground" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
+            <Link to="/organizer/profile">
+              <img
+                src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
+                alt={currentUser?.name}
+                className="w-10 h-10 rounded-xl object-cover ring-2 ring-cyan-500/20"
+              />
+            </Link>
+          </div>
         </div>
 
         {/* Page Content */}

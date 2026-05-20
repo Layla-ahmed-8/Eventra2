@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Users, MessageSquare, BarChart3, Settings, ChevronLeft, Menu, X, Shield, Moon, Sun, User, ShieldAlert, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, MessageSquare, BarChart3, Settings, ChevronLeft, Menu, X, Shield, Moon, Sun, User, ShieldAlert, LogOut, Wallet } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import Logo from '../Logo';
@@ -14,7 +14,7 @@ const bottomNavItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
   { icon: Calendar, label: 'Events', path: '/admin/events' },
   { icon: Users, label: 'Users', path: '/admin/users' },
-  { icon: Settings, label: 'Settings', path: '/admin/settings' },
+  { icon: Wallet, label: 'Wallet', path: '/admin/wallet' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
 ];
 
@@ -32,7 +32,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { path: '/admin/moderation', icon: ShieldAlert, label: 'Moderation' },
     { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/community', icon: MessageSquare, label: 'Community' },
+    { path: '/admin/messages', icon: MessageSquare, label: 'Messages' },
     { path: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
+    { path: '/admin/wallet', icon: Wallet, label: 'Wallet' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
     { path: '/admin/profile', icon: User, label: 'My Profile' },
   ];

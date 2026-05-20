@@ -16,6 +16,8 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   contactEmail: 'support@eventra.com',
   currencySymbol: 'EGP',
   platformFeePercentage: 5,
+  minPayoutAmount: 500,
+  autoApprovePayoutThreshold: 2000,
 };
 
 export const XP_TABLE = {

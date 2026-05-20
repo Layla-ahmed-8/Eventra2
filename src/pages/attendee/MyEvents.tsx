@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Ticket, Heart, XCircle, Star, Search, ArrowUpDown, Sparkles, Clock3, Filter, Bookmark, TicketCheck } from 'lucide-react';
+import { Calendar, MapPin, Ticket, Heart, XCircle, Star, Search, ArrowUpDown, Sparkles, Clock3, Filter, Bookmark, TicketCheck, MessagesSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 import CancellationCountdown from '../../components/business/CancellationCountdown';
 import { DEFAULT_SYSTEM_CONFIG } from '../../constants/config';
 
 export default function MyEvents() {
-  const { events, rsvpedEvents, bookmarkedEvents, bookings, cancelBooking, systemConfig, awardXP } = useAppStore();
+  const { events, rsvpedEvents, bookmarkedEvents, bookings, cancelBooking, systemConfig, awardXP, refundToWallet } = useAppStore();
   type TabKey = 'upcoming' | 'past' | 'bookmarked';
   type SortKey = 'soonest' | 'latest' | 'title';
   const [activeTab, setActiveTab] = useState<TabKey>('upcoming');
@@ -26,19 +26,27 @@ export default function MyEvents() {
 
   const handleCancelConfirm = async () => {
     if (!cancelTarget) return;
+    const booking = bookings.find((b) => b.id === cancelTarget);
     await cancelBooking(cancelTarget);
     setCancelTarget(null);
     setCancelQty(1);
-    const refundFails = Math.random() < 0.3;
-    if (refundFails) {
-      toast.error('Booking cancelled', {
-        description: 'Refund processing failed — our team has been notified and will resolve this within 2 business days.',
-      });
-    } else {
-      toast.success('Booking cancelled', {
-        description: `Refund for ${cancelQty} ticket${cancelQty > 1 ? 's' : ''} will be processed within 5–10 business days.`,
-      });
+
+    if (booking && booking.total > 0) {
+      const totalQty = booking.tickets.reduce((s, t) => s + t.qty, 0);
+      const refundAmount = totalQty > 0
+        ? Number(((booking.total / totalQty) * cancelQty).toFixed(2))
+        : 0;
+      if (refundAmount > 0) {
+        refundToWallet(refundAmount, cancelTarget, `Refund — cancelled ${cancelQty} ticket${cancelQty > 1 ? 's' : ''}`);
+        toast.success('Booking cancelled', {
+          description: `EGP ${refundAmount.toFixed(2)} refunded to your wallet instantly.`,
+        });
+        return;
+      }
     }
+    toast.success('Booking cancelled', {
+      description: 'Your ticket has been released.',
+    });
   };
 
   const handleReviewSubmit = () => {
@@ -293,11 +301,14 @@ export default function MyEvents() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {activeTab === 'upcoming' ? (
                     <>
                       <Link to={`/app/orders/${event.id}`} className="btn-primary text-body-sm flex-1">
                         View Ticket
+                      </Link>
+                      <Link to={`/app/events/${event.id}/chat`} className="btn-secondary text-body-sm px-3 inline-flex items-center gap-1.5" title="Event Chat">
+                        <MessagesSquare className="w-4 h-4" />
                       </Link>
                       {(() => {
                         const booking = getBookingForEvent(event.id);
@@ -357,7 +368,7 @@ export default function MyEvents() {
           <div className="surface-panel rounded-2xl p-6 w-full max-w-md space-y-5 shadow-2xl">
             <h3 className="text-h3 font-bold text-foreground">Cancel Booking</h3>
             <p className="text-body-sm text-muted-foreground">
-              How many tickets would you like to cancel? A refund will be issued for the cancelled tickets within 5–10 business days.
+              How many tickets would you like to cancel? Refunds are credited to your Eventra Wallet immediately.
             </p>
             {cancelMaxQty > 1 && (
               <div className="space-y-1.5">

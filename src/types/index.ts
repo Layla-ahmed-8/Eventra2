@@ -2,6 +2,7 @@
 // Re-exports types from data files for backward compatibility.
 
 export type { User, OrganizerRequest } from '../data/users';
+export type { ManagedUser } from '../data/adminUsersData';
 export type {
   Event,
   EngagementData,
@@ -74,7 +75,8 @@ export interface Booking {
   discount: number;
   total: number;
   currency: string;
-  paymentMethod: { brand: string; last4: string };
+  paymentMethod: { brand: string; last4: string } | { brand: 'Wallet'; last4: '' } | null;
+  paymentSource?: 'card' | 'wallet';
   status: BookingStatus;
   qrData: { bookingId: string; userId: string; eventId: string; valid: boolean };
   bookingRef: string;
@@ -101,7 +103,61 @@ export type XPReason =
   | 'streak_bonus'
   | 'share'
   | 'review'
-  | 'referral';
+  | 'referral'
+  | 'chat_message';
+
+// ── Direct Messaging ─────────────────────────────────────────────────────────
+
+export interface DirectMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar?: string;
+  senderRole: 'attendee' | 'organizer' | 'admin';
+  receiverId: string;
+  receiverName: string;
+  receiverRole: 'attendee' | 'organizer' | 'admin';
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+}
+
+export interface BroadcastMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: 'organizer' | 'admin';
+  targetRole: 'attendee' | 'organizer';
+  subject: string;
+  content: string;
+  timestamp: string;
+  recipientCount: number;
+}
+
+export interface DMThread {
+  conversationId: string;
+  partnerId: string;
+  partnerName: string;
+  partnerAvatar?: string;
+  partnerRole: 'attendee' | 'organizer' | 'admin';
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
+}
+
+// ── Event Chat ────────────────────────────────────────────────────────────────
+
+export interface EventMessage {
+  id: string;
+  eventId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  userRole: 'attendee' | 'organizer' | 'admin';
+  content: string;
+  createdAt: string;
+}
 
 export interface Badge {
   id: string;
@@ -175,4 +231,75 @@ export interface SystemConfig {
   contactEmail: string;
   currencySymbol: string;
   platformFeePercentage: number;
+  minPayoutAmount: number;
+  autoApprovePayoutThreshold: number;
+}
+
+// ── Wallet ────────────────────────────────────────────────────────────────────
+
+export type WalletTransactionType =
+  | 'deposit'
+  | 'withdrawal'
+  | 'payment'
+  | 'refund'
+  | 'payout'
+  | 'fee'
+  | 'earning';
+
+export type WalletStatus = 'active' | 'suspended' | 'pending_verification';
+
+export type PayoutStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'processing'
+  | 'completed';
+
+export type PayoutMethodType = 'bank_transfer' | 'vodafone_cash' | 'instapay';
+
+export interface WalletTransaction {
+  id: string;
+  userId: string;
+  type: WalletTransactionType;
+  amount: number;
+  balanceAfter: number;
+  description: string;
+  referenceId?: string;
+  createdAt: string;
+}
+
+export interface PayoutMethod {
+  id: string;
+  userId: string;
+  type: PayoutMethodType;
+  details: {
+    accountName: string;
+    accountNumber: string;
+    bankName?: string;
+    phone?: string;
+  };
+  isDefault: boolean;
+  createdAt: string;
+}
+
+export interface PayoutRequest {
+  id: string;
+  organizerId: string;
+  organizerName: string;
+  amount: number;
+  methodId: string;
+  method: PayoutMethod;
+  status: PayoutStatus;
+  notes?: string;
+  adminNotes?: string;
+  requestedAt: string;
+  processedAt?: string;
+}
+
+export interface UserWallet {
+  userId: string;
+  balance: number;
+  currency: string;
+  status: WalletStatus;
+  payoutMethods: PayoutMethod[];
 }
