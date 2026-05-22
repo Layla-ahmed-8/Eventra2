@@ -32,6 +32,8 @@ export default function CreateEvent() {
     capacity: '100',
     ticketPrice: '',
     vibeTags: [] as string[],
+    isVirtual: false,
+    virtualLink: '',
   });
 
   const [originalFormData] = useState(() => (editId ? { ...formData } : null));
@@ -139,10 +141,20 @@ export default function CreateEvent() {
     if (!formData.category) errors.category = 'Please select a category.';
     if (!formData.date) errors.date = 'Date is required.';
     if (!formData.time) errors.time = 'Time is required.';
-    if (!formData.venue.trim()) errors.venue = 'Venue name is required.';
-    if (!formData.address.trim()) errors.address = 'Street address is required.';
-    if (!formData.city.trim()) errors.city = 'City is required.';
+    if (!formData.venue.trim()) errors.venue = formData.isVirtual
+      ? 'Meeting room or online session name is required.'
+      : 'Venue name is required.';
+
+    if (!formData.isVirtual) {
+      if (!formData.address.trim()) errors.address = 'Street address is required.';
+      if (!formData.city.trim()) errors.city = 'City is required.';
+    }
+
     if (!formData.description.trim()) errors.description = 'Event description is required.';
+
+    if (formData.isVirtual && !formData.virtualLink.trim()) {
+      errors.virtualLink = 'Virtual meeting link is required for online events.';
+    }
 
     const today = new Date().toISOString().slice(0, 10);
     if (formData.date && formData.date < today) {
@@ -166,8 +178,8 @@ export default function CreateEvent() {
   };
 
   const isFormComplete = () => {
-    const required = ['title', 'category', 'date', 'time', 'venue', 'address', 'city', 'description', 'capacity'] as const;
-    return required.every((f) => {
+    const required = ['title', 'category', 'date', 'time', 'venue', 'description', 'capacity'] as const;
+    const meetsRequired = required.every((f) => {
       const v = formData[f as keyof typeof formData];
       if (f === 'capacity') {
         const n = Number(v as string);
@@ -175,6 +187,10 @@ export default function CreateEvent() {
       }
       return String(v).trim().length > 0;
     });
+
+    const virtualLinkOk = !formData.isVirtual || String(formData.virtualLink).trim().length > 0;
+
+    return meetsRequired && virtualLinkOk;
   };
 
   const criticalChanged =
@@ -432,7 +448,11 @@ export default function CreateEvent() {
             <div className="surface-panel p-3">
               <p className="text-caption text-muted-foreground">Venue</p>
               <p className="font-bold text-foreground">{formData.venue}</p>
-              <p className="text-caption text-muted-foreground">{formData.address}, {formData.city}</p>
+              <p className="text-caption text-muted-foreground">
+                {formData.isVirtual
+                  ? formData.virtualLink || 'Virtual event link will be added after saving.'
+                  : `${formData.address}, ${formData.city}`}
+              </p>
             </div>
             <div className="surface-panel p-3">
               <p className="text-caption text-muted-foreground">Capacity</p>
@@ -556,6 +576,29 @@ export default function CreateEvent() {
           </div>
 
           <div className="space-y-1.5">
+            <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">Event Type *</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: 'Onsite', value: false },
+                { label: 'Virtual', value: true },
+              ].map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => update({ isVirtual: option.value })}
+                  className={`rounded-2xl border px-4 py-2 text-body-sm font-bold transition-all ${
+                    formData.isVirtual === option.value
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-border/70 bg-background text-muted-foreground hover:border-primary hover:text-foreground'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
             <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">Venue Name *</label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -564,32 +607,52 @@ export default function CreateEvent() {
                 value={formData.venue}
                 onChange={(e) => update({ venue: e.target.value })}
                 className={`w-full input-base py-1.5 pl-10 pr-3 text-body-sm${err('venue') ? ' input-error' : ''}`}
-                placeholder="e.g., Cairo Opera House"
+                placeholder={formData.isVirtual ? 'e.g., Zoom call, Teams room' : 'e.g., Cairo Opera House'}
               />
             </div>
             {err('venue') && <p className="field-error-msg">{err('venue')}</p>}
           </div>
 
+          {formData.isVirtual && (
+            <div className="space-y-1.5">
+              <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">Join Link *</label>
+              <input
+                type="url"
+                value={formData.virtualLink}
+                onChange={(e) => update({ virtualLink: e.target.value })}
+                className={`w-full input-base px-3 py-1.5 text-body-sm${err('virtualLink') ? ' input-error' : ''}`}
+                placeholder="https://meet.eventra.com/your-room"
+              />
+              {err('virtualLink') && <p className="field-error-msg">{err('virtualLink')}</p>}
+            </div>
+          )}
+
           <div className="space-y-1.5">
-            <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">Street Address *</label>
+            <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">
+              Street Address {formData.isVirtual ? '(optional for virtual events)' : '*'}
+            </label>
             <input
               type="text"
               value={formData.address}
               onChange={(e) => update({ address: e.target.value })}
               className={`w-full input-base px-3 py-1.5 text-body-sm${err('address') ? ' input-error' : ''}`}
               placeholder="e.g., 1 Gezira St, Zamalek"
+              disabled={formData.isVirtual}
             />
             {err('address') && <p className="field-error-msg">{err('address')}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">City *</label>
+            <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">
+              City {formData.isVirtual ? '(optional for virtual events)' : '*'}
+            </label>
             <input
               type="text"
               value={formData.city}
               onChange={(e) => update({ city: e.target.value })}
               className={`w-full input-base px-3 py-1.5 text-body-sm${err('city') ? ' input-error' : ''}`}
               placeholder="e.g., Cairo"
+              disabled={formData.isVirtual}
             />
             {err('city') && <p className="field-error-msg">{err('city')}</p>}
           </div>
@@ -748,7 +811,12 @@ export default function CreateEvent() {
               <p className="text-caption text-muted-foreground">
                 {formData.date && formData.time ? `${formData.date} at ${formData.time}` : 'Date & Time TBD'}
               </p>
-              <p className="text-caption text-muted-foreground">{formData.venue || 'Venue TBD'}</p>
+              <p className="text-caption text-muted-foreground">
+                {formData.isVirtual ? 'Virtual event' : formData.venue || 'Venue TBD'}
+              </p>
+              {formData.isVirtual && formData.virtualLink && (
+                <p className="text-caption text-muted-foreground">Join URL: {formData.virtualLink}</p>
+              )}
               <div className="mt-3 flex items-center gap-3 border-t border-primary/10 pt-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   Capacity: <span className="text-foreground">{formData.capacity}</span>

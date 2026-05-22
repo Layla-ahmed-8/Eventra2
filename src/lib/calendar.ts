@@ -11,6 +11,7 @@ export function generateGoogleCalendarUrl(event: {
     address: string | null;
     city: string | null;
     isVirtual: boolean;
+    virtualLink?: string | null;
   };
 }): string {
   const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
@@ -26,10 +27,17 @@ export function generateGoogleCalendarUrl(event: {
     ? 'Virtual Event' 
     : `${event.location.venue || ''}, ${event.location.address || ''}, ${event.location.city || ''}`;
 
+  const details = [
+    event.description,
+    event.location.isVirtual && event.location.virtualLink ? `Join link: ${event.location.virtualLink}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+
   const params = new URLSearchParams({
     text: event.title,
     dates: `${start}/${end}`,
-    details: event.description,
+    details,
     location: locationStr,
     sf: 'true',
     output: 'xml'

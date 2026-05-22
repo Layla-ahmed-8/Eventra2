@@ -4,6 +4,7 @@ import {
   Search,
   Calendar,
   MapPin,
+  Clock,
   Heart,
   Sparkles,
   TrendingUp,
@@ -82,6 +83,12 @@ function enrichEvent(event: any, userRadius: number, currentCity: string | null,
   };
 }
 
+function isEventThisWeekend(dateString: string) {
+  const date = new Date(dateString);
+  const day = date.getDay();
+  return day === 5 || day === 6 || day === 0;
+}
+
 export default function Discover() {
   const { events, bookmarkedEvents, toggleBookmark, recordBrowse, currentUser, locationEnabled, userCoordinates, interests, rsvpedEvents } = useAppStore();
 
@@ -96,8 +103,20 @@ export default function Discover() {
   const [maxPrice, setMaxPrice] = useState(10000);
   const [showOnlyRecommended, setShowOnlyRecommended] = useState(false);
   const [showNearMeOnly, setShowNearMeOnly] = useState(false);
+  const [showThisWeekend, setShowThisWeekend] = useState(false);
+  const [showTrending, setShowTrending] = useState(false);
   const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
   const [sortBy, setSortBy] = useState<SortMode>('recommended');
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [drawerSections, setDrawerSections] = useState<Record<string, boolean>>({
+    categories: true,
+    tags: false,
+    dateTime: false,
+    budget: false,
+    eventType: false,
+    social: false,
+    ai: false,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [focusedIndex, setFocusedIndex] = useState(-1);
 
@@ -158,8 +177,12 @@ export default function Discover() {
     return new Map(result.recommendations.map((r) => [r.eventId, r]));
   }, [currentUser, interests, userCoordinates, userRadius, rsvpedEvents, events]);
 
+  const trending = useMemo(() => [...enrichedEvents].sort((a, b) => b.rsvpCount - a.rsvpCount).slice(0, 4), [enrichedEvents]);
+
   const filteredEvents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
+
+    const trendingIds = new Set(trending.map((event) => event.id));
 
     const base = enrichedEvents.filter((event) => {
       const matchesSearch = !query || event.searchBlob.includes(query);
@@ -168,12 +191,14 @@ export default function Discover() {
       const matchesPrice = event.price <= maxPrice;
       const matchesRecommended = !showOnlyRecommended || event.isRecommended;
       const matchesNearMe = !showNearMeOnly || event.isNearMe;
+      const matchesThisWeekend = !showThisWeekend || isEventThisWeekend(event.date);
+      const matchesTrending = !showTrending || trendingIds.has(event.id);
       const matchesMode =
         modeFilter === 'all' ||
         (modeFilter === 'virtual' && event.location.isVirtual) ||
         (modeFilter === 'in-person' && !event.location.isVirtual);
 
-      return matchesSearch && matchesCategory && matchesTag && matchesPrice && matchesRecommended && matchesNearMe && matchesMode;
+      return matchesSearch && matchesCategory && matchesTag && matchesPrice && matchesRecommended && matchesNearMe && matchesThisWeekend && matchesTrending && matchesMode;
     });
 
     return base.sort((a, b) => {
@@ -199,7 +224,7 @@ export default function Discover() {
         }
       }
     });
-  }, [enrichedEvents, interests, maxPrice, modeFilter, searchQuery, selectedCategories, selectedTags, showNearMeOnly, showOnlyRecommended, sortBy]);
+  }, [enrichedEvents, interests, maxPrice, modeFilter, searchQuery, selectedCategories, selectedTags, showNearMeOnly, showOnlyRecommended, showThisWeekend, showTrending, sortBy, trending]);
 
   useKeyboardShortcuts({
     j: () => setFocusedIndex((i) => Math.min(i + 1, filteredEvents.length - 1)),
@@ -212,7 +237,6 @@ export default function Discover() {
       .filter((e) => (scoreMap.get(e.id)?.topPick) ?? e.isRecommended)
       .slice(0, 4);
   }, [enrichedEvents, scoreMap]);
-  const trending = useMemo(() => [...enrichedEvents].sort((a, b) => b.rsvpCount - a.rsvpCount).slice(0, 4), [enrichedEvents]);
   const nearby = useMemo(
     () =>
       [...enrichedEvents]
@@ -229,11 +253,14 @@ export default function Discover() {
     maxPrice < 10000,
     showOnlyRecommended,
     showNearMeOnly,
+    showThisWeekend,
+    showTrending,
     modeFilter !== 'all',
     sortBy !== 'recommended',
   ].filter(Boolean).length;
 
   const visibleTags = Array.from(new Set(events.flatMap((event) => event.tags))).slice(0, 12);
+  const trendingTags = Array.from(new Set(trending.flatMap((event) => event.tags))).slice(0, 8);
 
   const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>
@@ -261,207 +288,252 @@ export default function Discover() {
       <AISearchModal isOpen={showAISearch} onClose={() => setShowAISearch(false)} />
 
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="hero-surface p-5 md:p-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] items-start">
-            <div className="space-y-5">
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-body-sm font-bold uppercase tracking-wider">
+        <div className="space-y-4 rounded-[3rem] bg-background/90 p-5 md:p-7 shadow-2xl border border-border/40 backdrop-blur-xl">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-3 max-w-3xl">
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-caption font-bold uppercase tracking-widest">
                 <Sparkles className="w-4 h-4" />
                 AI Powered Discovery
               </div>
-              <div className="space-y-3 max-w-3xl">
-                <h1 className="text-display font-bold text-foreground leading-[1.05]">
-                  Find your next experience with <span className="gradient-text">smarter</span> search and filters.
+              <div>
+                <h1 className="text-display font-bold text-foreground leading-[1.05] max-w-3xl">
+                  Find your next experience with <span className="gradient-text">smarter</span> search.
                 </h1>
                 <p className="text-body-lg text-muted-foreground max-w-2xl">
-                  Search by title, organizer, venue, tag, or city, then refine by category, format, budget, and proximity.
+                  Search by venue, vibe, or interests, then refine with emotional, community-driven filters.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <button onClick={() => setShowAISearch(true)} className="btn-primary px-7 py-3 h-auto text-body font-bold">
-                  <Sparkles className="w-5 h-5" />
-                  Try AI Search
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary px-7 py-3 h-auto text-body font-bold"
-                  onClick={() => document.getElementById('discover-event-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                >
-                  Browse Events
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="kpi-card !p-4">
-                  <span className="kpi-label">Live results</span>
-                  <div className="kpi-value">{filteredEvents.length}</div>
-                </div>
-                <div className="kpi-card !p-4">
-                  <span className="kpi-label">Nearby</span>
-                  <div className="kpi-value">{nearby.length}</div>
-                </div>
-                <div className="kpi-card !p-4">
-                  <span className="kpi-label">Recommended</span>
-                  <div className="kpi-value">{recommended.length}</div>
-                </div>
-                <div className="kpi-card !p-4">
-                  <span className="kpi-label">Active filters</span>
-                  <div className="kpi-value">{activeFilterCount}</div>
-                </div>
-              </div>
             </div>
 
-            <div className="space-y-4 rounded-3xl border border-border/60 bg-background/70 p-5 md:p-6 shadow-lg backdrop-blur">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 text-caption font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                    <SlidersHorizontal className="w-4 h-4" />
-                    Smart Search
-                  </div>
-                  <p className="text-body-sm text-muted-foreground mt-1">Compact, fast, and easy to scan.</p>
-                </div>
-                <button onClick={clearAllFilters} className={`filter-chip ${activeFilterCount > 0 ? 'active' : 'inactive'} inline-flex items-center gap-2`}>
-                  <X className="w-3.5 h-3.5" />
-                  Reset
-                </button>
-              </div>
-
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search title, organizer, venue, city, or tags..."
-                  className="input-base w-full pl-12 pr-4 text-body h-14"
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setShowOnlyRecommended((prev) => !prev)}
-                  className={`filter-chip ${showOnlyRecommended ? 'active' : 'inactive'} inline-flex items-center gap-2`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  AI Picks
-                </button>
-                <button
-                  onClick={() => setShowNearMeOnly((prev) => !prev)}
-                  className={`filter-chip ${showNearMeOnly ? 'active' : 'inactive'} inline-flex items-center gap-2 ${locationEnabled ? '' : 'opacity-60'}`}
-                  disabled={!locationEnabled}
-                  title={locationEnabled ? 'Show events within your radius' : 'Enable location to use this filter'}
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  Near me
-                </button>
-                <span className="filter-chip inactive inline-flex items-center gap-2">
-                  <ArrowUpDown className="w-3.5 h-3.5" />
-                  {sortBy.replace('-', ' ')}
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">Categories</span>
-                  {selectedCategories.length > 0 && <span className="text-caption text-muted-foreground">{selectedCategories.length} selected</span>}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {categories.slice(0, 6).map((category) => (
-                    <button key={category} onClick={() => toggleCategory(category)} className={`filter-chip ${selectedCategories.includes(category) ? 'active' : 'inactive'}`}>
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">Tags</span>
-                  {selectedTags.length > 0 && <span className="text-caption text-muted-foreground">{selectedTags.length} selected</span>}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {visibleTags.slice(0, 8).map((tag) => (
-                    <button key={tag} onClick={() => toggleTag(tag)} className={`filter-chip ${selectedTags.includes(tag) ? 'active' : 'inactive'} text-[12px]`}>
-                      #{tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">Budget</span>
-                    <span className="text-caption font-bold text-foreground">EGP {maxPrice.toLocaleString()}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="10000"
-                    step="100"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                    className="w-full accent-primary h-1.5 bg-secondary rounded-full"
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 sm:w-[14rem]">
-                  {(['all', 'virtual', 'in-person'] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setModeFilter(mode)}
-                      className={`px-3 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-wider transition-all border ${
-                        modeFilter === mode ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-secondary/30 border-border/50 text-muted-foreground hover:bg-secondary/50'
-                      }`}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-secondary/20 px-4 py-3">
-                <div>
-                  <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest">Sort</p>
-                  <p className="text-body-sm text-muted-foreground">Change ranking by relevance, proximity, popularity, or price.</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    ['recommended', 'Best match'],
-                    ['nearest', 'Nearest'],
-                    ['popular', 'Popular'],
-                    ['price-low', 'Price'],
-                  ] as const).map(([value, label]) => (
-                    <button
-                      key={value}
-                      onClick={() => setSortBy(value)}
-                      className={`px-3 py-2 rounded-xl text-caption font-bold transition-all border ${
-                        sortBy === value ? 'bg-background text-primary shadow-sm border-primary/20' : 'bg-secondary/30 border-border/50 text-muted-foreground hover:bg-secondary/50'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {activeFilterCount > 0 && (
-                <div className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-4">
-                  <span className="text-caption font-bold text-muted-foreground uppercase tracking-[0.2em]">Active</span>
-                  {searchQuery && <span className="filter-chip active">Search: {searchQuery}</span>}
-                  {selectedCategories.map((category) => (
-                    <span key={category} className="filter-chip active">{category}</span>
-                  ))}
-                  {selectedTags.map((tag) => (
-                    <span key={tag} className="filter-chip active">#{tag}</span>
-                  ))}
-                  {showOnlyRecommended && <span className="filter-chip active">AI Picks</span>}
-                  {showNearMeOnly && <span className="filter-chip active">Near me</span>}
-                  {modeFilter !== 'all' && <span className="filter-chip active">{modeFilter}</span>}
-                  {maxPrice < 10000 && <span className="filter-chip active">Under EGP {maxPrice.toLocaleString()}</span>}
-                </div>
-              )}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                className="btn-primary px-6 py-3 h-auto text-body font-bold rounded-2xl shadow-lg shadow-primary/10"
+                onClick={() => setShowAISearch(true)}
+              >
+                <Sparkles className="w-5 h-5" />
+                Try AI Search
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-2xl bg-secondary/80 px-5 py-3 text-body font-bold text-foreground border border-border/50"
+                onClick={() => setShowFilterDrawer(true)}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+                {activeFilterCount > 0 && <span className="ml-2 rounded-full bg-primary text-white text-[11px] font-black px-2 py-0.5">{activeFilterCount}</span>}
+              </button>
             </div>
           </div>
+
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Find rooftop jazz events tonight"
+              className="input-base w-full pl-12 pr-4 text-body h-16 rounded-[2rem] border border-border/50 bg-white/90 shadow-sm focus:border-primary/40"
+            />
+          </div>
+
+          <p className="text-caption text-muted-foreground">Try search examples like “Rooftop jazz tonight”, “Networking conference”, or “Creative workshops this weekend”.</p>
+
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: 'AI Picks', value: showOnlyRecommended, action: () => setShowOnlyRecommended((prev) => !prev), icon: Sparkles },
+              { label: 'Near me', value: showNearMeOnly, action: () => setShowNearMeOnly((prev) => !prev), icon: Compass, disabled: !locationEnabled },
+              { label: 'This weekend', value: showThisWeekend, action: () => setShowThisWeekend((prev) => !prev), icon: Calendar },
+              { label: 'Trending', value: showTrending, action: () => setShowTrending((prev) => !prev), icon: TrendingUp },
+            ].map((chip) => {
+              const Icon = chip.icon;
+              return (
+                <button
+                  key={chip.label}
+                  onClick={chip.action}
+                  disabled={chip.disabled}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold transition-all ${chip.value ? 'bg-primary/10 border-primary/20 text-primary shadow-sm' : 'bg-white/80 border-border/50 text-muted-foreground hover:bg-secondary/70'} ${chip.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {activeFilterCount > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-[2rem] bg-white/90 border border-border/50 p-3 shadow-sm">
+              <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-bold">Active filters</span>
+              {searchQuery && <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Search: {searchQuery}</span>}
+              {selectedCategories.map((category) => (
+                <span key={category} className="rounded-full bg-secondary/80 px-3 py-1 text-xs font-semibold text-foreground">{category}</span>
+              ))}
+              {selectedTags.map((tag) => (
+                <span key={tag} className="rounded-full bg-secondary/80 px-3 py-1 text-xs font-semibold text-foreground">#{tag}</span>
+              ))}
+              {showOnlyRecommended && <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">AI Picks</span>}
+              {showNearMeOnly && <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Near me</span>}
+              {showThisWeekend && <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">This weekend</span>}
+              {showTrending && <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Trending</span>}
+              {modeFilter !== 'all' && <span className="rounded-full bg-secondary/80 px-3 py-1 text-xs font-semibold text-foreground">{modeFilter}</span>}
+              {maxPrice < 10000 && <span className="rounded-full bg-secondary/80 px-3 py-1 text-xs font-semibold text-foreground">Under EGP {maxPrice.toLocaleString()}</span>}
+              <button onClick={clearAllFilters} className="ml-auto text-xs font-bold text-primary underline underline-offset-4">Clear all</button>
+            </div>
+          )}
         </div>
+
+        {showFilterDrawer && (
+          <>
+            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm opacity-100" />
+            <div className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-6 sm:items-center sm:py-10">
+              <div className="w-full max-w-3xl rounded-[2rem] border border-border/60 bg-background/95 shadow-2xl p-6 backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-4 mb-5">
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-[0.24em] text-muted-foreground">Advanced filters</p>
+                    <h2 className="text-2xl font-bold text-foreground">Refine event discovery</h2>
+                  </div>
+                  <button type="button" onClick={() => setShowFilterDrawer(false)} className="btn-ghost rounded-full p-3">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-5">
+                  {[
+                    {
+                      key: 'categories',
+                      title: 'Categories',
+                      description: 'Select event categories that match your current mood.',
+                      content: (
+                        <div className="flex flex-wrap gap-2">
+                          {categories.map((category) => (
+                            <button
+                              key={category}
+                              onClick={() => toggleCategory(category)}
+                              className={`filter-chip ${selectedCategories.includes(category) ? 'active' : 'inactive'}`}
+                            >
+                              {category}
+                            </button>
+                          ))}
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'tags',
+                      title: 'Mood tags',
+                      description: 'Narrow events by trending themes, hobbies, and vibes.',
+                      content: (
+                        <div className="flex flex-wrap gap-2">
+                          {trendingTags.map((tag) => (
+                            <button
+                              key={tag}
+                              onClick={() => toggleTag(tag)}
+                              className={`filter-chip ${selectedTags.includes(tag) ? 'active' : 'inactive'} text-[12px]`}
+                            >
+                              #{tag}
+                            </button>
+                          ))}
+                        </div>
+                      ),
+                    },
+
+                    {
+                      key: 'budget',
+                      title: 'Budget',
+                      description: 'Filter by maximum ticket price and keep recommendations within budget.',
+                      content: (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <span className="text-caption text-muted-foreground">Up to</span>
+                            <span className="text-foreground font-bold">EGP</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="10000"
+                              value={maxPrice}
+                              onChange={(e) => setMaxPrice(Number(e.target.value))}
+                              className="input-base flex-1 px-4 py-2 rounded-2xl border border-border/50 bg-white/90 shadow-sm focus:border-primary/40"
+                            />
+                          </div>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'mode',
+                      title: 'Event mode',
+                      description: 'Choose virtual, in-person, or all experiences.',
+                      content: (
+                        <div className="grid grid-cols-3 gap-2">
+                          {(['all', 'virtual', 'in-person'] as const).map((mode) => (
+                            <button
+                              key={mode}
+                              onClick={() => setModeFilter(mode)}
+                              className={`px-3 py-2 rounded-2xl text-sm font-bold uppercase tracking-wider transition-all border ${
+                                modeFilter === mode ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-secondary/30 border-border/50 text-muted-foreground hover:bg-secondary/50'
+                              }`}
+                            >
+                              {mode}
+                            </button>
+                          ))}
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'social',
+                      title: 'Momentum & timing',
+                      description: 'Surface the most active and upcoming experiences first.',
+                      content: (
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setShowThisWeekend((prev) => !prev)}
+                            className={`filter-chip ${showThisWeekend ? 'active' : 'inactive'}`}
+                          >
+                            This weekend
+                          </button>
+                          <button
+                            onClick={() => setShowTrending((prev) => !prev)}
+                            className={`filter-chip ${showTrending ? 'active' : 'inactive'}`}
+                          >
+                            Trending
+                          </button>
+                          <button
+                            onClick={() => setShowOnlyRecommended((prev) => !prev)}
+                            className={`filter-chip ${showOnlyRecommended ? 'active' : 'inactive'}`}
+                          >
+                            AI Picks
+                          </button>
+                        </div>
+                      ),
+                    },
+                  ].map(({ key, title, description, content }) => (
+                    <div key={key} className="rounded-3xl border border-border/50 bg-background/80 p-4">
+                      <button
+                        type="button"
+                        onClick={() => setDrawerSections((prev) => ({ ...prev, [key]: !prev[key] }))}
+                        className="w-full flex items-center justify-between gap-4 text-left"
+                      >
+                        <div>
+                          <p className="text-sm font-bold text-foreground">{title}</p>
+                          <p className="text-caption text-muted-foreground mt-1">{description}</p>
+                        </div>
+                        <span className="text-primary font-bold">{drawerSections[key] ? '–' : '+'}</span>
+                      </button>
+                      {drawerSections[key] && <div className="mt-4">{content}</div>}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center gap-3 justify-end">
+                  <button type="button" onClick={clearAllFilters} className="btn-ghost rounded-2xl px-5 py-3">
+                    Clear filters
+                  </button>
+                  <button type="button" onClick={() => setShowFilterDrawer(false)} className="btn-primary rounded-2xl px-5 py-3">
+                    Apply filters
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         {interests.length === 0 && (
           <div className="surface-panel p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-primary/20 bg-primary/5 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -720,6 +792,12 @@ function EventCard({ event, bookmarkedEvents, toggleBookmark, distanceKm, aiReas
             <MapPin className="w-3.5 h-3.5" />
             <span className="truncate">{event.location.venue}</span>
           </div>
+          {event.schedule?.length ? (
+            <div className="flex items-center gap-2 text-caption text-muted-foreground">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="truncate font-semibold">{event.schedule[0].time} — {event.schedule[0].title}</span>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-border/50">

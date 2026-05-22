@@ -232,7 +232,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className={theme === 'dark' ? 'dark' : undefined}>
-        <div className="min-h-screen bg-background text-foreground">
+        <div className="h-full min-h-screen bg-background text-foreground">
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[200] btn-primary"

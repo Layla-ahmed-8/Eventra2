@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Ticket, Heart, XCircle, Star, Search, ArrowUpDown, Sparkles, Clock3, Filter, Bookmark, TicketCheck, MessagesSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import { generateGoogleCalendarUrl } from '../../lib/calendar';
 import { useAppStore } from '../../store/useAppStore';
 import CancellationCountdown from '../../components/business/CancellationCountdown';
 import { DEFAULT_SYSTEM_CONFIG } from '../../constants/config';
@@ -249,11 +250,26 @@ export default function MyEvents() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {displayEvents.map((event) => (
-            <div
-              key={event.id}
-              className="group card-surface overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl"
-            >
+            {displayEvents.map((event) => {
+              const calendarUrl = generateGoogleCalendarUrl({
+                title: event.title,
+                description: event.description,
+                date: event.date,
+                endDate: event.endDate,
+                location: {
+                  venue: event.location.venue,
+                  address: event.location.address,
+                  city: event.location.city,
+                  isVirtual: event.location.isVirtual,
+                  virtualLink: event.location.virtualLink,
+                },
+              });
+
+              return (
+                <div
+                  key={event.id}
+                  className="group card-surface overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl"
+                >
               <div className="relative h-44 overflow-hidden">
                 <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-40" />
@@ -310,6 +326,25 @@ export default function MyEvents() {
                       <Link to={`/app/events/${event.id}/chat`} className="btn-secondary text-body-sm px-3 inline-flex items-center gap-1.5" title="Event Chat">
                         <MessagesSquare className="w-4 h-4" />
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => window.open(calendarUrl, '_blank')}
+                        className="btn-secondary text-body-sm px-3 inline-flex items-center gap-1.5"
+                        title="Add to calendar"
+                      >
+                        <Calendar className="w-4 h-4" />
+                      </button>
+                      {event.location.isVirtual && event.location.virtualLink ? (
+                        <a
+                          href={event.location.virtualLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-secondary text-body-sm px-3 inline-flex items-center gap-1.5"
+                          title="Join meeting"
+                        >
+                          Join
+                        </a>
+                      ) : null}
                       {(() => {
                         const booking = getBookingForEvent(event.id);
                         const canCancel = booking && isWithinCancellationWindow(event.date);
@@ -334,6 +369,14 @@ export default function MyEvents() {
                       <Link to={`/app/events/${event.id}`} className="btn-secondary text-body-sm flex-1">
                         View Details
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => window.open(calendarUrl, '_blank')}
+                        className="btn-secondary text-body-sm flex-1 inline-flex items-center justify-center gap-1"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        Add to Calendar
+                      </button>
                       {!reviewedEvents.has(event.id) ? (
                         <button
                           onClick={() => setReviewTarget(event.id)}
@@ -349,14 +392,24 @@ export default function MyEvents() {
                       )}
                     </>
                   ) : (
-                    <Link to={`/app/events/${event.id}`} className="btn-primary text-body-sm w-full">
-                      View Details
-                    </Link>
+                    <>
+                      <Link to={`/app/events/${event.id}`} className="btn-primary text-body-sm w-full">
+                        View Details
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => window.open(calendarUrl, '_blank')}
+                        className="btn-secondary text-body-sm w-full inline-flex items-center justify-center gap-1"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        Add to Calendar
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 

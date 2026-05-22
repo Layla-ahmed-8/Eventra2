@@ -32,7 +32,6 @@ export function getCategoryPin(category: string, isLive = false, crowdLevel: 'lo
     popupAnchor: [0, -20],
     html: `
       <div style="position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">
-        <!-- outer glow ring -->
         <div style="
           position:absolute;
           width:${ringSize}px;height:${ringSize}px;
@@ -41,7 +40,6 @@ export function getCategoryPin(category: string, isLive = false, crowdLevel: 'lo
           opacity:${ringOpacity};
           ${pulseAnim}
         "></div>
-        <!-- pin body -->
         <div style="
           width:24px;height:24px;border-radius:50%;
           background:${bg};

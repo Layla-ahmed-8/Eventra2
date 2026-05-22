@@ -48,24 +48,21 @@ function ModeIcon({ modeKey, className }: { modeKey: string; className?: string 
   }
 }
 
-// ── Imperative Leaflet map — works with react-leaflet v5 / React 18
+// ── Leaflet mini map for venue display
 function VenueMap({
   lat,
   lng,
   userCoords,
-  onExpand,
 }: {
   lat: number;
   lng: number;
   userCoords: { lat: number; lng: number } | null;
-  onExpand: () => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const polylineRef = useRef<L.Polyline | null>(null);
 
-  // Initialise map once
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
@@ -78,24 +75,23 @@ function VenueMap({
       attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    L.marker([lat, lng], { icon: purplePin }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
 
+    L.marker([lat, lng], { icon: purplePin }).addTo(map);
     mapRef.current = map;
 
     return () => {
       map.remove();
       mapRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [lat, lng]);
 
-  // Update user dot + polyline when coords change
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Remove old user marker and polyline
     userMarkerRef.current?.remove();
     polylineRef.current?.remove();
     userMarkerRef.current = null;
@@ -110,9 +106,7 @@ function VenueMap({
     }
   }, [userCoords, lat, lng]);
 
-  return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
-  );
+  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 }
 
 export default function EventVenueSection({ location }: Props) {
@@ -222,7 +216,6 @@ export default function EventVenueSection({ location }: Props) {
           lat={lat}
           lng={lng}
           userCoords={coords}
-          onExpand={() => window.open(openMapsUrl, '_blank')}
         />
 
         {/* Expand button */}

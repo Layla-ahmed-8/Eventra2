@@ -20,14 +20,19 @@ export default function Calendar() {
   const [view, setView] = useState<'month' | 'week'>('month');
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [eventFilter, setEventFilter] = useState<'all' | 'upcoming' | 'virtual' | 'in-person'>('all');
+  const [eventFilter, setEventFilter] = useState<'all' | 'upcoming' | 'virtual' | 'in-person' | 'booked'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedEventForModal, setSelectedEventForModal] = useState<any>(null);
 
-  const userEvents = useMemo(() => {
+  const bookedEvents = useMemo(() => {
     return events
       .filter((event) => rsvpedEvents.includes(event.id))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [events, rsvpedEvents]);
+
+  const calendarEvents = useMemo(() => {
+    return [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [events]);
 
   const today = new Date();
   const todayStart = new Date(today);
@@ -40,17 +45,18 @@ export default function Calendar() {
   gridStart.setDate(monthStart.getDate() - monthStart.getDay());
 
   const filteredEvents = useMemo(() => {
-    return userEvents.filter((event) => {
+    return calendarEvents.filter((event) => {
       const eventDate = new Date(event.date);
       const isUpcoming = eventDate.getTime() >= todayStart.getTime();
       return (
         eventFilter === 'all' ||
+        (eventFilter === 'booked' && rsvpedEvents.includes(event.id)) ||
         (eventFilter === 'upcoming' && isUpcoming) ||
         (eventFilter === 'virtual' && event.location.isVirtual) ||
         (eventFilter === 'in-person' && !event.location.isVirtual)
       );
     });
-  }, [eventFilter, todayStart, userEvents]);
+  }, [calendarEvents, eventFilter, rsvpedEvents, todayStart]);
 
   const monthEvents = useMemo(() => {
     return filteredEvents.filter((event) => {
@@ -79,11 +85,11 @@ export default function Calendar() {
   }, [filteredEvents, todayStart]);
 
   const stats = useMemo(() => {
-    const virtualCount = userEvents.filter((event) => event.location.isVirtual).length;
-    const inPersonCount = userEvents.length - virtualCount;
+    const virtualCount = filteredEvents.filter((event) => event.location.isVirtual).length;
+    const inPersonCount = filteredEvents.filter((event) => !event.location.isVirtual).length;
     const monthCount = monthEvents.length;
     return { virtualCount, inPersonCount, monthCount };
-  }, [monthEvents.length, userEvents]);
+  }, [filteredEvents, monthEvents.length]);
 
   const selectedDateLabel = selectedDate ? new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : 'Pick a day';
 
@@ -128,6 +134,7 @@ export default function Calendar() {
           <div className="flex flex-wrap gap-2">
             {([
               { key: 'all', label: 'All' },
+              { key: 'booked', label: 'Booked' },
               { key: 'upcoming', label: 'Upcoming' },
               { key: 'virtual', label: 'Virtual' },
               { key: 'in-person', label: 'In person' },
@@ -146,7 +153,7 @@ export default function Calendar() {
         <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-4">
           <div className="kpi-card !p-2">
             <span className="kpi-label">Saved events</span>
-            <div className="kpi-value text-lg">{userEvents.length}</div>
+            <div className="kpi-value text-lg">{bookedEvents.length}</div>
           </div>
           <div className="kpi-card !p-2">
             <span className="kpi-label">This month</span>
@@ -315,21 +322,45 @@ export default function Calendar() {
                 </div>
               ) : (
                 selectedDayEvents.map((event) => (
-                  <Link key={event.id} to={`/app/events/${event.id}`} className="activity-item p-1 group">
-                    <div className="activity-icon-wrapper overflow-hidden border-0 scale-90 w-8 h-8">
-                      <img src={event.image} alt="" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-body-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{event.title}</p>
-                      <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground mt-0.5">
-                        <Clock3 className="w-3 h-3" />
-                        <span>{new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span>•</span>
-                        <MapPin className="w-3 h-3" />
-                        <span className="truncate">{event.location.city}</span>
+                  <div key={event.id} className="activity-item p-1 group">
+                    <Link to={`/app/events/${event.id}`} className="flex items-start gap-3 min-w-0">
+                      <div className="activity-icon-wrapper overflow-hidden border-0 scale-90 w-8 h-8">
+                        <img src={event.image} alt="" className="w-full h-full object-cover" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-body-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{event.title}</p>
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-muted-foreground mt-0.5">
+                          <Clock3 className="w-3 h-3" />
+                          <span>{new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span>•</span>
+                          <MapPin className="w-3 h-3" />
+                          <span className="truncate">{event.location.city || 'Online'}</span>
+                        </div>
+                      </div>
+                    </Link>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedEventForModal(event);
+                          setShowAddModal(true);
+                        }}
+                        className="btn-secondary text-[11px] px-2 py-1"
+                      >
+                        Add to calendar
+                      </button>
+                      {event.location.isVirtual && event.location.virtualLink && (
+                        <a
+                          href={event.location.virtualLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-secondary text-[11px] px-2 py-1"
+                        >
+                          Join meeting
+                        </a>
+                      )}
                     </div>
-                  </Link>
+                  </div>
                 ))
               )}
             </div>
@@ -351,21 +382,45 @@ export default function Calendar() {
                 </div>
               ) : (
                 upcomingEvents.map((event) => (
-                  <Link key={event.id} to={`/app/events/${event.id}`} className="activity-item p-1 group">
-                    <div className="activity-icon-wrapper overflow-hidden border-0 scale-90 w-8 h-8">
-                      <img src={event.image} alt="" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-body-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{event.title}</p>
-                      <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground mt-0.5">
-                        <Clock3 className="w-3 h-3" />
-                        <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                        <span>•</span>
-                        <MapPin className="w-3 h-3" />
-                        <span className="truncate">{event.location.city}</span>
+                  <div key={event.id} className="activity-item p-1 group">
+                    <Link to={`/app/events/${event.id}`} className="flex items-start gap-3 min-w-0">
+                      <div className="activity-icon-wrapper overflow-hidden border-0 scale-90 w-8 h-8">
+                        <img src={event.image} alt="" className="w-full h-full object-cover" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-body-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">{event.title}</p>
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-muted-foreground mt-0.5">
+                          <Clock3 className="w-3 h-3" />
+                          <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          <span>•</span>
+                          <MapPin className="w-3 h-3" />
+                          <span className="truncate">{event.location.city || 'Online'}</span>
+                        </div>
+                      </div>
+                    </Link>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedEventForModal(event);
+                          setShowAddModal(true);
+                        }}
+                        className="btn-secondary text-[11px] px-2 py-1"
+                      >
+                        Add to calendar
+                      </button>
+                      {event.location.isVirtual && event.location.virtualLink && (
+                        <a
+                          href={event.location.virtualLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-secondary text-[11px] px-2 py-1"
+                        >
+                          Join meeting
+                        </a>
+                      )}
                     </div>
-                  </Link>
+                  </div>
                 ))
               )}
             </div>
@@ -391,8 +446,19 @@ export default function Calendar() {
 
     {showAddModal && (
       <CalendarAddEventModal
-        onClose={() => setShowAddModal(false)}
+        onClose={() => {
+          setShowAddModal(false);
+          setSelectedEventForModal(null);
+        }}
         initialDate={selectedDate ?? undefined}
+        initialEvent={selectedEventForModal ? {
+          title: selectedEventForModal.title,
+          description: selectedEventForModal.description,
+          date: selectedEventForModal.date,
+          endDate: selectedEventForModal.endDate,
+          location: selectedEventForModal.location,
+          category: selectedEventForModal.category,
+        } : undefined}
       />
     )}
     </>

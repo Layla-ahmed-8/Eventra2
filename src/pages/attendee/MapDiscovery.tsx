@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef, useMemo } from 'react';
-import L from 'leaflet';
 import { Link, useNavigate } from 'react-router-dom';
+import L from 'leaflet';
 import {
   Search, X, MapPin, Users, Heart, ExternalLink,
   Navigation, LocateFixed, ZoomIn, ZoomOut, Sparkles,
@@ -138,11 +138,12 @@ export default function MapDiscovery() {
       attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
 
     mapRef.current = map;
 
-    // Handle window resize
     const handleResize = () => {
       map.invalidateSize();
     };
@@ -159,7 +160,7 @@ export default function MapDiscovery() {
   // Update map center when coords change
   useEffect(() => {
     if (mapRef.current && coords) {
-      mapRef.current.setView([coords.lat, coords.lng], 14);
+      mapRef.current.panTo({ lat: coords.lat, lng: coords.lng });
     }
   }, [coords]);
 
@@ -168,8 +169,7 @@ export default function MapDiscovery() {
     const map = mapRef.current;
     if (!map) return;
 
-    // Remove old markers
-    markersRef.current.forEach(m => m.remove());
+    markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
     enriched.forEach((ev: EnrichedEvent) => {
@@ -182,6 +182,7 @@ export default function MapDiscovery() {
           setSelectedEvent(ev);
           map.flyTo([ev.location.lat, ev.location.lng], 16, { duration: 0.5 });
         });
+
       markersRef.current.push(marker);
     });
   }, [enriched, liveMode]);
@@ -213,11 +214,17 @@ export default function MapDiscovery() {
   // ── Map controls ─────────────────────────────────────────────────────────
   const locateMe = () => {
     if (!coords) { request(); return; }
-    mapRef.current?.flyTo([coords.lat, coords.lng], 14, { duration: 1 });
+    if (mapRef.current) {
+      mapRef.current.panTo({ lat: coords.lat, lng: coords.lng });
+      mapRef.current.setZoom(14);
+    }
   };
 
   const flyToEvent = (ev: Event) => {
-    mapRef.current?.flyTo([ev.location.lat, ev.location.lng], 16, { duration: 0.8 });
+    if (mapRef.current) {
+      mapRef.current.panTo({ lat: ev.location.lat, lng: ev.location.lng });
+      mapRef.current.setZoom(16);
+    }
     setSelectedEvent(ev);
     setView('detail');
   };

@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, MapPin, AlignLeft, CheckCircle2, Tag } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+
+interface InitialEvent {
+  title: string;
+  description: string;
+  date: string;
+  endDate?: string;
+  location: { venue: string; address: string; city: string; isVirtual: boolean; virtualLink?: string | null };
+  category?: string;
+}
 
 interface CalendarAddEventModalProps {
   onClose: () => void;
   initialDate?: string;
+  initialEvent?: InitialEvent;
 }
 
 const CATEGORIES = ['General', 'Meeting', 'Workshop', 'Social', 'Task', 'Health', 'Education'];
 
-export default function CalendarAddEventModal({ onClose, initialDate }: CalendarAddEventModalProps) {
+export default function CalendarAddEventModal({ onClose, initialDate, initialEvent }: CalendarAddEventModalProps) {
   const { addPersonalEvent } = useAppStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -19,6 +29,29 @@ export default function CalendarAddEventModal({ onClose, initialDate }: Calendar
   const [location, setLocation] = useState('');
   const [type, setType] = useState<'personal' | 'reminder'>('personal');
   const [category, setCategory] = useState('General');
+
+  useEffect(() => {
+    if (initialEvent) {
+      setTitle(initialEvent.title);
+      setDescription(initialEvent.description);
+      const eventDate = new Date(initialEvent.date);
+      setDate(eventDate.toISOString().slice(0, 10));
+      setStartTime(eventDate.toTimeString().slice(0, 5));
+      if (initialEvent.endDate) {
+        const endDate = new Date(initialEvent.endDate);
+        const diffMs = endDate.getTime() - eventDate.getTime();
+        const diffMins = Math.round(diffMs / 60000);
+        setDuration(diffMins.toString());
+      }
+      const loc = initialEvent.location;
+      setLocation(loc.isVirtual ? (loc.virtualLink || 'Virtual') : `${loc.venue}, ${loc.city}`);
+      if (initialEvent.category && CATEGORIES.includes(initialEvent.category)) {
+        setCategory(initialEvent.category);
+      } else {
+        setCategory('General');
+      }
+    }
+  }, [initialEvent]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

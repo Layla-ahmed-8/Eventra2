@@ -6,12 +6,14 @@ import { ArrowLeft, Calendar, MapPin, Users, Heart, Share2, Copy, Ticket, CheckC
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 import EventVenueSection from '../../components/map/EventVenueSection';
+import CalendarAddEventModal from '../../components/calendar/CalendarAddEventModal';
 
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const { events, bookmarkedEvents, toggleBookmark, awardXP, rsvpedEvents } = useAppStore();
   const event = events.find((e) => e.id === id);
   const [sharedEvents, setSharedEvents] = useState<Set<string>>(new Set());
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   const handleShare = () => {
     if (!event) return;
@@ -96,6 +98,27 @@ export default function EventDetail() {
               <Copy className="w-5 h-5 text-muted-foreground" />
             </button>
 
+            <button
+              type="button"
+              className="w-11 h-11 rounded-2xl bg-secondary flex items-center justify-center transition-all hover:scale-105 border border-border/50"
+              aria-label="Add to calendar"
+              onClick={() => setShowCalendarModal(true)}
+            >
+              <Calendar className="w-5 h-5 text-muted-foreground" />
+            </button>
+
+            {event.location.isVirtual && event.location.virtualLink && (
+              <a
+                href={event.location.virtualLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary h-11 px-4 flex items-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Join Meeting
+              </a>
+            )}
+
             <Link
               to={`/app/events/${event.id}/chat`}
               className="btn-secondary h-11 px-4 flex items-center gap-2"
@@ -109,7 +132,7 @@ export default function EventDetail() {
               className={alreadyRsvped ? 'btn-secondary h-11 px-6 flex items-center gap-2' : 'btn-primary h-11 px-6 flex items-center gap-2 shadow-lg shadow-primary/20'}
             >
               <Ticket className="w-4 h-4" />
-              {alreadyRsvped ? 'View Ticket' : 'Get Tickets'}
+              {alreadyRsvped ? 'View Ticket' : 'Join the Experience'}
             </Link>
           </div>
         </div>
@@ -159,6 +182,17 @@ export default function EventDetail() {
               </div>
             </div>
 
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-3xl bg-secondary/90 border border-border/70 p-5">
+                <p className="text-caption font-bold uppercase tracking-[0.3em] text-muted-foreground mb-2">Recommended for you</p>
+                <p className="text-body-sm font-bold text-foreground">{event.engagement.aiMatchReason || 'Matches your interests'}</p>
+              </div>
+              <div className="rounded-3xl bg-secondary/90 border border-border/70 p-5">
+                <p className="text-caption font-bold uppercase tracking-[0.3em] text-muted-foreground mb-2">Community signal</p>
+                <p className="text-body-sm font-bold text-foreground">{event.engagement.identityLabel || 'People like you saved this event'}</p>
+              </div>
+            </div>
+
             {/* Content Details */}
             <div className="bento-section p-10">
               <div className="max-w-3xl">
@@ -190,11 +224,11 @@ export default function EventDetail() {
 
                   <div className="p-5 rounded-3xl bg-secondary/30 border border-border/50">
                     <div className="icon-box bg-orange-500/10 text-orange-500 mb-4">
-                      <Users className="w-5 h-5" />
+                      <TrendingUp className="w-5 h-5" />
                     </div>
-                    <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest mb-1">Capacity</p>
-                    <p className="text-body-sm font-bold text-foreground">{event.rsvpCount} Attending</p>
-                    <p className="text-micro text-muted-foreground font-medium">{event.capacity - event.rsvpCount} spots left</p>
+                    <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest mb-1">Momentum</p>
+                    <p className="text-body-sm font-bold text-foreground">{event.engagement.momentumLabel}</p>
+                    <p className="text-micro text-muted-foreground font-medium">{event.engagement.atmosphereLabel}</p>
                   </div>
                 </div>
 
@@ -232,6 +266,36 @@ export default function EventDetail() {
                   </p>
                 </div>
 
+                {event.schedule?.length ? (
+                  <div className="mb-12 p-8 rounded-[2.5rem] bg-secondary/20 border border-border/50">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="icon-box bg-primary/10 text-primary">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-h3 font-bold text-foreground">Event Schedule</h3>
+                        <p className="text-body-sm text-muted-foreground">What happens at each stage of this event.</p>
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      {event.schedule.map((item, idx) => (
+                        <div key={idx} className="flex gap-4">
+                          <div className="mt-1 flex h-11 w-11 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+                            <Clock className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 border-l border-border/50 pl-5">
+                            <p className="text-caption uppercase tracking-[0.24em] text-muted-foreground">{item.time}</p>
+                            <p className="text-body-sm font-bold text-foreground mt-2">{item.title}</p>
+                            {item.description ? (
+                              <p className="text-body-sm text-muted-foreground mt-2">{item.description}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
                 {/* Engagement Rewards */}
                 {event.engagement && (
                   <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-orange-500/10 via-purple-500/5 to-cyan-500/10 border border-orange-500/20 mb-12">
@@ -255,7 +319,7 @@ export default function EventDetail() {
                         <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600">
                           <Award className="w-5 h-5" />
                         </div>
-                        <span className="text-body-sm font-bold text-foreground">{event.engagement.badgeUnlock} Badge</span>
+                        <span className="text-body-sm font-bold text-foreground">{event.engagement.badgeUnlock ? `${event.engagement.badgeUnlock} Badge` : 'Engagement Reward'}</span>
                       </div>
                     </div>
                   </div>
@@ -286,17 +350,29 @@ export default function EventDetail() {
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4 mb-6">
                     <div className="flex items-center gap-3 p-4 rounded-2xl bg-background/50 border border-primary/15">
-                      <Users className="w-5 h-5 text-primary flex-shrink-0" />
+                      <div className="relative">
+                        <div className="flex -space-x-3">
+                          {event.engagement.recentAttendees.slice(0, 4).map((attendee, index) => (
+                            <img
+                              key={attendee.name}
+                              src={attendee.avatar}
+                              alt={attendee.name}
+                              className="w-10 h-10 rounded-full border-2 border-background shadow-sm"
+                              style={{ zIndex: 10 - index }}
+                            />
+                          ))}
+                        </div>
+                      </div>
                       <div>
-                        <p className="text-body-sm font-bold text-foreground">{event.rsvpCount} attendees</p>
-                        <p className="text-micro text-muted-foreground">in this event</p>
+                        <p className="text-body-sm font-bold text-foreground">People from your communities are interested</p>
+                        <p className="text-micro text-muted-foreground">{event.engagement.sharedInterests.join(', ')}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-4 rounded-2xl bg-background/50 border border-purple-500/15">
                       <MessageSquare className="w-5 h-5 text-purple-500 flex-shrink-0" />
                       <div>
-                        <p className="text-body-sm font-bold text-foreground">Live chat</p>
-                        <p className="text-micro text-muted-foreground">ask questions, share updates</p>
+                        <p className="text-body-sm font-bold text-foreground">{event.engagement.softActivityFeedback}</p>
+                        <p className="text-micro text-muted-foreground">{event.engagement.activitySignals[0]?.timestamp} · {event.engagement.activitySignals[0]?.text}</p>
                       </div>
                     </div>
                   </div>
@@ -305,7 +381,7 @@ export default function EventDetail() {
                     className="btn-primary w-full py-4 h-auto text-h4 justify-center shadow-lg shadow-primary/20"
                   >
                     <MessagesSquare className="w-5 h-5" />
-                    Join Event Chat
+                    Join the Conversation
                   </Link>
                 </div>
               </div>
@@ -341,7 +417,7 @@ export default function EventDetail() {
                   to={alreadyRsvped ? `/app/orders/${event.id}` : `/app/events/${event.id}/rsvp`}
                   className={alreadyRsvped ? 'btn-secondary w-full py-4 text-h4 h-auto' : 'btn-primary w-full py-4 text-h4 h-auto shadow-xl shadow-primary/25'}
                 >
-                  {alreadyRsvped ? 'View Your Ticket' : 'Reserve Your Spot'}
+                  {alreadyRsvped ? 'View Your Ticket' : 'Save Your Spot'}
                 </Link>
                 <p className="mt-4 text-center text-micro text-muted-foreground">
                   {alreadyRsvped ? 'Already reserved. You can view ticket details any time.' : 'Powered by Eventra Secure Checkout'}
@@ -368,24 +444,17 @@ export default function EventDetail() {
                   Live Activity
                 </h3>
                 <div className="space-y-4">
-                  <div className="activity-item">
-                    <div className="activity-icon-wrapper">
-                      <Users className="w-4 h-4" />
+                  {event.engagement.activitySignals.map((signal, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-3xl bg-secondary/40 text-foreground shadow-sm">
+                        <span className="text-lg">{signal.icon}</span>
+                      </div>
+                      <div>
+                        <p className="text-body-sm font-bold text-foreground">{signal.text}</p>
+                        <p className="text-micro text-muted-foreground">{signal.timestamp}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-body-sm font-bold text-foreground">Popular choice</p>
-                      <p className="text-micro text-muted-foreground">50+ people viewed this today</p>
-                    </div>
-                  </div>
-                  <div className="activity-item">
-                    <div className="activity-icon-wrapper text-orange-500">
-                      <Zap className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-body-sm font-bold text-foreground">Filling fast</p>
-                      <p className="text-micro text-muted-foreground">Only few tickets remaining</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -443,6 +512,20 @@ export default function EventDetail() {
           </div>
         )}
       </div>
+      
+      {showCalendarModal && event && (
+        <CalendarAddEventModal
+          onClose={() => setShowCalendarModal(false)}
+          initialEvent={{
+            title: event.title,
+            description: event.description,
+            date: event.date,
+            endDate: event.endDate,
+            location: event.location,
+            category: event.category,
+          }}
+        />
+      )}
     </div>
   );
 }

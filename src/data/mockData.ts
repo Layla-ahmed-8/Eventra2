@@ -72,6 +72,12 @@ export interface EngagementData {
   softActivityFeedback: string; // "New conversations happening"
 }
 
+export interface EventScheduleItem {
+  time: string;
+  title: string;
+  description?: string;
+}
+
 export interface Event {
   id: string;
   title: string;
@@ -80,6 +86,7 @@ export interface Event {
   category: string;
   date: string;
   endDate: string;
+  schedule?: EventScheduleItem[];
   location: {
     venue: string;
     address: string;
@@ -118,6 +125,12 @@ export const mockEvents: Event[] = [
     id: 'event-001',
     title: 'Cairo Jazz Night: Live at Sunset',
     description: 'Experience an unforgettable evening of smooth jazz under the Cairo sky. Featuring renowned local and international jazz musicians, this event promises a night of soulful melodies, improvisation, and rhythm. Enjoy craft cocktails and a curated menu while you immerse yourself in the timeless art of jazz.',
+    schedule: [
+      { time: '7:00 PM', title: 'Doors Open & Welcome Drinks', description: 'Arrive early for a welcome cocktail and settle in before the first set.' },
+      { time: '7:30 PM', title: 'Opening Jazz Set', description: 'Local ensemble opens with soulful standards and original grooves.' },
+      { time: '8:30 PM', title: 'Headline Performance', description: 'International headliner takes the stage for the main set.' },
+      { time: '10:00 PM', title: 'Late-Night Jam', description: 'Stick around for a spontaneous late-night jazz jam session.' },
+    ],
     image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800',
     category: 'Music',
     date: '2026-05-15T19:00:00Z',
@@ -179,9 +192,212 @@ export const mockEvents: Event[] = [
     }
   },
   {
+    id: 'event-001a',
+    title: 'Virtual Startup Pitch Night',
+    description: 'Pitch your startup in a live online room, get instant feedback from investors, and network with founders from across the MENA region.',
+    schedule: [
+      { time: '6:00 PM', title: 'Virtual Check-In', description: 'Join the online room early, meet founders, and test audio/video.' },
+      { time: '6:15 PM', title: 'Pitch Session', description: 'Founders deliver 3-minute pitches to investors and mentors.' },
+      { time: '7:05 PM', title: 'Investor Q&A', description: 'Live feedback from investors with an interactive Q&A round.' },
+      { time: '7:25 PM', title: 'Networking Lounge', description: 'Stay online for breakout networking rooms and follow-up chats.' },
+    ],
+    image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800',
+    category: 'Business',
+    date: '2026-05-23T18:00:00Z',
+    endDate: '2026-05-23T19:30:00Z',
+    location: {
+      venue: 'Online',
+      address: 'Virtual room',
+      city: 'Online',
+      country: 'EG',
+      lat: 0,
+      lng: 0,
+      isVirtual: true,
+      virtualLink: 'https://meet.eventra.com/pitch-night'
+    },
+    organizer: {
+      id: 'org-003',
+      name: 'Eventra Labs',
+      avatar: 'https://i.pravatar.cc/150?img=30',
+      verified: true,
+      followerCount: 7600
+    },
+    price: 0,
+    ticketTypes: [{ name: 'Free Pass', price: 0, available: 150 }],
+    capacity: 150,
+    rsvpCount: 87,
+    tags: ['startup', 'pitch', 'virtual', 'networking'],
+    isRecommended: true,
+    relevanceScore: 0.87,
+    communityId: 'comm-003',
+    attendees: [],
+    engagement: {
+      momentumLabel: 'Trending among tech enthusiasts',
+      atmosphereLabel: 'High-energy crowd expected',
+      vibeTags: ['Tech-forward', 'Networking-friendly', 'Creative crowd'],
+      activitySignals: [
+        { text: 'Investors are joining from across the region', icon: '💼', timestamp: '20 min ago' },
+        { text: '20 people bookmarked the pitch room today', icon: '🔖', timestamp: '15 min ago' },
+        { text: 'Founders are prepping final decks', icon: '📊', timestamp: '35 min ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=26', name: 'Laila', interest: 'Startups' },
+        { avatar: 'https://i.pravatar.cc/40?img=27', name: 'Omar', interest: 'Investing' },
+        { avatar: 'https://i.pravatar.cc/40?img=28', name: 'Yara', interest: 'Product' },
+      ],
+      sharedInterests: ['Startups', 'Pitching', 'Networking'],
+      discussionCount: 42,
+      bookmarkCount: 56,
+      reactionCount: 110,
+      xpReward: 140,
+      badgeUnlock: 'Startup Star',
+      identityLabel: 'Pitch Pro',
+      aiMatchReason: 'You may connect well with other founders and investors',
+      softActivityFeedback: 'Attendees are getting ready for the live Q&A',
+    }
+  },
+  {
+    id: 'event-001b',
+    title: 'Online Wellness Workshop: Mindful Meetings',
+    description: 'Set the tone for your week with a guided virtual wellness session. Learn practical breathing exercises, productivity rituals, and mindful networking techniques designed for remote professionals.',
+    schedule: [
+      { time: '4:00 PM', title: 'Welcome & Centering', description: 'Gather online, introduce the instructor, and set your intention.' },
+      { time: '4:10 PM', title: 'Guided Breathwork', description: 'Follow a calming breath sequence designed for focus and balance.' },
+      { time: '4:30 PM', title: 'Mindful Networking', description: 'Share a quick check-in and best practices for remote work wellness.' },
+      { time: '5:00 PM', title: 'Closing Reflection', description: 'Finish with a grounding ritual and take-home productivity tips.' },
+    ],
+    image: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800',
+    category: 'Health & Wellness',
+    date: '2026-05-28T16:00:00Z',
+    endDate: '2026-05-28T17:30:00Z',
+    location: {
+      venue: 'Online Wellness Studio',
+      address: 'Virtual session',
+      city: 'Online',
+      country: 'EG',
+      lat: 0,
+      lng: 0,
+      isVirtual: true,
+      virtualLink: 'https://meet.eventra.com/mindful-meetings'
+    },
+    organizer: {
+      id: 'org-004',
+      name: 'ZenZone',
+      avatar: 'https://i.pravatar.cc/150?img=44',
+      verified: true,
+      followerCount: 5200
+    },
+    price: 10,
+    ticketTypes: [{ name: 'Pay What You Can', price: 10, available: 120 }],
+    capacity: 120,
+    rsvpCount: 62,
+    tags: ['wellness', 'mindfulness', 'virtual', 'career'],
+    isRecommended: false,
+    relevanceScore: 0.74,
+    communityId: 'comm-004',
+    attendees: [],
+    engagement: {
+      momentumLabel: 'A calm crowd is gathering online',
+      atmosphereLabel: 'Relaxed and focused',
+      vibeTags: ['Chill atmosphere', 'Creative crowd', 'Community builders'],
+      activitySignals: [
+        { text: '20 people bookmarked this session today', icon: '🔖', timestamp: '1 hr ago' },
+        { text: 'Early birds are joining from Cairo and Alexandria', icon: '🌍', timestamp: '45 min ago' },
+        { text: 'People are sharing their favorite productivity rituals', icon: '🧘', timestamp: '30 min ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=31', name: 'Mona', interest: 'Wellness' },
+        { avatar: 'https://i.pravatar.cc/40?img=32', name: 'Youssef', interest: 'Mindfulness' },
+        { avatar: 'https://i.pravatar.cc/40?img=33', name: 'Sara', interest: 'Remote work' },
+      ],
+      sharedInterests: ['Mindfulness', 'Wellness', 'Remote Work'],
+      discussionCount: 18,
+      bookmarkCount: 34,
+      reactionCount: 58,
+      xpReward: 85,
+      badgeUnlock: 'Wellness Seeker',
+      identityLabel: 'Mindful Pro',
+      aiMatchReason: 'You may enjoy events that help with balance and remote productivity',
+      softActivityFeedback: 'Attendees are ready to reset before their next week',
+    }
+  },
+  {
+    id: 'event-001c',
+    title: 'Global Design Jam: Remote Creative Sprint',
+    description: 'Collaborate with designers around the world in a fast-paced virtual sprint. This online event features rapid ideation, peer feedback, and live build sessions for product and UX thinkers.',
+    schedule: [
+      { time: '2:00 PM', title: 'Kickoff Briefing', description: 'Meet the hosts, review the challenge, and join your breakout team.' },
+      { time: '2:20 PM', title: 'Rapid Ideation', description: 'Sketch concepts and share ideas with your team.' },
+      { time: '3:20 PM', title: 'Feedback Studio', description: 'Present your concept for peer feedback and iteration.' },
+      { time: '4:15 PM', title: 'Demo & Wrap-Up', description: 'Show final concepts and hear closing inspiration from the hosts.' },
+    ],
+    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800',
+    category: 'Design',
+    date: '2026-06-02T14:00:00Z',
+    endDate: '2026-06-02T17:00:00Z',
+    location: {
+      venue: 'Global Design Jam',
+      address: 'Virtual creative room',
+      city: 'Online',
+      country: 'EG',
+      lat: 0,
+      lng: 0,
+      isVirtual: true,
+      virtualLink: 'https://meet.eventra.com/design-jam'
+    },
+    organizer: {
+      id: 'org-005',
+      name: 'Creative Collective',
+      avatar: 'https://i.pravatar.cc/150?img=45',
+      verified: false,
+      followerCount: 4800
+    },
+    price: 5,
+    ticketTypes: [{ name: 'Standard Pass', price: 5, available: 180 }],
+    capacity: 180,
+    rsvpCount: 105,
+    tags: ['design', 'remote', 'virtual', 'workshop'],
+    isRecommended: true,
+    relevanceScore: 0.84,
+    communityId: 'comm-005',
+    attendees: [],
+    engagement: {
+      momentumLabel: 'Design teams are joining from multiple time zones',
+      atmosphereLabel: 'Energetic and collaborative',
+      vibeTags: ['Creative crowd', 'Networking-friendly', 'Tech-forward'],
+      activitySignals: [
+        { text: 'Designers are sharing mood boards in the chat', icon: '🎨', timestamp: '15 min ago' },
+        { text: '20 new RSVPs in the last hour', icon: '📈', timestamp: '10 min ago' },
+        { text: 'Live feedback sessions are getting booked fast', icon: '💬', timestamp: '25 min ago' },
+      ],
+      recentAttendees: [
+        { avatar: 'https://i.pravatar.cc/40?img=34', name: 'Hany', interest: 'UI/UX' },
+        { avatar: 'https://i.pravatar.cc/40?img=35', name: 'Dalia', interest: 'Product Design' },
+        { avatar: 'https://i.pravatar.cc/40?img=36', name: 'Fady', interest: 'Creative Tech' },
+      ],
+      sharedInterests: ['Design', 'Remote Collaboration', 'Productivity'],
+      discussionCount: 37,
+      bookmarkCount: 68,
+      reactionCount: 94,
+      xpReward: 130,
+      badgeUnlock: 'Design Sprint Champion',
+      identityLabel: 'Creative Collaborator',
+      aiMatchReason: 'You may connect well with fast-moving virtual creative experiences',
+      softActivityFeedback: 'Participants are already exchanging quick-win ideas',
+    }
+  },
+  {
     id: 'event-002',
     title: 'AI & Machine Learning Summit 2026',
     description: 'Join industry leaders, researchers, and developers for a full-day conference on the latest developments in AI and ML. Featuring keynote speakers from top tech companies, hands-on workshops, and networking opportunities.',
+    schedule: [
+      { time: '9:00 AM', title: 'Registration & Coffee', description: 'Check in, grab a coffee, and connect with early arrivals.' },
+      { time: '10:00 AM', title: 'Keynote: The Future of AI', description: 'Opening keynote from an industry leader on AI innovation.' },
+      { time: '11:30 AM', title: 'Panel Discussion', description: 'Top speakers debate the latest AI opportunities and ethics.' },
+      { time: '1:00 PM', title: 'Lunch & Networking', description: 'Enjoy lunch and meet peers from the AI community.' },
+      { time: '2:30 PM', title: 'Breakout Workshops', description: 'Choose hands-on sessions on ML, product, and growth.' },
+      { time: '4:30 PM', title: 'Closing Remarks', description: 'Summary, next steps, and community announcements.' },
+    ],
     image: 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?w=800',
     category: 'Tech',
     date: '2026-05-20T09:00:00Z',
@@ -243,6 +459,13 @@ export const mockEvents: Event[] = [
     id: 'event-003',
     title: 'Weekend Hiking Adventure: Wadi Degla',
     description: 'Escape the city and explore the natural beauty of Wadi Degla Protected Area. This guided hiking tour covers 8km of scenic trails through the canyon.',
+    schedule: [
+      { time: '7:00 AM', title: 'Meet & Gear Check', description: 'Meet the group, check your gear, and review the trail plan.' },
+      { time: '7:30 AM', title: 'Trail Briefing', description: 'Safety briefing and warm-up before heading out.' },
+      { time: '8:00 AM', title: 'Hike Begins', description: 'Start the scenic 8km guided hike through the canyon.' },
+      { time: '10:00 AM', title: 'Summit Break', description: 'Take a rest break, enjoy the view, and refuel.' },
+      { time: '11:30 AM', title: 'Closing Circle', description: 'Finish the hike together and share highlights.' },
+    ],
     image: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800',
     category: 'Sports',
     date: '2026-05-10T07:00:00Z',
@@ -301,6 +524,12 @@ export const mockEvents: Event[] = [
     id: 'event-004',
     title: 'Contemporary Art Exhibition: Voices of the Nile',
     description: 'A curated exhibition featuring 30+ contemporary Egyptian artists exploring themes of identity, heritage, and modernity.',
+    schedule: [
+      { time: '6:00 PM', title: 'Opening Reception', description: 'Welcome drink and first look at the new installations.' },
+      { time: '6:30 PM', title: 'Artist Walkthrough', description: 'Guided tour with featured artists sharing inspiration.' },
+      { time: '7:30 PM', title: 'Live Painting', description: 'Watch a live art performance and meet the creator.' },
+      { time: '8:30 PM', title: 'Curator Q&A', description: 'Ask questions about the works and exhibition themes.' },
+    ],
     image: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800',
     category: 'Art',
     date: '2026-05-12T18:00:00Z',
@@ -361,6 +590,13 @@ export const mockEvents: Event[] = [
     id: 'event-005',
     title: 'Street Food Festival: Flavors of Cairo',
     description: 'Celebrate Cairo\'s vibrant street food culture with over 40 vendors serving traditional and modern Egyptian cuisine.',
+    schedule: [
+      { time: '4:00 PM', title: 'Festival Gates Open', description: 'Enter the park and explore food stalls across the venue.' },
+      { time: '5:00 PM', title: 'Chef Tasting Session', description: 'Join a guided tasting of local street food favorites.' },
+      { time: '6:30 PM', title: 'Live Music Set', description: 'Enjoy live performers while you sample the food.' },
+      { time: '8:00 PM', title: 'Cultural Dance Showcase', description: 'Watch a performance inspired by Egyptian street culture.' },
+      { time: '9:30 PM', title: 'Night Bites & Wrap', description: 'Finish the evening with dessert and good company.' },
+    ],
     image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
     category: 'Food & Drink',
     date: '2026-05-18T16:00:00Z',
