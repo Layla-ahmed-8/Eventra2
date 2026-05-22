@@ -1298,4 +1298,23 @@ Default system config values (editable via Admin → Settings):
 
 ---
 
+## Changelog
+
+### 2026-05-22
+
+#### Fixed
+- Fixed variable order issue in Discover.tsx (trending useMemo declared before filteredEvents)
+- Fixed filteredEvents useMemo missing trending dependency
+- Removed duplicate hero section JSX in Discover.tsx
+- Removed extra closing div tags in Discover.tsx
+
+#### Updated
+- Changed budget filter in Discover page from range slider to number input
+- Modified calendar integration: replaced Google Calendar with app's own calendar modal
+  - Updated CalendarAddEventModal to accept initialEvent prop for pre-filling details
+  - Updated EventDetail.tsx to use modal with pre-filled event details
+  - Updated Calendar.tsx to use modal with pre-filled event details
+
+---
+
 *Built as a frontend demo — all data is mocked and persisted in localStorage. No backend required.*
