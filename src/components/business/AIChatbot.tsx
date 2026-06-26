@@ -316,7 +316,7 @@ export default function AIChatbot() {
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Ask me anything…"
+                    placeholder="Ask me about events, bookings, profile, or try “bookmark the rooftop mixer”"
                     className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground/60 outline-none"
                     disabled={isTyping}
                     maxLength={300}
