@@ -703,7 +703,29 @@ export const mockBookings = [
   }
 ];
 
-export const mockCommunities = [
+export interface Community {
+  id: string;
+  name: string;
+  description: string;
+  coverImage: string;
+  category: string;
+  memberCount: number;
+  eventCount: number;
+  isJoined: boolean;
+  tags: string[];
+  threads: Array<{
+    id: string;
+    title: string;
+    author: string;
+    avatar: string;
+    replies: number;
+    time: string;
+    hot: boolean;
+  }>;
+  members: Array<{ avatar: string; name: string }>;
+}
+
+export const mockCommunities: Community[] = [
   {
     id: 'comm-001',
     name: 'Cairo Music Lovers',
@@ -713,19 +735,102 @@ export const mockCommunities = [
     memberCount: 12500,
     eventCount: 45,
     isJoined: true,
-    threads: []
+    tags: ['Live Music', 'Jazz', 'Concerts'],
+    threads: [
+      { id: 't1', title: 'Best jazz venues in Cairo?', author: 'Sarah Ahmed', avatar: 'https://i.pravatar.cc/40?img=1', replies: 12, time: '2 hours ago', hot: true },
+      { id: 't2', title: 'Looking for band members — Jazz fusion project', author: 'Mike Johnson', avatar: 'https://i.pravatar.cc/40?img=2', replies: 8, time: '5 hours ago', hot: false },
+      { id: 't3', title: 'Upcoming Jazz Night was amazing!', author: 'Emily Chen', avatar: 'https://i.pravatar.cc/40?img=3', replies: 24, time: '1 day ago', hot: true },
+    ],
+    members: [
+      { avatar: 'https://i.pravatar.cc/60?img=11', name: 'Sarah Ahmed' },
+      { avatar: 'https://i.pravatar.cc/60?img=12', name: 'Karim Nour' },
+      { avatar: 'https://i.pravatar.cc/60?img=13', name: 'Dina Walid' },
+    ]
   },
   {
     id: 'comm-002',
     name: 'Tech Cairo Hub',
-    description: 'Community for developers, designers, and tech entrepreneurs.',
+    description: 'Community for developers, designers, and tech entrepreneurs in the Cairo ecosystem.',
     coverImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200',
     category: 'Tech',
     memberCount: 8900,
     eventCount: 38,
     isJoined: true,
-    threads: []
-  }
+    tags: ['Developers', 'Startups', 'Design'],
+    threads: [
+      { id: 't4', title: 'Which AI tools are you using this month?', author: 'Omar Sherif', avatar: 'https://i.pravatar.cc/40?img=4', replies: 31, time: '3 hours ago', hot: true },
+      { id: 't5', title: 'Open-source project seeking contributors', author: 'Layla Hassan', avatar: 'https://i.pravatar.cc/40?img=5', replies: 7, time: '8 hours ago', hot: false },
+      { id: 't6', title: 'Recap: Cairo Tech Summit 2026', author: 'Ahmed Fathy', avatar: 'https://i.pravatar.cc/40?img=6', replies: 18, time: '2 days ago', hot: true },
+    ],
+    members: [
+      { avatar: 'https://i.pravatar.cc/60?img=14', name: 'Omar Sherif' },
+      { avatar: 'https://i.pravatar.cc/60?img=15', name: 'Layla Hassan' },
+      { avatar: 'https://i.pravatar.cc/60?img=16', name: 'Ahmed Fathy' },
+    ]
+  },
+  {
+    id: 'comm-003',
+    name: 'Startup Founders Egypt',
+    description: 'A network for entrepreneurs, investors, and startup enthusiasts across Egypt and MENA.',
+    coverImage: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1200',
+    category: 'Business',
+    memberCount: 5400,
+    eventCount: 22,
+    isJoined: false,
+    tags: ['Startups', 'Networking', 'Investors'],
+    threads: [
+      { id: 't7', title: 'How to find your first 10 customers?', author: 'Yara Khaled', avatar: 'https://i.pravatar.cc/40?img=7', replies: 45, time: '1 hour ago', hot: true },
+      { id: 't8', title: 'Seed funding landscape in Egypt 2026', author: 'Tarek Mostafa', avatar: 'https://i.pravatar.cc/40?img=8', replies: 22, time: '6 hours ago', hot: false },
+      { id: 't9', title: 'Co-founder wanted for fintech idea', author: 'Nour Ali', avatar: 'https://i.pravatar.cc/40?img=9', replies: 14, time: '1 day ago', hot: false },
+    ],
+    members: [
+      { avatar: 'https://i.pravatar.cc/60?img=17', name: 'Yara Khaled' },
+      { avatar: 'https://i.pravatar.cc/60?img=18', name: 'Tarek Mostafa' },
+      { avatar: 'https://i.pravatar.cc/60?img=19', name: 'Nour Ali' },
+    ]
+  },
+  {
+    id: 'comm-004',
+    name: 'Cairo Sports Club',
+    description: 'Unite over football, padel, running clubs, and all things sports in Cairo.',
+    coverImage: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200',
+    category: 'Sports',
+    memberCount: 7200,
+    eventCount: 61,
+    isJoined: false,
+    tags: ['Football', 'Running', 'Padel'],
+    threads: [
+      { id: 't10', title: 'Weekly 5K run — who is joining Saturday?', author: 'Hana Magdy', avatar: 'https://i.pravatar.cc/40?img=20', replies: 19, time: '30 min ago', hot: true },
+      { id: 't11', title: 'Best padel courts in Maadi?', author: 'Sherif Adel', avatar: 'https://i.pravatar.cc/40?img=21', replies: 11, time: '4 hours ago', hot: false },
+      { id: 't12', title: 'Pre-season football tryouts — join us!', author: 'Amr Galal', avatar: 'https://i.pravatar.cc/40?img=22', replies: 9, time: '2 days ago', hot: false },
+    ],
+    members: [
+      { avatar: 'https://i.pravatar.cc/60?img=20', name: 'Hana Magdy' },
+      { avatar: 'https://i.pravatar.cc/60?img=21', name: 'Sherif Adel' },
+      { avatar: 'https://i.pravatar.cc/60?img=22', name: 'Amr Galal' },
+    ]
+  },
+  {
+    id: 'comm-005',
+    name: 'Art & Culture Cairo',
+    description: 'Connecting artists, gallery-goers, and culture lovers across the city.',
+    coverImage: 'https://images.unsplash.com/photo-1577083552431-6e5fd01f8bcc?w=1200',
+    category: 'Art',
+    memberCount: 3900,
+    eventCount: 29,
+    isJoined: false,
+    tags: ['Art', 'Galleries', 'Culture'],
+    threads: [
+      { id: 't13', title: 'Must-see exhibitions this summer', author: 'Rima Fares', avatar: 'https://i.pravatar.cc/40?img=23', replies: 16, time: '2 hours ago', hot: true },
+      { id: 't14', title: 'Open call: collaborative mural project', author: 'Sami Nader', avatar: 'https://i.pravatar.cc/40?img=24', replies: 6, time: '9 hours ago', hot: false },
+      { id: 't15', title: 'Photography walk — Zamalek this Friday?', author: 'Lina Samir', avatar: 'https://i.pravatar.cc/40?img=25', replies: 21, time: '3 days ago', hot: true },
+    ],
+    members: [
+      { avatar: 'https://i.pravatar.cc/60?img=23', name: 'Rima Fares' },
+      { avatar: 'https://i.pravatar.cc/60?img=24', name: 'Sami Nader' },
+      { avatar: 'https://i.pravatar.cc/60?img=25', name: 'Lina Samir' },
+    ]
+  },
 ];
 
 export const mockCurrentUser = {

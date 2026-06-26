@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, Search, Calendar, Ticket, Users, User, Bell, MessageSquare, ChevronLeft, Menu, X, Moon, Sun, LogOut, Wallet, Map } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
+import AIChatbot from '../business/AIChatbot';
 import Logo from '../Logo';
 import MobileBottomNav from './MobileBottomNav';
 import WalletBalanceBadge from '../business/WalletBalanceBadge';
@@ -47,6 +48,7 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
   ];
 
   return (
+    <>
     <div className="min-h-screen bg-background flex">
       {/* Sidebar - Desktop */}
       <aside
@@ -271,5 +273,7 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
         <MobileBottomNav items={bottomNavItems} />
       </div>
     </div>
+    <AIChatbot />
+    </>
   );
 }

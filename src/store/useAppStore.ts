@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { mockEvents, mockBookings, mockCommunities, Event, UserBehaviorType } from '../data/mockData';
 import { demoAccounts, sarahAccount, ahmedAccount, laylaAccount, User, mockOrganizerRequests, OrganizerRequest } from '../data/users';
 import { getNotificationsForUser, Notification } from '../data/notifications';
-import type { Badge, RegisterRequest, RegisterResponse, Booking, XPReason, UserWallet, WalletTransaction, PayoutRequest, PayoutMethod, EventMessage, DirectMessage, BroadcastMessage, DMThread } from '../types';
+import type { Badge, RegisterRequest, RegisterResponse, Booking, XPReason, UserWallet, WalletTransaction, PayoutRequest, PayoutMethod, EventMessage, DirectMessage, BroadcastMessage, DMThread, CommunityMessage, CommunityPost } from '../types';
 import { BADGE_DEFINITIONS } from '../constants/badges';
 import { XP_TABLE, POINTS_TABLE, DEFAULT_SYSTEM_CONFIG } from '../constants/config';
 import type { SystemConfig } from '../types';
@@ -12,6 +12,7 @@ import { initialManagedUsers } from '../data/adminUsersData';
 import type { ManagedUser } from '../data/adminUsersData';
 import { initialEventMessages } from '../data/eventChatData';
 import { initialDirectMessages, initialBroadcastMessages } from '../data/messagesData';
+import { initialCommunityMessages, initialCommunityPosts } from '../data/communityData';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -96,6 +97,12 @@ interface AppState {
 
   // ── EVENT CHAT (persisted) ──────────────────────────────────────────────────
   eventMessages: Record<string, EventMessage[]>;
+
+  // ── COMMUNITY CHAT & POSTS (persisted) ──────────────────────────────────────
+  communityMessages: Record<string, CommunityMessage[]>;
+  communityPosts: Record<string, CommunityPost[]>;
+  communityXP: number; // total XP earned from community actions
+  postsCount: number;  // total posts/replies created by user
 
   // ── DIRECT MESSAGING (persisted) ────────────────────────────────────────────
   directMessages: DirectMessage[];
@@ -210,6 +217,15 @@ interface AppState {
   addPersonalEvent: (event: Omit<PersonalEvent, 'id' | 'createdAt'>) => void;
   removePersonalEvent: (eventId: string) => void;
 
+  // Communities
+  toggleJoinCommunity: (communityId: string) => void;
+  sendCommunityMessage: (communityId: string, content: string) => void;
+  getCommunityMessages: (communityId: string) => CommunityMessage[];
+  getCommunityPosts: (communityId: string) => CommunityPost[];
+  addCommunityPost: (communityId: string, title: string, body: string, imageUrl?: string) => CommunityPost;
+  addCommunityReply: (communityId: string, postId: string, content: string) => void;
+  togglePostReaction: (communityId: string, postId: string, emoji: string) => void;
+
   // Direct messaging
   sendDirectMessage: (receiverId: string, receiverName: string, receiverRole: 'attendee' | 'organizer' | 'admin', content: string) => void;
   sendBroadcastMessage: (subject: string, content: string, targetRole: 'attendee' | 'organizer') => void;
@@ -271,6 +287,10 @@ export const useAppStore = create<AppState>()(
       walletTransactions: initialWalletTransactions,
       payoutRequests: mockPayoutRequests,
       eventMessages: initialEventMessages,
+      communityMessages: initialCommunityMessages,
+      communityPosts: initialCommunityPosts,
+      communityXP: 0,
+      postsCount: 0,
       directMessages: initialDirectMessages,
       broadcastMessages: initialBroadcastMessages,
       managedUsers: initialManagedUsers,
@@ -698,6 +718,11 @@ export const useAppStore = create<AppState>()(
           // Community Builder — 3+ discussions
           if (!earnedBadgeIds.has('badge-003') && state.discussionCount >= 3) {
             const badge = BADGE_DEFINITIONS.find((b) => b.id === 'badge-003');
+            if (badge) newBadges.push({ ...badge, unlockedAt: new Date().toISOString() });
+          }
+          // Community Voice — 5+ posts/replies
+          if (!earnedBadgeIds.has('badge-009') && state.postsCount >= 5) {
+            const badge = BADGE_DEFINITIONS.find((b) => b.id === 'badge-009');
             if (badge) newBadges.push({ ...badge, unlockedAt: new Date().toISOString() });
           }
 
@@ -1390,6 +1415,135 @@ export const useAppStore = create<AppState>()(
 
       removePersonalEvent: (eventId) => {
         set((state) => ({ personalEvents: state.personalEvents.filter((e) => e.id !== eventId) }));
+      },
+
+      // ── Communities ───────────────────────────────────────────────────────────
+
+      toggleJoinCommunity: (communityId) => {
+        set((state) => ({
+          communities: state.communities.map((c) =>
+            c.id === communityId
+              ? { ...c, isJoined: !c.isJoined, memberCount: c.isJoined ? c.memberCount - 1 : c.memberCount + 1 }
+              : c
+          ),
+        }));
+      },
+
+      sendCommunityMessage: (communityId, content) => {
+        const { currentUser } = get();
+        if (!currentUser || !content.trim()) return;
+        const msg: CommunityMessage = {
+          id: `comm-msg-${Date.now()}`,
+          communityId,
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userAvatar: currentUser.avatar,
+          content: content.trim(),
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          communityMessages: {
+            ...state.communityMessages,
+            [communityId]: [...(state.communityMessages[communityId] ?? []), msg],
+          },
+          communityXP: state.communityXP + 5,
+        }));
+        get().awardXP(5, 'chat_message');
+        get().checkStreak();
+      },
+
+      getCommunityMessages: (communityId) => {
+        return get().communityMessages[communityId] ?? [];
+      },
+
+      getCommunityPosts: (communityId) => {
+        return get().communityPosts[communityId] ?? [];
+      },
+
+      addCommunityPost: (communityId, title, body, imageUrl) => {
+        const { currentUser } = get();
+        const post: CommunityPost = {
+          id: `comm-post-${Date.now()}`,
+          communityId,
+          title: title.trim(),
+          body: body.trim(),
+          imageUrl,
+          authorId: currentUser?.id ?? 'anon',
+          authorName: currentUser?.name ?? 'Anonymous',
+          authorAvatar: currentUser?.avatar,
+          createdAt: new Date().toISOString(),
+          hot: false,
+          reactions: {},
+          replyCount: 0,
+          replies: [],
+        };
+        set((state) => ({
+          communityPosts: {
+            ...state.communityPosts,
+            [communityId]: [post, ...(state.communityPosts[communityId] ?? [])],
+          },
+          discussionCount: state.discussionCount + 1,
+          postsCount: state.postsCount + 1,
+          communityXP: state.communityXP + XP_TABLE.discussion,
+          pointsBalance: state.pointsBalance + POINTS_TABLE.discussion,
+        }));
+        get().awardXP(XP_TABLE.discussion, 'discussion');
+        get().checkStreak();
+        return post;
+      },
+
+      addCommunityReply: (communityId, postId, content) => {
+        const { currentUser } = get();
+        if (!currentUser || !content.trim()) return;
+        const reply = {
+          id: `reply-${Date.now()}`,
+          postId,
+          communityId,
+          userId: currentUser.id,
+          userName: currentUser.name,
+          userAvatar: currentUser.avatar,
+          content: content.trim(),
+          createdAt: new Date().toISOString(),
+        };
+        set((state) => ({
+          communityPosts: {
+            ...state.communityPosts,
+            [communityId]: (state.communityPosts[communityId] ?? []).map((p) =>
+              p.id === postId
+                ? { ...p, replies: [...p.replies, reply], replyCount: p.replyCount + 1 }
+                : p
+            ),
+          },
+          discussionCount: state.discussionCount + 1,
+          postsCount: state.postsCount + 1,
+          communityXP: state.communityXP + XP_TABLE.discussion,
+          pointsBalance: state.pointsBalance + POINTS_TABLE.discussion,
+        }));
+        get().awardXP(XP_TABLE.discussion, 'discussion');
+        get().checkStreak();
+      },
+
+      togglePostReaction: (communityId, postId, emoji) => {
+        const { currentUser } = get();
+        if (!currentUser) return;
+        const uid = currentUser.id;
+        set((state) => ({
+          communityPosts: {
+            ...state.communityPosts,
+            [communityId]: (state.communityPosts[communityId] ?? []).map((p) => {
+              if (p.id !== postId) return p;
+              const prev = p.reactions[emoji] ?? [];
+              const already = prev.includes(uid);
+              return {
+                ...p,
+                reactions: {
+                  ...p.reactions,
+                  [emoji]: already ? prev.filter((id) => id !== uid) : [...prev, uid],
+                },
+              };
+            }),
+          },
+        }));
       },
 
       // ── User Management ───────────────────────────────────────────────────────

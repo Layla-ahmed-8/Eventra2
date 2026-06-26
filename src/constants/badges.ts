@@ -65,6 +65,14 @@ export const BADGE_DEFINITIONS: Badge[] = [
     tier: 'bronze',
     xpBonus: 25,
   },
+  {
+    id: 'badge-009',
+    name: 'Community Voice',
+    description: 'Post or reply 5 times across communities',
+    icon: '🗣️',
+    tier: 'silver',
+    xpBonus: 100,
+  },
 ];
 
 export const getBadgeById = (id: string): Badge | undefined =>

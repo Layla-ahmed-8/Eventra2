@@ -9,6 +9,7 @@ export type {
   ActivitySignal,
   SocialAttendee,
   UserBehaviorType,
+  Community,
 } from '../data/mockData';
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
@@ -144,6 +145,45 @@ export interface DMThread {
   lastMessage: string;
   lastMessageAt: string;
   unreadCount: number;
+}
+
+// ── Community Chat & Posts ────────────────────────────────────────────────────
+
+export interface CommunityMessage {
+  id: string;
+  communityId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CommunityReply {
+  id: string;
+  postId: string;
+  communityId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface CommunityPost {
+  id: string;
+  communityId: string;
+  title: string;
+  body: string;
+  imageUrl?: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  createdAt: string;
+  hot: boolean;
+  reactions: Record<string, string[]>; // emoji → userIds
+  replyCount: number;
+  replies: CommunityReply[];
 }
 
 // ── Event Chat ────────────────────────────────────────────────────────────────

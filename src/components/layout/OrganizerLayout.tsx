@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BarChart3, Calendar, Plus, MessageSquare, ChevronLeft, Menu, X, Moon, Sun, Crown, LogOut, Wallet, Bell } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
+import AIChatbot from '../business/AIChatbot';
 import Logo from '../Logo';
 import MobileBottomNav from './MobileBottomNav';
 import WalletBalanceBadge from '../business/WalletBalanceBadge';
@@ -52,6 +53,7 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
   ];
 
   return (
+    <>
     <div className="min-h-screen bg-background flex">
       {/* Sidebar - Desktop */}
       <aside
@@ -300,5 +302,7 @@ export default function OrganizerLayout({ children }: { children: React.ReactNod
         <MobileBottomNav items={bottomNavItems} />
       </div>
     </div>
+    <AIChatbot />
+    </>
   );
 }

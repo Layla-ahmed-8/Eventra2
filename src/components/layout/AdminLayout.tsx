@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { BarChart3, Calendar, Users, MessageSquare, Settings, ChevronLeft, Menu, X, Shield, Moon, Sun, User, ShieldAlert, LogOut, Wallet } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
+import AIChatbot from '../business/AIChatbot';
 import Logo from '../Logo';
 import MobileBottomNav from './MobileBottomNav';
 import { useBreadcrumbs } from '../../hooks/useBreadcrumbs';
@@ -39,6 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
+    <>
     <div className="min-h-screen bg-background flex">
       {/* Sidebar - Desktop */}
       <aside
@@ -262,5 +264,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <MobileBottomNav items={bottomNavItems} />
       </div>
     </div>
+    <AIChatbot />
+    </>
   );
 }
