@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Send, Users, Inbox, Radio, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '../../store/useAppStore';
 import { formatRelativeTime } from '../../lib/utils';
-import type { DMThread } from '../../types';
+import type { DMThread, User } from '../../types';
 
 export default function AdminMessages() {
   const [activeTab, setActiveTab] = useState<'broadcast' | 'inbox'>('broadcast');
@@ -13,10 +13,12 @@ export default function AdminMessages() {
 
   const [selectedThread, setSelectedThread] = useState<DMThread | null>(null);
   const [input, setInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const {
     currentUser,
+    registeredUsers,
     getMyDMThreads,
     getDirectConversation,
     sendDirectMessage,
@@ -24,6 +26,36 @@ export default function AdminMessages() {
     sendBroadcastMessage,
     broadcastMessages,
   } = useAppStore();
+
+  const availableUsers = useMemo(
+    () => registeredUsers.filter((user) => user.id !== currentUser?.id),
+    [registeredUsers, currentUser],
+  );
+
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+    return availableUsers.filter((user) =>
+      user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query),
+    );
+  }, [availableUsers, searchQuery]);
+
+  const handleStartConversation = (user: User) => {
+    if (!currentUser) return;
+    const conversationId = [currentUser.id, user.id].sort().join('--');
+    setSelectedThread({
+      conversationId,
+      partnerId: user.id,
+      partnerName: user.name,
+      partnerAvatar: user.avatar,
+      partnerRole: user.role,
+      lastMessage: '',
+      lastMessageAt: new Date().toISOString(),
+      unreadCount: 0,
+    });
+    setSearchQuery('');
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+  };
 
   const inboxThreads = getMyDMThreads();
   const totalUnread = inboxThreads.reduce((s, t) => s + t.unreadCount, 0);
@@ -182,9 +214,41 @@ export default function AdminMessages() {
         <div className="grid lg:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-18rem)] min-h-[500px]">
           {/* Thread list */}
           <div className="surface-panel flex flex-col overflow-hidden rounded-2xl">
-            <div className="p-4 border-b border-border">
+            <div className="p-4 border-b border-border space-y-3">
               <p className="text-caption font-black uppercase tracking-widest text-muted-foreground">Conversations</p>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search all users to message"
+                className="w-full input-base text-body-sm"
+              />
             </div>
+            {searchQuery && (
+              <div className="px-4 pb-4 border-b border-border">
+                {searchResults.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No users found for “{searchQuery}”.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {searchResults.map((user) => (
+                      <button
+                        key={user.id}
+                        onClick={() => handleStartConversation(user)}
+                        className="w-full text-left rounded-3xl border border-border bg-secondary/50 px-4 py-3 transition hover:bg-secondary/80"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-xl object-cover" />
+                          <div className="min-w-0">
+                            <p className="text-body-sm font-bold truncate">{user.name}</p>
+                            <p className="text-caption text-muted-foreground truncate">{user.email} · {user.role}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex-1 overflow-y-auto divide-y divide-border/50">
               {inboxThreads.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">

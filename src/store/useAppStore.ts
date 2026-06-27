@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { mockEvents, mockBookings, mockCommunities, Event, UserBehaviorType } from '../data/mockData';
-import { demoAccounts, sarahAccount, ahmedAccount, laylaAccount, User, mockOrganizerRequests, OrganizerRequest } from '../data/users';
+import { User, demoAccounts, mockOrganizerRequests, OrganizerRequest } from '../data/users';
 import { getNotificationsForUser, Notification } from '../data/notifications';
 import type { Badge, RegisterRequest, RegisterResponse, Booking, XPReason, UserWallet, WalletTransaction, PayoutRequest, PayoutMethod, EventMessage, DirectMessage, BroadcastMessage, DMThread, CommunityMessage, CommunityPost } from '../types';
 import { BADGE_DEFINITIONS } from '../constants/badges';
@@ -264,7 +264,7 @@ export const useAppStore = create<AppState>()(
       lastActivityDate: null,
 
       onboardingCompleted: false,
-      registeredUsers: [],
+      registeredUsers: [...demoAccounts],
       personalEvents: [],
 
       userBehaviorType: 'passive',
@@ -299,9 +299,7 @@ export const useAppStore = create<AppState>()(
 
       login: async (email, password) => {
         // TODO: replace with → const { user, accessToken, refreshToken } = await api.post('/auth/login', { email, password });
-        const user =
-          demoAccounts.find((u) => u.email === email && u.password === password) ||
-          get().registeredUsers.find((u) => u.email === email && u.password === password);
+        const user = get().registeredUsers.find((u) => u.email === email && u.password === password);
         if (user) {
           const base = getNotificationsForUser(user.id);
           const persistedForUser = get().notifications.filter(
@@ -358,9 +356,7 @@ export const useAppStore = create<AppState>()(
       },
 
       register: async (data) => {
-        const existing =
-          demoAccounts.find((u) => u.email === data.email) ||
-          get().registeredUsers.find((u) => u.email === data.email);
+        const existing = get().registeredUsers.find((u) => u.email === data.email);
         if (existing) {
           return { success: false, message: 'An account with this email already exists.' };
         }
@@ -409,6 +405,11 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           onboardingCompleted: val,
           currentUser: state.currentUser ? { ...state.currentUser, onboardingCompleted: val } : null,
+          registeredUsers: state.currentUser
+            ? state.registeredUsers.map((user) =>
+                user.id === state.currentUser?.id ? { ...user, onboardingCompleted: val } : user
+              )
+            : state.registeredUsers,
         }));
       },
 

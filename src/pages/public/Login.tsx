@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { LogIn, Mail, Lock, Users, Briefcase, Shield, Moon, Sun } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, Moon, Sun } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import Logo from '../../components/Logo';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { login, theme, toggleTheme } = useAppStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,270 +19,125 @@ export default function Login() {
     return currentUser.onboardingCompleted ? '/app/discover' : '/onboarding';
   };
 
-  const clearOnboardingParams = () => {
-    searchParams.delete('afterOnboarding');
-    searchParams.delete('afterOrganizerOnboarding');
-    searchParams.delete('afterAdminOnboarding');
-    setSearchParams(searchParams, { replace: true });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = await login(email, password);
     if (success) {
-      clearOnboardingParams();
       navigate(resolvePostLoginRoute());
     } else {
       setError('Invalid email or password');
     }
   };
 
-  const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    const success = await login(demoEmail, demoPassword);
-    if (success) {
-      clearOnboardingParams();
-      navigate(resolvePostLoginRoute());
-    }
-  };
-
-  const onboardingHint =
-    searchParams.get('afterOnboarding') === '1'
-      ? 'Attendee setup is complete. Sign in with a demo attendee account (Sarah) to open the app.'
-      : searchParams.get('afterOrganizerOnboarding') === '1'
-      ? 'Organizer setup is complete. Sign in with ahmed@demo.com to manage events.'
-      : searchParams.get('afterAdminOnboarding') === '1'
-      ? 'Admin orientation is complete. Sign in with admin@demo.com to open the admin console.'
-      : null;
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background elements */}
+    <div className="min-h-screen bg-[#F7F6FF] dark:bg-[#050816] flex items-center justify-center p-6 overflow-hidden">
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-500/10 blur-[120px]" />
+        <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-cyan-500/10 blur-3xl" />
       </div>
-
-      {onboardingHint && (
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 z-50 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="surface-panel px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-primary/30 bg-primary/5">
-            <p className="text-body-sm font-medium text-foreground">{onboardingHint}</p>
-            <button
-              type="button"
-              onClick={() => {
-                searchParams.delete('afterOnboarding');
-                searchParams.delete('afterOrganizerOnboarding');
-                searchParams.delete('afterAdminOnboarding');
-                setSearchParams(searchParams, { replace: true });
-              }}
-              className="text-primary font-bold hover:text-primary-soft transition-colors whitespace-nowrap"
-            >
-              Dismiss
-            </button>
-          </div>
-        </div>
-      )}
 
       <button
         onClick={toggleTheme}
-        className="absolute top-6 right-6 w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center border border-border/50 hover:bg-secondary/80 transition-all active:scale-95 z-50"
+        className="absolute top-6 right-6 w-12 h-12 rounded-3xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-center shadow-lg shadow-slate-900/5 transition-all hover:-translate-y-0.5"
         aria-label="Toggle dark mode"
       >
         {theme === 'dark' ? <Sun className="w-5 h-5 text-foreground" /> : <Moon className="w-5 h-5 text-foreground" />}
       </button>
 
-      <div className="w-full max-w-5xl relative z-10">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
-            <Logo variant="horizontal" className="h-12 w-auto" />
+      <div className="relative z-10 w-full max-w-6xl">
+        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] items-center">
+          <div className="hidden lg:block rounded-[2rem] bg-white/90 dark:bg-slate-950/90 border border-slate-200/70 dark:border-slate-800/70 p-12 shadow-2xl shadow-slate-900/5 backdrop-blur-xl">
+            <div className="inline-flex items-center gap-3 rounded-3xl bg-gradient-to-r from-purple-600 to-cyan-500 px-5 py-3 text-white font-semibold mb-8 shadow-lg shadow-purple-500/20">
+              <Logo variant="small" className="w-10 h-10" />
+              <span>Eventra Secure Login</span>
+            </div>
+            <h2 className="text-4xl font-extrabold text-slate-950 dark:text-white leading-tight mb-6">Access your event dashboard with a secure account.</h2>
+            <p className="max-w-xl text-slate-600 dark:text-slate-300 text-lg leading-relaxed">
+              Create a new account or sign in to continue. Admin access is kept separate to protect the platform control panel.
+            </p>
+            <div className="mt-10 grid gap-4 text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex items-start gap-3">
+                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                <span>Clean, polished login experience for users and admins.</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-cyan-500" />
+                <span>Sign up with a modern registration workflow for attendees and organizers.</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-purple-500" />
+                <span>Admin portal receives a dedicated signin route for better separation.</span>
+              </div>
+            </div>
           </div>
-          <h1 className="text-h1 font-bold text-foreground mb-2">Welcome Back</h1>
-          <p className="text-body text-muted-foreground">Select a demo profile or enter your credentials</p>
-        </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {/* Sarah - Attendee */}
-          <button
-            onClick={() => handleDemoLogin('sarah@demo.com', 'demo123')}
-            className="surface-panel p-6 text-left group hover:-translate-y-2 hover:border-primary/40 transition-all duration-300"
-          >
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <img
-                  src="https://i.pravatar.cc/150?img=25"
-                  alt="Sarah"
-                  className="w-24 h-24 rounded-3xl object-cover ring-4 ring-primary/10 shadow-xl"
-                />
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shadow-lg ring-4 ring-background">
-                  <Users className="w-5 h-5 text-white" />
+          <div className="rounded-[2rem] bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800/70 p-10 shadow-2xl shadow-slate-900/10">
+            <div className="flex flex-col gap-3 mb-8 text-center">
+              <Logo variant="horizontal" className="mx-auto h-10 w-auto" />
+              <div>
+                <h1 className="text-3xl font-semibold text-slate-950 dark:text-white">Sign in to Eventra</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Use your registered account credentials to continue.</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="rounded-3xl border border-red-200/80 bg-red-50/80 px-4 py-3 text-sm text-red-700">
+                  {error}
                 </div>
-              </div>
-            </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-h3 font-bold text-foreground">Sarah Johnson</h3>
-              <span className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-caption font-black uppercase tracking-widest">
-                Attendee
-              </span>
-              <p className="text-caption text-muted-foreground leading-relaxed pt-2">
-                Discover events and join communities
-              </p>
-            </div>
-            <div className="mt-6 pt-6 border-t border-border/50 space-y-2 text-micro font-medium text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5" /> sarah@demo.com
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-3.5 h-3.5" /> Level 8 • 1,580 XP
-              </div>
-            </div>
-          </button>
+              )}
 
-          {/* Ahmed - Organizer */}
-          <button
-            onClick={() => handleDemoLogin('ahmed@demo.com', 'demo123')}
-            className="surface-panel p-6 text-left group hover:-translate-y-2 hover:border-cyan-500/40 transition-all duration-300"
-          >
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <img
-                  src="https://i.pravatar.cc/150?img=12"
-                  alt="Ahmed"
-                  className="w-24 h-24 rounded-3xl object-cover ring-4 ring-cyan-500/10 shadow-xl"
-                />
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-cyan-500 rounded-2xl flex items-center justify-center shadow-lg ring-4 ring-background">
-                  <Briefcase className="w-5 h-5 text-white" />
-                </div>
-              </div>
-            </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-h3 font-bold text-foreground">Ahmed Hassan</h3>
-              <span className="inline-block px-3 py-1 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-full text-caption font-black uppercase tracking-widest">
-                Organizer
-              </span>
-              <p className="text-caption text-muted-foreground leading-relaxed pt-2">
-                Create and manage platform events
-              </p>
-            </div>
-            <div className="mt-6 pt-6 border-t border-border/50 space-y-2 text-micro font-medium text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5" /> ahmed@demo.com
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-3.5 h-3.5" /> Level 15 • 3,240 XP
-              </div>
-            </div>
-          </button>
-
-          {/* Layla - Admin */}
-          <button
-            onClick={() => handleDemoLogin('admin@demo.com', 'demo123')}
-            className="surface-panel p-6 text-left group hover:-translate-y-2 hover:border-orange-500/40 transition-all duration-300"
-          >
-            <div className="flex justify-center mb-6">
-              <div className="relative">
-                <img
-                  src="https://i.pravatar.cc/150?img=47"
-                  alt="Layla"
-                  className="w-24 h-24 rounded-3xl object-cover ring-4 ring-orange-500/10 shadow-xl"
-                />
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg ring-4 ring-background">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-              </div>
-            </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-h3 font-bold text-foreground">Layla Mostafa</h3>
-              <span className="inline-block px-3 py-1 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-full text-caption font-black uppercase tracking-widest">
-                Admin
-              </span>
-              <p className="text-caption text-muted-foreground leading-relaxed pt-2">
-                Full platform moderation and analytics
-              </p>
-            </div>
-            <div className="mt-6 pt-6 border-t border-border/50 space-y-2 text-micro font-medium text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5" /> admin@demo.com
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-3.5 h-3.5" /> Level 20 • 5,000 XP
-              </div>
-            </div>
-          </button>
-        </div>
-
-        {/* Manual Login Form */}
-        <div className="max-w-md mx-auto bento-section p-10">
-          <h2 className="text-h3 font-bold text-foreground mb-8 text-center">Manual Entry</h2>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-body-sm font-medium animate-shake">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-caption font-black uppercase tracking-widest text-muted-foreground ml-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                Email address
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-base w-full pl-12"
                   placeholder="you@example.com"
+                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                 />
-              </div>
-            </div>
+              </label>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between ml-1">
-                <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">
-                  Password
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-caption text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                Password
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-base w-full pl-12"
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
+                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                 />
+              </label>
+
+              <button
+                type="submit"
+                className="w-full rounded-3xl bg-gradient-to-r from-primary to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-0.5"
+              >
+                Sign in
+              </button>
+            </form>
+
+            <div className="mt-6 flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400">
+              <Link to="/forgot-password" className="text-center hover:text-slate-900 dark:hover:text-white transition-colors">
+                Forgot password?
+              </Link>
+              <div className="text-center">
+                Don&rsquo;t have an account?{' '}
+                <Link to="/register" className="font-semibold text-primary hover:underline">
+                  Sign up
+                </Link>
+              </div>
+              <div className="text-center">
+                Admin?{' '}
+                <Link to="/admin-login" className="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline">
+                  Sign in here
+                </Link>
               </div>
             </div>
-
-            <button
-              type="submit"
-              className="btn-primary w-full py-4 text-body font-bold shadow-xl shadow-primary/20 mt-2"
-            >
-              <LogIn className="w-5 h-5" />
-              Sign In
-            </button>
-          </form>
-
-          <div className="mt-10 pt-8 border-t border-border/50 text-center space-y-4">
-            <p className="text-body-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link to="/signup" className="text-primary font-bold hover:text-primary-soft transition-colors">Create one</Link>
-            </p>
-            <Link to="/" className="block text-caption font-bold text-muted-foreground hover:text-foreground transition-colors">
-              ← Back to homepage
-            </Link>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

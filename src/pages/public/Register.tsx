@@ -71,218 +71,272 @@ export default function Register() {
     }
   };
 
-  const pageStyle: React.CSSProperties = {
-    background: 'linear-gradient(145deg, #f0edff 0%, #f8f4ff 40%, #edf6ff 100%)',
-    minHeight: '100vh',
-  };
+  const isAttendee = role === 'attendee';
+  const focusRing = isAttendee
+    ? 'focus:ring-2 focus:ring-purple-200 focus:border-purple-400'
+    : 'focus:ring-2 focus:ring-cyan-200 focus:border-cyan-400';
+  const inputBase = `w-full pl-10 pr-4 py-3 rounded-3xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none transition-all ${focusRing}`;
 
   // ── STEP 1: Role selection ────────────────────────────────────────────────
   if (step === 'select') {
     return (
-      <div style={pageStyle} className="flex flex-col items-center justify-center px-4 py-8 min-h-screen">
-        <div className="w-full max-w-2xl">
-          <div className="flex flex-col items-center mb-7">
-            <Logo variant="small" className="w-12 h-12" />
-            <h1 className="text-2xl font-bold mt-4 mb-1 text-gray-900">Join Eventra</h1>
-            <p className="text-gray-500 text-sm">Choose how you want to get started</p>
-          </div>
+      <div className="min-h-screen bg-[#F7F6FF] dark:bg-[#050816] flex items-center justify-center px-6 py-10 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-20 left-10 w-72 h-72 rounded-full bg-primary/15 blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-cyan-500/10 blur-3xl" />
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Attendee card */}
-            <div
-              onClick={() => selectRole('attendee')}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-purple-600 flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-white" />
+        <div className="relative z-10 w-full max-w-7xl grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="hidden lg:flex flex-col justify-between rounded-[2rem] bg-white/90 dark:bg-slate-950/90 border border-slate-200/70 dark:border-slate-800/70 p-10 shadow-2xl shadow-slate-900/5 backdrop-blur-xl">
+            <div>
+              <div className="inline-flex items-center gap-3 rounded-3xl bg-gradient-to-r from-purple-600 to-cyan-500 px-5 py-3 text-white font-semibold mb-8 shadow-lg shadow-purple-500/20">
+                <Logo variant="small" className="w-9 h-9" />
+                <span>Eventra Registration</span>
               </div>
-              <h2 className="text-lg font-bold mb-1.5 text-gray-900">Join as Attendee</h2>
-              <p className="text-gray-500 text-sm leading-relaxed mb-4">
-                Discover amazing events, connect with communities, and earn rewards as you explore new experiences.
+              <h2 className="text-4xl font-extrabold text-slate-950 dark:text-white leading-tight mb-6">Start your Eventra journey with a secure, modern signup.</h2>
+              <p className="max-w-xl text-slate-600 dark:text-slate-300 text-lg leading-relaxed">
+                Choose the account type that fits your role. Admins always sign in on a separate secure page.
               </p>
-              <ul className="space-y-1.5 mb-4">
-                {['AI-powered event recommendations', 'Join vibrant communities', 'Earn badges and level up'].map(feat => (
-                  <li key={feat} className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-600 flex-shrink-0" />
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-              <span className="text-purple-600 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                Get Started <span>→</span>
-              </span>
             </div>
-
-            {/* Organizer card */}
-            <div
-              onClick={() => selectRole('organizer')}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500 flex items-center justify-center mb-4">
-                <Briefcase className="w-6 h-6 text-white" />
+            <div className="mt-10 grid gap-4 text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex items-start gap-3">
+                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                <span>Attendee and organizer registration are separate from admin access.</span>
               </div>
-              <h2 className="text-lg font-bold mb-1.5 text-gray-900">Join as Organizer</h2>
-              <p className="text-gray-500 text-sm leading-relaxed mb-4">
-                Create and manage events, reach thousands of attendees, and grow your community with powerful tools.
-              </p>
-              <ul className="space-y-1.5 mb-4">
-                {['Create unlimited events', 'AI-powered insights & analytics', 'Advanced attendee management'].map(feat => (
-                  <li key={feat} className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 flex-shrink-0" />
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-              <span className="text-cyan-600 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                Get Started <span>→</span>
-              </span>
+              <div className="flex items-start gap-3">
+                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-cyan-500" />
+                <span>Clean, structured onboarding for every user role.</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-purple-500" />
+                <span>Sign up now and complete your profile after registration.</span>
+              </div>
             </div>
           </div>
 
-          <p className="text-center text-sm text-gray-500">
-            Already have an account?{' '}
-            <Link to="/login" className="text-purple-600 font-semibold hover:underline">Sign in</Link>
-          </p>
-          <p className="text-center text-sm text-gray-400 mt-2">
-            <Link to="/" className="hover:text-gray-600 transition-colors">← Back to homepage</Link>
-          </p>
+          <div className="rounded-[2rem] bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800/70 p-10 shadow-2xl shadow-slate-900/10">
+            <div className="flex flex-col gap-4 mb-8 text-center">
+              <Logo variant="small" className="mx-auto h-12 w-12" />
+              <div>
+                <h1 className="text-3xl font-semibold text-slate-950 dark:text-white">Create your Eventra account</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Pick the experience you want and sign up in seconds.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+              <button
+                type="button"
+                onClick={() => selectRole('attendee')}
+                className="rounded-3xl border border-slate-200 bg-slate-50 px-6 py-6 text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/5"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-purple-600 text-white mb-4">
+                  <Users className="w-5 h-5" />
+                </div>
+                <h2 className="text-lg font-semibold text-slate-950 mb-2">Attendee</h2>
+                <p className="text-sm text-slate-500">Browse events, join communities, and earn rewards.</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => selectRole('organizer')}
+                className="rounded-3xl border border-slate-200 bg-slate-50 px-6 py-6 text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/5"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-cyan-500 text-white mb-4">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <h2 className="text-lg font-semibold text-slate-950 mb-2">Organizer</h2>
+                <p className="text-sm text-slate-500">Create events, manage registrations, and grow your audience.</p>
+              </button>
+            </div>
+
+            <div className="text-center text-sm text-slate-500">
+              Already have an account?{' '}
+              <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link>
+            </div>
+            <div className="text-center text-sm text-slate-500 mt-2">
+              Admin access?{' '}
+              <Link to="/admin-login" className="font-semibold text-cyan-600 hover:underline">Sign in here</Link>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // ── STEP 2: Registration form ─────────────────────────────────────────────
-  const isAttendee = role === 'attendee';
-  const focusRing = isAttendee
-    ? 'focus:ring-2 focus:ring-purple-200 focus:border-purple-400'
-    : 'focus:ring-2 focus:ring-cyan-200 focus:border-cyan-400';
-  const inputBase = `w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none transition-all ${focusRing}`;
-
   return (
-    <div style={pageStyle} className="flex flex-col items-center px-4 py-8">
-      <div className="w-full max-w-xl">
-        {/* Back */}
-        <button
-          type="button"
-          onClick={() => setStep('select')}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Change account type
-        </button>
+    <div className="min-h-screen bg-[#F7F6FF] dark:bg-[#050816] flex items-center justify-center px-6 py-10 overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-20 left-10 w-72 h-72 rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-cyan-500/10 blur-3xl" />
+      </div>
 
-        {/* Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isAttendee ? 'bg-purple-600' : 'bg-cyan-500'}`}>
-            {isAttendee ? <Users className="w-8 h-8 text-white" /> : <Briefcase className="w-8 h-8 text-white" />}
+      <div className="relative z-10 w-full max-w-7xl grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="hidden lg:flex flex-col justify-between rounded-[2rem] bg-white/90 dark:bg-slate-950/90 border border-slate-200/70 dark:border-slate-800/70 p-10 shadow-2xl shadow-slate-900/5 backdrop-blur-xl">
+          <div>
+            <div className="inline-flex items-center gap-3 rounded-3xl bg-gradient-to-r from-purple-600 to-cyan-500 px-5 py-3 text-white font-semibold mb-8 shadow-lg shadow-purple-500/20">
+              <Logo variant="small" className="w-9 h-9" />
+              <span>Eventra Registration</span>
+            </div>
+            <h2 className="text-4xl font-extrabold text-slate-950 dark:text-white leading-tight mb-6">Finish your signup with one secure form.</h2>
+            <p className="max-w-xl text-slate-600 dark:text-slate-300 text-lg leading-relaxed">
+              Complete your account details and get ready to explore events or manage your community.
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {isAttendee ? 'Create Attendee Account' : 'Create Organizer Account'}
-          </h1>
-          <p className="text-gray-500 text-sm text-center">
-            {isAttendee
-              ? 'Quick setup — you\'ll personalize your feed during onboarding'
-              : 'Register your account — we\'ll set up your event profile after approval'}
-          </p>
+          <div className="mt-10 grid gap-4 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-start gap-3">
+              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
+              <span>Fast registration for attendees and organizers.</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-cyan-500" />
+              <span>Separate admin login keeps elevated access secure.</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="mt-1 h-2.5 w-2.5 rounded-full bg-purple-500" />
+              <span>Everything is built around the same modern auth experience.</span>
+            </div>
+          </div>
         </div>
 
-        {/* Form card */}
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="rounded-[2rem] bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800/70 p-10 shadow-2xl shadow-slate-900/10">
+          <button
+            type="button"
+            onClick={() => setStep('select')}
+            className="mb-8 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Change account type
+          </button>
 
-            {/* Full Name */}
+          <div className="flex flex-col gap-4 mb-8 text-center">
+            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${isAttendee ? 'bg-purple-600' : 'bg-cyan-500'} text-white`}>
+              {isAttendee ? <Users className="w-8 h-8" /> : <Briefcase className="w-8 h-8" />}
+            </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input
-                  name="name" type="text" placeholder="John Doe" value={form.name}
-                  onChange={handleChange} onBlur={handleBlur} onFocus={handleFocus}
-                  className={`${inputBase}${errors.name ? ' border-red-400 focus:ring-red-200' : ''}`}
-                />
-              </div>
-              {errors.name && <p className="field-error-msg">{errors.name}</p>}
+              <h1 className="text-3xl font-semibold text-slate-950 dark:text-white">{isAttendee ? 'Create Attendee Account' : 'Create Organizer Account'}</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                {isAttendee
+                  ? 'Quick setup — you’ll personalize your feed during onboarding.'
+                  : 'Register your account — we’ll set up your event profile after approval.'}
+              </p>
             </div>
+          </div>
 
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input
-                  name="email" type="email" placeholder="you@example.com" value={form.email}
-                  onChange={handleChange} onBlur={handleBlur} onFocus={handleFocus}
-                  className={`${inputBase}${errors.email ? ' border-red-400 focus:ring-red-200' : ''}`}
-                />
-              </div>
-              {errors.email && <p className="field-error-msg">{errors.email}</p>}
-            </div>
-
-            {/* Password + Confirm */}
-            <div className="grid grid-cols-2 gap-4">
+          <div className="bg-slate-50 dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-200/70 dark:border-slate-800/70">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Full Name</label>
+                <div className="relative mt-3">
+                  <User className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
-                    name="password" type="password" placeholder="Min 8 characters" value={form.password}
-                    onChange={handleChange} onBlur={handleBlur} onFocus={handleFocus}
-                    className={`${inputBase}${errors.password ? ' border-red-400 focus:ring-red-200' : ''}`}
-                  />
-                </div>
-                {errors.password && <p className="field-error-msg">{errors.password}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <input
-                    name="confirm" type="password" placeholder="Re-enter password" value={form.confirm}
-                    onChange={handleChange} onBlur={handleBlur} onFocus={handleFocus}
-                    className={`${inputBase}${errors.confirm ? ' border-red-400 focus:ring-red-200' : ''}`}
-                  />
-                </div>
-                {errors.confirm && <p className="field-error-msg">{errors.confirm}</p>}
-              </div>
-            </div>
-
-            {/* Organizer-only: Organization Name */}
-            {!isAttendee && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Organization Name{' '}
-                  <span className="text-gray-400 font-normal">(Optional)</span>
-                </label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <input
-                    name="organization" type="text" placeholder="Company or Organization" value={form.organization}
+                    name="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={form.name}
                     onChange={handleChange}
-                    className={`w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none transition-all ${focusRing}`}
+                    onBlur={handleBlur}
+                    onFocus={handleFocus}
+                    className={`${inputBase}${errors.name ? ' border-red-400 focus:ring-red-200' : ''}`}
                   />
                 </div>
+                {errors.name && <p className="field-error-msg">{errors.name}</p>}
               </div>
-            )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-60 ${
-                isAttendee
-                  ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600'
-                  : 'bg-cyan-500 hover:bg-cyan-600'
-              }`}
-            >
-              {loading ? <span className="btn-spinner" /> : <UserPlus className="w-5 h-5" />}
-              {loading ? 'Creating account…' : isAttendee ? 'Create Attendee Account' : 'Create Organizer Account'}
-            </button>
-          </form>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Email Address</label>
+                <div className="relative mt-3">
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={form.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    onFocus={handleFocus}
+                    className={`${inputBase}${errors.email ? ' border-red-400 focus:ring-red-200' : ''}`}
+                  />
+                </div>
+                {errors.email && <p className="field-error-msg">{errors.email}</p>}
+              </div>
 
-          <p className="text-center text-sm text-gray-500 mt-5">
-            Already have an account?{' '}
-            <Link to="/login" className="text-purple-600 font-semibold hover:underline">Sign in</Link>
-          </p>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Password</label>
+                  <div className="relative mt-3">
+                    <Lock className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      name="password"
+                      type="password"
+                      placeholder="Min 8 characters"
+                      value={form.password}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      onFocus={handleFocus}
+                      className={`${inputBase}${errors.password ? ' border-red-400 focus:ring-red-200' : ''}`}
+                    />
+                  </div>
+                  {errors.password && <p className="field-error-msg">{errors.password}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Confirm Password</label>
+                  <div className="relative mt-3">
+                    <Lock className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      name="confirm"
+                      type="password"
+                      placeholder="Re-enter password"
+                      value={form.confirm}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      onFocus={handleFocus}
+                      className={`${inputBase}${errors.confirm ? ' border-red-400 focus:ring-red-200' : ''}`}
+                    />
+                  </div>
+                  {errors.confirm && <p className="field-error-msg">{errors.confirm}</p>}
+                </div>
+              </div>
+
+              {!isAttendee && (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Organization Name <span className="text-slate-500 dark:text-slate-400 font-normal">(Optional)</span></label>
+                  <div className="relative mt-3">
+                    <Briefcase className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      name="organization"
+                      type="text"
+                      placeholder="Company or Organization"
+                      value={form.organization}
+                      onChange={handleChange}
+                      className={inputBase}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-4 rounded-3xl font-semibold text-white transition-all disabled:opacity-60 ${
+                  isAttendee
+                    ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600'
+                    : 'bg-cyan-500 hover:bg-cyan-600'
+                }`}
+              >
+                {loading ? <span className="btn-spinner" /> : <UserPlus className="w-5 h-5" />}
+                {loading ? 'Creating account…' : isAttendee ? 'Create Attendee Account' : 'Create Organizer Account'}
+              </button>
+            </form>
+
+            <div className="mt-5 text-center text-sm text-slate-500 dark:text-slate-400">
+              Already have an account?{' '}
+              <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link>
+            </div>
+            <div className="mt-3 text-center text-sm text-slate-500 dark:text-slate-400">
+              Admin access?{' '}
+              <Link to="/admin-login" className="font-semibold text-cyan-600 hover:text-white transition-colors">Sign in here</Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -17,6 +17,7 @@ import AdminLayout from '../components/layout/AdminLayout';
 // Public Pages
 import Landing from '../pages/public/Landing';
 import Login from '../pages/public/Login';
+import AdminLogin from '../pages/public/AdminLogin';
 import Onboarding from '../pages/public/Onboarding';
 import Register from '../pages/public/Register';
 import PendingApproval from '../pages/public/PendingApproval';
@@ -141,6 +142,7 @@ const router = createBrowserRouter(
       {/* ── Public ── */}
       <Route index element={<Landing />} />
       <Route path="/login" element={<RedirectIfAuth><Login /></RedirectIfAuth>} />
+      <Route path="/admin-login" element={<RedirectIfAuth><AdminLogin /></RedirectIfAuth>} />
       <Route path="/register" element={<RedirectIfAuth><Register /></RedirectIfAuth>} />
       <Route path="/register/pending" element={<PendingApproval />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
