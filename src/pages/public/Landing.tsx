@@ -115,7 +115,9 @@ export default function Landing() {
         <nav className="sticky top-0 z-50 backdrop-blur-2xl bg-white/75 dark:bg-[#0A0F1E]/80 border-b border-purple-200/20 dark:border-purple-900/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              <Logo variant="horizontal" theme={theme === 'dark' ? 'dark' : 'light'} className="h-8 w-auto" />
+              <Link to="/" className="flex items-center shrink-0" aria-label="Eventra home">
+                <Logo variant="horizontal" theme={theme === 'dark' ? 'dark' : 'light'} className="h-8 w-auto" />
+              </Link>
 
               {/* Desktop nav */}
               <div className="hidden md:flex items-center gap-1 text-sm">

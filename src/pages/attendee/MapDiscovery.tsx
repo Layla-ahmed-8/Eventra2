@@ -9,6 +9,9 @@ import {
   Share2, Map as MapIcon
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { createMapTileLayer } from '../../lib/mapTiles';
+import { reverseGeocode } from '../../lib/geocoding';
+import { scoreNearbyEvents, buildNearMeInsight } from '../../lib/mapRecommendations';
 import { useLocation } from '../../hooks/useLocation';
 import { haversineKm } from '../../utils/distance';
 import { TRAVEL_MODES, formatTravelTime, mapsUrl } from '../../utils/travelTime';
@@ -49,7 +52,7 @@ function ModeIcon({ k }: { k: TravelKey }) {
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function MapDiscovery() {
   const navigate = useNavigate();
-  const { events, bookmarkedEvents, toggleBookmark } = useAppStore();
+  const { events, bookmarkedEvents, toggleBookmark, theme, interests, setUserLocation } = useAppStore();
   const { coords, denied, request } = useLocation();
 
   const [search, setSearch]           = useState('');
@@ -64,6 +67,7 @@ export default function MapDiscovery() {
 
   const mapRef       = useRef<L.Map | null>(null);
   const mapDivRef    = useRef<HTMLDivElement>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersRef   = useRef<L.Marker[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const radiusCircleRef = useRef<L.Circle | null>(null);
@@ -125,7 +129,17 @@ export default function MapDiscovery() {
     });
   }, [filtered, coords]);
 
-  const topPick = enriched.find(e => (e as any).isRecommended) || enriched[0];
+  const nearMeInsight = useMemo(() => {
+    if (!coords) return 'Enable location to get AI-powered nearby event recommendations.';
+    const recs = scoreNearbyEvents(events, coords.lat, coords.lng, { interests });
+    return buildNearMeInsight(recs);
+  }, [coords, events, interests]);
+
+  const topPick = useMemo(() => {
+    if (!coords) return enriched.find((e) => e.isRecommended) || enriched[0];
+    const recs = scoreNearbyEvents(events, coords.lat, coords.lng, { interests });
+    return recs[0]?.event ?? enriched[0];
+  }, [coords, events, interests, enriched]);
 
   // ── Init map ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -138,9 +152,9 @@ export default function MapDiscovery() {
       attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map);
+    const tileLayer = createMapTileLayer(theme === 'dark' ? 'dark' : 'light');
+    tileLayer.addTo(map);
+    tileLayerRef.current = tileLayer;
 
     mapRef.current = map;
 
@@ -156,6 +170,24 @@ export default function MapDiscovery() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Sync map tiles when theme changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    tileLayerRef.current?.remove();
+    const tileLayer = createMapTileLayer(theme === 'dark' ? 'dark' : 'light');
+    tileLayer.addTo(map);
+    tileLayerRef.current = tileLayer;
+  }, [theme]);
+
+  // Persist user location in store + reverse geocode label
+  useEffect(() => {
+    if (!coords) return;
+    reverseGeocode(coords.lat, coords.lng).then((city) => {
+      setUserLocation(coords.lat, coords.lng, city);
+    });
+  }, [coords, setUserLocation]);
 
   // Update map center when coords change
   useEffect(() => {
@@ -326,9 +358,7 @@ export default function MapDiscovery() {
                           <span className="text-[11px] font-bold text-muted-foreground">Nearby Recommendation</span>
                         </div>
                         <p className="text-[13px] text-foreground font-bold leading-tight">
-                          {topPick
-                            ? `"${topPick.title}" is trending among designers within 10 min walk.`
-                            : 'Scanning your preferences for nearby hidden gems...'}
+                          {nearMeInsight}
                         </p>
                       </div>
                     </div>

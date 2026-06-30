@@ -33,7 +33,7 @@ const MOCK_REJECTED: RejectedEvent[] = [
 ];
 
 export default function OrganizerEvents() {
-  const { events } = useAppStore();
+  const { events, duplicateEvent } = useAppStore();
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past' | 'draft' | 'rejected'>('all');
   const [search, setSearch] = useState('');
 
@@ -197,8 +197,11 @@ export default function OrganizerEvents() {
                         <button
                           type="button"
                           className="btn-ghost p-2"
-                          title="More"
-                          onClick={() => demoToast('More options', 'Duplicate, archive, and cancel are demo placeholders.')}
+                          title="Duplicate"
+                          onClick={() => {
+                            const copy = duplicateEvent(event.id);
+                            if (copy) demoToast('Event duplicated', `"${copy.title}" added to your events.`);
+                          }}
                         >
                           <MoreVertical className="w-4 h-4" />
                         </button>

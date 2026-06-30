@@ -6,9 +6,12 @@ import { formatRelativeTime } from '../../lib/utils';
 import {
   Users, Calendar, TrendingUp, AlertCircle, Activity, DollarSign,
   ArrowUpRight, ArrowDownRight, Globe, Repeat, Target, Zap, Sparkles,
-  ChevronRight, Cpu, ArrowRight, RefreshCw,
+  ChevronRight, Cpu, ArrowRight, RefreshCw, ShieldAlert, Settings, Eye, Shield, UserCheck,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import {
+  DashboardPage, DashboardHero, QuickActionGrid, PeriodTabs, LiveIndicator,
+} from '../../components/business/DashboardPrimitives';
 
 const PERIODS = ['7d', '30d', '6m', '1y'] as const;
 type Period = typeof PERIODS[number];
@@ -127,10 +130,10 @@ const realtimeActivity = [
 ];
 
 const pendingItems = [
-  { label: 'Events awaiting approval', count: 5, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30', link: '/admin/events' },
-  { label: 'User reports', count: 3, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30', link: '/admin/moderation' },
-  { label: 'Flagged posts', count: 8, color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/30', link: '/admin/community' },
-  { label: 'Organizer requests', count: 2, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30', link: '/admin/users' },
+  { label: 'Events awaiting approval', count: 5, link: '/admin/events' },
+  { label: 'User reports', count: 3, link: '/admin/moderation' },
+  { label: 'Flagged posts', count: 8, link: '/admin/community' },
+  { label: 'Organizer requests', count: 2, link: '/admin/users' },
 ];
 
 const systemHealth = [
@@ -150,11 +153,24 @@ const categoryData = [
   { category: 'Business', events: 65, growth: '+22%', attendees: 8100, color: '#F59E0B' },
 ];
 
+const topOrganizers = [
+  { name: 'Cairo Food Collective', events: 12, revenue: 'EGP 89K', avatar: 'https://i.pravatar.cc/40?img=50' },
+  { name: 'Tech Cairo', events: 8, revenue: 'EGP 0', avatar: 'https://i.pravatar.cc/40?img=20' },
+  { name: 'Cairo Jazz Club', events: 6, revenue: 'EGP 45K', avatar: 'https://i.pravatar.cc/40?img=10' },
+  { name: 'Townhouse Gallery', events: 5, revenue: 'EGP 12K', avatar: 'https://i.pravatar.cc/40?img=40' },
+];
+
+const userDonutSegments = [
+  { value: 10200, color: '#7C5CFF', label: 'Attendees' },
+  { value: 1840, color: '#9B8CFF', label: 'Organizers' },
+  { value: 360, color: '#C4B5FD', label: 'Admins' },
+];
+
 const topCities = [
   { city: 'Cairo', events: 520, users: 8400, color: '#7C5CFF' },
-  { city: 'Alexandria', events: 180, users: 2800, color: '#00D4FF' },
-  { city: 'Giza', events: 95, users: 1400, color: '#FF9B3D' },
-  { city: 'Sharm El-Sheikh', events: 52, users: 820, color: '#22C55E' },
+  { city: 'Alexandria', events: 180, users: 2800, color: '#9B8CFF' },
+  { city: 'Giza', events: 95, users: 1400, color: '#C4B5FD' },
+  { city: 'Sharm El-Sheikh', events: 52, users: 820, color: '#DDD6FE' },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -171,48 +187,61 @@ export default function AdminAnalytics() {
     setTimeout(() => setChartLoading(false), 500);
   };
 
-  const greeting = () => {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
+  const totalPending = pendingItems.reduce((s, i) => s + i.count, 0) + pendingRequests;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-caption text-muted-foreground mb-0.5">{greeting()},</p>
-          <h1 className="text-h1 font-bold text-foreground">{currentUser?.name ?? 'Admin'} 👋</h1>
-          <p className="text-body-sm text-muted-foreground mt-1">Platform overview, real-time activity, and analytics.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setLastRefresh(new Date().toLocaleTimeString());
-              demoToast('Refreshed', 'Dashboard data updated.');
-            }}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-          <div className="hidden sm:block text-right">
-            <p className="text-caption text-muted-foreground">Last updated</p>
-            <p className="text-caption font-bold text-foreground">{lastRefresh}</p>
-          </div>
-        </div>
-      </div>
+    <DashboardPage>
+      <DashboardHero
+        badge="Administrator"
+        badgeIcon={Shield}
+        name={currentUser?.name ?? 'Admin'}
+        subtitle="Platform command center — monitor health, review actions, and track growth in real time."
+        meta={<LiveIndicator label="All systems operational" />}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setLastRefresh(new Date().toLocaleTimeString());
+                demoToast('Refreshed', 'Dashboard data updated.');
+              }}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+            <Link to="/admin/settings" className="btn-secondary flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Settings</span>
+            </Link>
+            <span className="hidden md:inline text-caption text-muted-foreground">
+              Updated {lastRefresh}
+            </span>
+          </>
+        }
+        stats={[
+          { label: 'Total Users', value: '12.4K', hint: '+12% this month' },
+          { label: 'Active Events', value: '847', hint: '+24% growth' },
+          { label: 'Revenue', value: 'EGP 2.4M', hint: 'Platform-wide' },
+          { label: 'Pending Reviews', value: String(totalPending), hint: 'Needs attention' },
+        ]}
+      />
 
-      {/* KPI cards with sparklines */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <QuickActionGrid
+        items={[
+          { to: '/admin/users', icon: Users, label: 'Manage Users', grad: 'from-[#7C5CFF] to-[#9B8CFF]' },
+          { to: '/admin/events', icon: Eye, label: 'Review Events', grad: 'from-[#7C5CFF] to-[#5B3FE0]' },
+          { to: '/admin/moderation', icon: ShieldAlert, label: 'Moderation', grad: 'from-[#9B8CFF] to-[#7C5CFF]' },
+          { to: '/admin/settings', icon: Settings, label: 'Settings', grad: 'from-[#C4B5FD] to-[#9B8CFF]' },
+        ]}
+      />
+
+      <div className="dashboard-grid dashboard-grid-4">
         {[
           { label: 'Total Users', value: '12.4K', change: '+12%', up: true, data: kpiSparklines.users, color: '#7C5CFF', icon: Users, iconClass: 'icon-box-primary' },
-          { label: 'Active Events', value: '847', change: '+24%', up: true, data: kpiSparklines.events, color: '#00D4FF', icon: Calendar, iconClass: 'icon-box-cyan' },
-          { label: 'Platform Revenue', value: 'EGP 2.4M', change: '+32%', up: true, data: kpiSparklines.revenue, color: '#FF8A00', icon: DollarSign, iconClass: 'icon-box-orange' },
-          { label: 'System Flags', value: '24', change: '-5%', up: false, data: kpiSparklines.flags, color: '#EF4444', icon: AlertCircle, iconClass: 'icon-box-red' },
+          { label: 'Active Events', value: '847', change: '+24%', up: true, data: kpiSparklines.events, color: '#9B8CFF', icon: Calendar, iconClass: 'icon-box-primary' },
+          { label: 'Platform Revenue', value: 'EGP 2.4M', change: '+32%', up: true, data: kpiSparklines.revenue, color: '#7C5CFF', icon: DollarSign, iconClass: 'icon-box-primary' },
+          { label: 'System Flags', value: '24', change: '-5%', up: false, data: kpiSparklines.flags, color: '#C4B5FD', icon: AlertCircle, iconClass: 'icon-box-primary' },
         ].map((kpi) => (
           <div key={kpi.label} className="kpi-card">
             <div className="flex items-center justify-between">
@@ -234,22 +263,15 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Period selector + charts */}
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-h3 font-bold text-foreground">Platform Metrics</h2>
-        <div className="flex gap-1 p-1 bg-muted/50 rounded-xl">
-          {PERIODS.map((p) => (
-            <button
-              key={p}
-              onClick={() => handlePeriodChange(p)}
-              className={`px-3 py-1.5 rounded-lg text-body-sm font-semibold transition-all ${period === p ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              {p}
-            </button>
-          ))}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-h3 font-bold text-foreground">Platform Metrics</h2>
+          <p className="text-caption text-muted-foreground mt-0.5">User growth and revenue trends</p>
         </div>
+        <PeriodTabs periods={PERIODS} value={period} onChange={handlePeriodChange} />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="dashboard-grid dashboard-grid-2">
         <div className="bento-section">
           <div className="bento-header">
             <div className="bento-title-wrapper">
@@ -275,7 +297,7 @@ export default function AdminAnalytics() {
         <div className="bento-section">
           <div className="bento-header">
             <div className="bento-title-wrapper">
-              <DollarSign className="w-5 h-5 text-orange-500" />
+              <DollarSign className="w-5 h-5 text-primary" />
               <h2 className="bento-title">Revenue (EGP K)</h2>
             </div>
             <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">{period}</span>
@@ -296,18 +318,15 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Real-time Activity + System Health + Pending Reviews */}
-      <div className="grid lg:grid-cols-3 gap-5">
+      <div className="dashboard-grid dashboard-grid-3-lg">
         {/* Activity feed — 2 cols */}
-        <div className="lg:col-span-2 bento-section">
+        <div className="bento-section">
           <div className="bento-header">
             <div className="bento-title-wrapper">
               <Activity className="w-5 h-5 text-primary" />
               <h2 className="bento-title">Real-time Activity</h2>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-caption text-green-600 dark:text-green-400 font-semibold">Live</span>
-            </div>
+            <LiveIndicator />
           </div>
           <div className="space-y-3">
             {realtimeActivity.map((activity, index) => (
@@ -324,51 +343,96 @@ export default function AdminAnalytics() {
               </div>
             ))}
           </div>
+          <Link to="/admin/audit-logs" className="w-full mt-4 py-2.5 text-caption font-semibold text-primary hover:bg-primary/5 rounded-xl transition-colors border border-dashed border-primary/20 flex items-center justify-center gap-2">
+            View system audit log <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
-        {/* Right col — Pending + System Health */}
         <div className="space-y-5">
-          {/* Pending reviews */}
           <div className="bento-section">
-            <h3 className="text-body-sm font-bold text-foreground mb-4 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-orange-500" />
-              Action required
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-body-sm font-semibold text-foreground flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-primary" />
+                Action required
+              </h3>
+              <span className="status-pill bg-primary/10 text-primary">{totalPending} total</span>
+            </div>
             <div className="grid grid-cols-1 gap-2">
               {pendingItems.map((item) => (
-                <Link key={item.label} to={item.link} className={`p-3 rounded-xl ${item.bg} flex items-center justify-between group hover:scale-[1.02] transition-transform`}>
-                  <span className={`text-caption font-bold ${item.color}`}>{item.label}</span>
+                <Link key={item.label} to={item.link} className="pending-action-card group">
+                  <span className="text-caption font-semibold text-foreground">{item.label}</span>
                   <div className="flex items-center gap-2">
-                    <span className={`text-body-sm font-black ${item.color}`}>{item.count}</span>
-                    <ArrowRight className={`w-3.5 h-3.5 ${item.color} group-hover:translate-x-0.5 transition-transform`} />
+                    <span className="text-body-sm font-bold text-primary">{item.count}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-primary group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </Link>
               ))}
+              {pendingRequests > 0 && (
+                <Link to="/admin/users" className="pending-action-card group">
+                  <span className="text-caption font-semibold text-foreground">Organizer requests (live)</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-body-sm font-bold text-primary">{pendingRequests}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-primary group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </Link>
+              )}
             </div>
           </div>
 
-          {/* System Health */}
-          <div className="atmo-panel p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-body-sm font-bold text-white flex items-center gap-2">
+          <div className="bento-section">
+            <div className="bento-header !mb-3">
+              <h3 className="text-body-sm font-semibold text-foreground flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-primary" />
                 System Health
               </h3>
-              <Globe className="w-4 h-4 text-slate-500" />
+              <Globe className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="space-y-3">
               {systemHealth.map((s) => (
                 <div key={s.label} className="space-y-1">
-                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <div className="flex justify-between text-caption font-semibold uppercase tracking-wide text-muted-foreground">
                     <span>{s.label}</span>
-                    <span style={{ color: s.color }}>{s.status}</span>
+                    <span className="text-primary">{s.status}</span>
                   </div>
-                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${s.pct}%`, background: s.color }} />
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-grid dashboard-grid-2">
+        <div className="bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
+              <Users className="w-5 h-5 text-primary" />
+              <h2 className="bento-title">User Distribution</h2>
+            </div>
+          </div>
+          <DonutChart segments={userDonutSegments} />
+        </div>
+
+        <div className="bento-section">
+          <div className="bento-header">
+            <div className="bento-title-wrapper">
+              <UserCheck className="w-5 h-5 text-primary" />
+              <h2 className="bento-title">Top Organizers</h2>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {topOrganizers.map((org) => (
+              <div key={org.name} className="card-surface flex items-center gap-3">
+                <img src={org.avatar} alt="" className="w-10 h-10 rounded-xl object-cover ring-2 ring-primary/10" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-body-sm font-semibold text-foreground truncate">{org.name}</p>
+                  <p className="text-caption text-muted-foreground">{org.events} events</p>
+                </div>
+                <p className="text-body-sm font-bold text-primary flex-shrink-0">{org.revenue}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -383,7 +447,7 @@ export default function AdminAnalytics() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {categoryData.map((cat) => (
-            <div key={cat.category} className="card-surface p-4 hover:border-primary/20 transition-all">
+            <div key={cat.category} className="card-surface hover:border-primary/20 transition-all">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
@@ -394,11 +458,11 @@ export default function AdminAnalytics() {
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
                   <p className="text-h3 font-black text-foreground">{cat.events}</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Events</p>
+                  <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground">Events</p>
                 </div>
                 <div>
                   <p className="text-h3 font-black text-foreground">{(cat.attendees / 1000).toFixed(1)}K</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Attendees</p>
+                  <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground">Attendees</p>
                 </div>
               </div>
               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -410,7 +474,7 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Geographic + engagement */}
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="dashboard-grid dashboard-grid-2">
         <div className="bento-section">
           <div className="bento-header">
             <div className="bento-title-wrapper">
@@ -445,8 +509,8 @@ export default function AdminAnalytics() {
           </div>
           <div className="space-y-5 mb-6">
             <HBar label="Daily Active Users" value={4200} max={12400} color="#7C5CFF" />
-            <HBar label="Weekly Active Users" value={8900} max={12400} color="#00D4FF" />
-            <HBar label="Monthly Active Users" value={12400} max={12400} color="#22C55E" />
+            <HBar label="Weekly Active Users" value={8900} max={12400} color="#9B8CFF" />
+            <HBar label="Monthly Active Users" value={12400} max={12400} color="#7C5CFF" />
           </div>
           <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border/50">
             {[
@@ -460,8 +524,8 @@ export default function AdminAnalytics() {
                   <m.icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-body-sm font-black text-foreground leading-none">{m.value}</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1">{m.label}</p>
+                  <p className="text-body-sm font-semibold text-foreground leading-none">{m.value}</p>
+                  <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground mt-1">{m.label}</p>
                 </div>
               </div>
             ))}
@@ -473,24 +537,24 @@ export default function AdminAnalytics() {
       <div className="bento-section">
         <div className="bento-header">
           <div className="bento-title-wrapper">
-            <DollarSign className="w-5 h-5 text-orange-500" />
+            <DollarSign className="w-5 h-5 text-primary" />
             <h2 className="bento-title">Revenue Breakdown</h2>
           </div>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Ticket Sales', value: 'EGP 1.8M', pct: 75, color: '#7C5CFF' },
-            { label: 'Service Fees', value: 'EGP 420K', pct: 17.5, color: '#00D4FF' },
-            { label: 'VIP Upgrades', value: 'EGP 140K', pct: 5.8, color: '#FF9B3D' },
-            { label: 'Partnerships', value: 'EGP 40K', pct: 1.7, color: '#22C55E' },
+            { label: 'Service Fees', value: 'EGP 420K', pct: 17.5, color: '#9B8CFF' },
+            { label: 'VIP Upgrades', value: 'EGP 140K', pct: 5.8, color: '#C4B5FD' },
+            { label: 'Partnerships', value: 'EGP 40K', pct: 1.7, color: '#DDD6FE' },
           ].map((r) => (
-            <div key={r.label} className="card-surface p-4 hover:border-primary/20 transition-all">
+            <div key={r.label} className="card-surface hover:border-primary/20 transition-all">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-2 h-2 rounded-full" style={{ background: r.color }} />
-                <span className="text-[10px] font-black text-muted-foreground uppercase">{r.pct}%</span>
+                <span className="text-caption font-semibold text-muted-foreground uppercase">{r.pct}%</span>
               </div>
               <p className="text-h3 font-black text-foreground">{r.value}</p>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1">{r.label}</p>
+              <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground mt-1">{r.label}</p>
               <div className="mt-4 h-1 bg-muted rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${r.pct}%`, background: r.color }} />
               </div>
@@ -498,6 +562,6 @@ export default function AdminAnalytics() {
           ))}
         </div>
       </div>
-    </div>
+    </DashboardPage>
   );
 }

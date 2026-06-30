@@ -407,7 +407,9 @@ export default function EventDetail() {
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-caption text-muted-foreground">{ticket.available} spots left</span>
+                        <span className="text-caption text-muted-foreground">
+                          {event.rsvpCount > 30 ? 'Join the crowd — seats filling fast' : 'Be among the first to reserve'}
+                        </span>
                         <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
                       </div>
                     </div>
@@ -417,7 +419,7 @@ export default function EventDetail() {
                   to={alreadyRsvped ? `/app/orders/${event.id}` : `/app/events/${event.id}/rsvp`}
                   className={alreadyRsvped ? 'btn-secondary w-full py-4 text-h4 h-auto' : 'btn-primary w-full py-4 text-h4 h-auto shadow-xl shadow-primary/25'}
                 >
-                  {alreadyRsvped ? 'View Your Ticket' : 'Save Your Spot'}
+                  {alreadyRsvped ? 'View Your Ticket' : 'Reserve Your Place'}
                 </Link>
                 <p className="mt-4 text-center text-micro text-muted-foreground">
                   {alreadyRsvped ? 'Already reserved. You can view ticket details any time.' : 'Powered by Eventra Secure Checkout'}
@@ -478,7 +480,7 @@ export default function EventDetail() {
                 <Link
                   key={similarEvent.id}
                   to={`/app/events/${similarEvent.id}`}
-                  className="group bento-section p-0 overflow-hidden hover:-translate-y-2 transition-all duration-500"
+                  className="group bento-section card-pad-0 overflow-hidden hover:-translate-y-2 transition-all duration-500"
                 >
                   <div className="relative h-48 overflow-hidden">
                     <img

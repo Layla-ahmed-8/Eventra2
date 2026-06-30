@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, Calendar, Users, MessageSquare, Settings, ChevronLeft, Menu, X, Shield, Moon, Sun, User, ShieldAlert, LogOut, Wallet } from 'lucide-react';
+import { BarChart3, Calendar, Users, MessageSquare, Settings, ChevronLeft, Menu, X, Shield, Moon, Sun, User, ShieldAlert, LogOut, Wallet, Bell } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useState } from 'react';
 import AIChatbot from '../business/AIChatbot';
@@ -22,7 +22,7 @@ const bottomNavItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, theme, toggleTheme, logout } = useAppStore();
+  const { currentUser, theme, toggleTheme, logout, unreadCount } = useAppStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const crumbs = useBreadcrumbs();
@@ -34,6 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/community', icon: MessageSquare, label: 'Community' },
     { path: '/admin/messages', icon: MessageSquare, label: 'Messages' },
+    { path: '/admin/notifications', icon: Bell, label: 'Notifications', badge: unreadCount },
     { path: '/admin/wallet', icon: Wallet, label: 'Wallet' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
     { path: '/admin/profile', icon: User, label: 'My Profile' },
@@ -77,6 +78,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                 {sidebarOpen && <span className="font-bold text-body-sm tracking-wide">{item.label}</span>}
+                {'badge' in item && (item.badge ?? 0) > 0 && (
+                  <span className="ml-auto min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">
+                    {item.badge}
+                  </span>
+                )}
                 {!sidebarOpen && (
                   <div className="absolute left-full ml-4 px-3 py-2 bg-sidebar-accent border border-sidebar-border text-sidebar-foreground text-caption font-bold rounded-xl whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl">
                     {item.label}

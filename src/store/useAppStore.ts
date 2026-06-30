@@ -5,6 +5,7 @@ import { User, demoAccounts, mockOrganizerRequests, OrganizerRequest } from '../
 import { getNotificationsForUser, Notification } from '../data/notifications';
 import type { Badge, RegisterRequest, RegisterResponse, Booking, XPReason, UserWallet, WalletTransaction, PayoutRequest, PayoutMethod, EventMessage, DirectMessage, BroadcastMessage, DMThread, CommunityMessage, CommunityPost } from '../types';
 import { BADGE_DEFINITIONS } from '../constants/badges';
+import { REWARDS_CATALOG } from '../constants/rewards';
 import { XP_TABLE, POINTS_TABLE, DEFAULT_SYSTEM_CONFIG } from '../constants/config';
 import type { SystemConfig } from '../types';
 import { initialWallets, initialWalletTransactions, mockPayoutRequests } from '../data/walletData';
@@ -13,6 +14,27 @@ import type { ManagedUser } from '../data/adminUsersData';
 import { initialEventMessages } from '../data/eventChatData';
 import { initialDirectMessages, initialBroadcastMessages } from '../data/messagesData';
 import { initialCommunityMessages, initialCommunityPosts } from '../data/communityData';
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+/** Demo accounts must always be login-able even if localStorage drifted. */
+function resolveDemoUser(email: string, password: string): User | undefined {
+  const normalizedEmail = normalizeEmail(email);
+  const normalizedPassword = password.trim();
+  return demoAccounts.find(
+    (u) => u.email.toLowerCase() === normalizedEmail && u.password === normalizedPassword,
+  );
+}
+
+function findRegisteredUser(users: User[], email: string, password: string): User | undefined {
+  const normalizedEmail = normalizeEmail(email);
+  const normalizedPassword = password.trim();
+  return users.find(
+    (u) => u.email.toLowerCase() === normalizedEmail && u.password === normalizedPassword,
+  );
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -58,7 +80,7 @@ interface AppState {
   communities: typeof mockCommunities;
   organizerRequests: OrganizerRequest[];
   pointsBalance: number;
-  rewardHistory: Array<{ id: string; title: string; redeemedAt: string }>;
+  rewardHistory: Array<{ id: string; title: string; redeemedAt: string; code?: string; usedAt?: string }>;
 
   // ── GAMIFICATION (persisted) ────────────────────────────────────────────────
   xp: number;
@@ -139,7 +161,22 @@ interface AppState {
   // Events
   toggleBookmark: (eventId: string) => void;
   rsvpEvent: (eventId: string) => void;
-  rsvpEventFull: (eventId: string, ticketTypeId: string | undefined, quantity: number, paymentSource?: 'card' | 'wallet') => Promise<Booking | null>;
+  upsertEvent: (event: Event) => void;
+  duplicateEvent: (eventId: string) => Event | null;
+  setUserLocation: (lat: number, lng: number, city?: string | null) => void;
+  rsvpEventFull: (
+    eventId: string,
+    payload: {
+      tickets: Array<{ type: string; qty: number; unitPrice: number; subtotal: number }>;
+      discount: number;
+      promoCode?: string;
+      voucherCode?: string;
+      paymentSource?: 'card' | 'wallet';
+      cardBrand?: string;
+      cardLast4?: string;
+    },
+  ) => Promise<Booking | null>;
+  markVoucherUsed: (code: string) => void;
   cancelBooking: (bookingId: string) => Promise<void>;
   dismissRecommendation: (eventId: string) => void;
 
@@ -155,6 +192,7 @@ interface AppState {
   // Notifications
   markNotificationAsRead: (notificationId: string) => void;
   markAllRead: () => void;
+  removeNotification: (notificationId: string) => void;
   clearMyNotifications: () => void;
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;
   fetchNotifications: () => Promise<void>;
@@ -299,8 +337,15 @@ export const useAppStore = create<AppState>()(
 
       login: async (email, password) => {
         // TODO: replace with → const { user, accessToken, refreshToken } = await api.post('/auth/login', { email, password });
-        const user = get().registeredUsers.find((u) => u.email === email && u.password === password);
+        const registered = get().registeredUsers;
+        const user = findRegisteredUser(registered, email, password) ?? resolveDemoUser(email, password);
         if (user) {
+          const missingDemo = demoAccounts.filter(
+            (d) => !registered.some((u) => u.id === d.id),
+          );
+          if (missingDemo.length > 0) {
+            set({ registeredUsers: [...registered, ...missingDemo] });
+          }
           const base = getNotificationsForUser(user.id);
           const persistedForUser = get().notifications.filter(
             (n) => n.userId === user.id && !base.some((b) => b.id === n.id)
@@ -309,13 +354,17 @@ export const useAppStore = create<AppState>()(
             (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
           );
           const unreadCount = notifications.filter((n) => !n.isRead && n.userId === user.id).length;
+          const bookingEventIds = get().bookings
+            .filter((b) => b.userId === user.id && b.status === 'confirmed')
+            .map((b) => b.eventId);
+          const mergedRsvp = [...new Set([...user.rsvpedEvents, ...bookingEventIds])];
           set({
-            currentUser: user,
+            currentUser: { ...user, rsvpedEvents: mergedRsvp },
             isAuthenticated: true,
             accessToken: 'demo-token',
             tokenExpiry: Date.now() + 30 * 60 * 1000, // 30 min demo session
             bookmarkedEvents: user.bookmarkedEvents,
-            rsvpedEvents: user.rsvpedEvents,
+            rsvpedEvents: mergedRsvp,
             xp: user.xp,
             level: getLevelFromXP(user.xp),
             interests: user.interests,
@@ -588,6 +637,13 @@ export const useAppStore = create<AppState>()(
             xp: newXP,
             level: newLevel,
             pointsBalance: newPoints,
+            registeredUsers: state.currentUser
+              ? state.registeredUsers.map((u) =>
+                  u.id === state.currentUser!.id
+                    ? { ...u, rsvpedEvents: [...u.rsvpedEvents, eventId], xp: newXP, level: newLevel }
+                    : u,
+                )
+              : state.registeredUsers,
             currentUser: state.currentUser
               ? {
                   ...state.currentUser,
@@ -601,31 +657,36 @@ export const useAppStore = create<AppState>()(
         get().checkStreak();
       },
 
-      rsvpEventFull: async (eventId, ticketTypeId, quantity, paymentSource = 'card') => {
+      rsvpEventFull: async (eventId, payload) => {
         const state = get();
         if (state.rsvpedEvents.includes(eventId)) return null;
 
         const event = state.events.find((e) => e.id === eventId);
-        const ticketType = event?.ticketTypes.find((t) => t.name === ticketTypeId) || event?.ticketTypes[0];
-        if (!event) return null;
+        if (!event || payload.tickets.length === 0) return null;
 
-        const unitPrice = ticketType?.price || 0;
-        const subtotal = unitPrice * quantity;
-        const serviceFee = Number((subtotal * 0.03).toFixed(2));
+        const subtotal = payload.tickets.reduce((sum, t) => sum + t.subtotal, 0);
+        const serviceFee = subtotal > 0 ? Number((subtotal * 0.03).toFixed(2)) : 0;
+        const discount = Math.min(payload.discount, subtotal);
+        const total = Math.max(0, Number((subtotal + serviceFee - discount).toFixed(2)));
+        const paymentSource = payload.paymentSource ?? 'card';
 
         const booking: Booking = {
           id: `booking-${Date.now()}`,
           eventId,
           userId: state.currentUser?.id || 'guest',
-          tickets: [{ type: ticketType?.name || 'General Admission', qty: quantity, unitPrice, subtotal }],
+          tickets: payload.tickets,
           serviceFee,
-          discount: 0,
-          total: subtotal + serviceFee,
+          discount,
+          total,
           currency: 'EGP',
-          paymentMethod: paymentSource === 'wallet'
-            ? { brand: 'Wallet', last4: '' }
-            : { brand: 'Visa', last4: '4242' },
-          paymentSource,
+          promoCode: payload.promoCode,
+          voucherCode: payload.voucherCode,
+          paymentMethod: total === 0
+            ? null
+            : paymentSource === 'wallet'
+              ? { brand: 'Wallet', last4: '' }
+              : { brand: payload.cardBrand || 'Visa', last4: payload.cardLast4 || '4242' },
+          paymentSource: total === 0 ? undefined : paymentSource,
           status: 'confirmed',
           qrData: { bookingId: `EVT-${Date.now()}`, userId: state.currentUser?.id || 'guest', eventId, valid: true },
           bookingRef: `EVT-${Date.now()}`,
@@ -642,18 +703,40 @@ export const useAppStore = create<AppState>()(
           xp: newXP,
           level: newLevel,
           pointsBalance: s.pointsBalance + POINTS_TABLE.rsvp,
+          registeredUsers: s.currentUser
+            ? s.registeredUsers.map((u) =>
+                u.id === s.currentUser!.id
+                  ? { ...u, rsvpedEvents: [...u.rsvpedEvents, eventId], xp: newXP, level: newLevel }
+                  : u,
+              )
+            : s.registeredUsers,
           currentUser: s.currentUser
             ? { ...s.currentUser, rsvpedEvents: [...s.currentUser.rsvpedEvents, eventId], xp: newXP, level: newLevel }
             : s.currentUser,
         }));
         get().checkStreak();
 
+        if (payload.voucherCode) {
+          get().markVoucherUsed(payload.voucherCode);
+        }
+
         if (subtotal > 0) {
           const organizerId = 'user-002';
-          get().recordOrganizerEarning(booking.id, subtotal, organizerId);
+          get().recordOrganizerEarning(booking.id, subtotal - discount, organizerId);
         }
 
         return booking;
+      },
+
+      markVoucherUsed: (code) => {
+        const normalized = code.trim().toUpperCase();
+        set((state) => ({
+          rewardHistory: state.rewardHistory.map((entry) =>
+            entry.code?.toUpperCase() === normalized && !entry.usedAt
+              ? { ...entry, usedAt: new Date().toISOString() }
+              : entry,
+          ),
+        }));
       },
 
       cancelBooking: async (bookingId) => {
@@ -697,6 +780,61 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           dismissedRecommendations: [...state.dismissedRecommendations, eventId],
         }));
+      },
+
+      upsertEvent: (event) => {
+        set((state) => {
+          const exists = state.events.some((e) => e.id === event.id);
+          const events = exists
+            ? state.events.map((e) => (e.id === event.id ? event : e))
+            : [event, ...state.events];
+
+          if (exists) {
+            const rsvpUserIds = state.bookings
+              .filter((b) => b.eventId === event.id)
+              .map((b) => b.userId);
+            const notifyIds = new Set(rsvpUserIds);
+            const updateNotifs = [...state.notifications];
+            for (const uid of notifyIds) {
+              updateNotifs.unshift({
+                id: `notif-update-${event.id}-${uid}-${Date.now()}`,
+                userId: uid,
+                type: 'event_update',
+                title: `Update: ${event.title}`,
+                message: 'Event details have been updated. Check the latest info before you go.',
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                actionUrl: `/app/events/${event.id}`,
+              });
+            }
+            return { events, notifications: updateNotifs };
+          }
+
+          return { events };
+        });
+      },
+
+      duplicateEvent: (eventId) => {
+        const source = get().events.find((e) => e.id === eventId);
+        if (!source) return null;
+        const copy: Event = {
+          ...source,
+          id: `event-${Date.now()}`,
+          title: `${source.title} (Copy)`,
+          rsvpCount: 0,
+          attendees: [],
+          isRecommended: false,
+        };
+        set((state) => ({ events: [copy, ...state.events] }));
+        return copy;
+      },
+
+      setUserLocation: (lat, lng, city = null) => {
+        set({
+          userCoordinates: { lat, lng },
+          userCity: city,
+          locationEnabled: true,
+        });
       },
 
       // ── Gamification ─────────────────────────────────────────────────────────
@@ -802,20 +940,20 @@ export const useAppStore = create<AppState>()(
       },
 
       redeemReward: (rewardId) => {
-        const rewardCatalog: Record<string, { title: string; cost: number }> = {
-          'reward-001': { title: 'Free Event Ticket', cost: 1000 },
-          'reward-002': { title: 'VIP Lounge Access', cost: 1800 },
-          'reward-003': { title: 'Profile Highlight', cost: 700 },
-          'reward-004': { title: 'Partner Discount Voucher', cost: 500 },
-        };
-        const reward = rewardCatalog[rewardId];
-        if (!reward) return;
+        const catalogItem = REWARDS_CATALOG.find((r) => r.id === rewardId);
+        if (!catalogItem) return;
         set((state) => {
-          if (state.pointsBalance < reward.cost) return state;
+          if (state.pointsBalance < catalogItem.cost) return state;
+          if (state.rewardHistory.some((e) => e.id === rewardId && !e.usedAt)) return state;
           return {
-            pointsBalance: state.pointsBalance - reward.cost,
+            pointsBalance: state.pointsBalance - catalogItem.cost,
             rewardHistory: [
-              { id: rewardId, title: reward.title, redeemedAt: new Date().toISOString() },
+              {
+                id: rewardId,
+                title: catalogItem.title,
+                redeemedAt: new Date().toISOString(),
+                code: 'code' in catalogItem ? catalogItem.code : undefined,
+              },
               ...state.rewardHistory,
             ],
           };
@@ -842,6 +980,15 @@ export const useAppStore = create<AppState>()(
             n.userId === uid ? { ...n, isRead: true } : n
           );
           return { notifications, unreadCount: 0 };
+        });
+      },
+
+      removeNotification: (notificationId) => {
+        set((state) => {
+          const notifications = state.notifications.filter((n) => n.id !== notificationId);
+          const uid = state.currentUser?.id;
+          const unreadCount = notifications.filter((n) => !n.isRead && n.userId === uid).length;
+          return { notifications, unreadCount };
         });
       },
 

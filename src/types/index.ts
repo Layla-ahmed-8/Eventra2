@@ -79,6 +79,8 @@ export interface Booking {
   paymentMethod: { brand: string; last4: string } | { brand: 'Wallet'; last4: '' } | null;
   paymentSource?: 'card' | 'wallet';
   status: BookingStatus;
+  promoCode?: string;
+  voucherCode?: string;
   qrData: { bookingId: string; userId: string; eventId: string; valid: boolean };
   bookingRef: string;
   createdAt: string;
@@ -214,6 +216,8 @@ export interface Redemption {
   title: string;
   pointsCost: number;
   redeemedAt: string;
+  code?: string;
+  usedAt?: string;
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────

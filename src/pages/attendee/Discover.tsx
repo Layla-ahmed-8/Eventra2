@@ -90,7 +90,8 @@ function isEventThisWeekend(dateString: string) {
 }
 
 export default function Discover() {
-  const { events, bookmarkedEvents, toggleBookmark, recordBrowse, currentUser, locationEnabled, userCoordinates, interests, rsvpedEvents } = useAppStore();
+  const { events, bookmarkedEvents, toggleBookmark, recordBrowse, currentUser, locationEnabled, userCoordinates, interests, rsvpedEvents, systemConfig } = useAppStore();
+  const aiEnabled = systemConfig.aiRecommendationsEnabled;
 
   useEffect(() => {
     recordBrowse();
@@ -341,7 +342,7 @@ export default function Discover() {
 
           <div className="flex flex-wrap gap-2">
             {[
-              { label: 'AI Picks', value: showOnlyRecommended, action: () => setShowOnlyRecommended((prev) => !prev), icon: Sparkles },
+              ...(aiEnabled ? [{ label: 'AI Picks', value: showOnlyRecommended, action: () => setShowOnlyRecommended((prev) => !prev), icon: Sparkles }] : []),
               { label: 'Near me', value: showNearMeOnly, action: () => setShowNearMeOnly((prev) => !prev), icon: Compass, disabled: !locationEnabled },
               { label: 'This weekend', value: showThisWeekend, action: () => setShowThisWeekend((prev) => !prev), icon: Calendar },
               { label: 'Trending', value: showTrending, action: () => setShowTrending((prev) => !prev), icon: TrendingUp },
@@ -644,7 +645,7 @@ export default function Discover() {
           </div>
         )}
 
-        {!searchQuery && selectedCategories.length === 0 && selectedTags.length === 0 && !showOnlyRecommended && !showNearMeOnly && modeFilter === 'all' && maxPrice === 10000 && (
+        {!searchQuery && selectedCategories.length === 0 && selectedTags.length === 0 && !showOnlyRecommended && !showNearMeOnly && modeFilter === 'all' && maxPrice === 10000 && aiEnabled && recommended.length > 0 && (
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -674,7 +675,7 @@ export default function Discover() {
           </div>
         )}
 
-        {!searchQuery && selectedCategories.length === 0 && selectedTags.length === 0 && !showOnlyRecommended && !showNearMeOnly && modeFilter === 'all' && maxPrice === 10000 && (
+        {!searchQuery && selectedCategories.length === 0 && selectedTags.length === 0 && !showOnlyRecommended && !showNearMeOnly && modeFilter === 'all' && maxPrice === 10000 && trending.length > 0 && (
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -710,8 +711,9 @@ export default function Discover() {
 }
 
 function EventCard({ event, bookmarkedEvents, toggleBookmark, distanceKm, aiReason, aiScore }: any) {
+  const aiEnabled = useAppStore((s) => s.systemConfig.aiRecommendationsEnabled);
   const isBookmarked = bookmarkedEvents.includes(event.id);
-  const isTopPick = aiScore !== null && aiScore >= 55;
+  const isTopPick = aiEnabled && aiScore !== null && aiScore >= 55;
 
   return (
     <div className="group card-surface overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.02]">

@@ -1,5 +1,9 @@
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Download, Share2, QrCode, Wallet } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import {
+  ArrowLeft, Calendar, MapPin, Download, Share2, Wallet, Tag, Gift,
+  MessageSquare, Users, CheckCircle2,
+} from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { demoToast, downloadTextFile, shareOrCopyLink } from '../../lib/demoFeedback';
 
@@ -15,256 +19,152 @@ export default function OrderSummary() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Event not found</h2>
-          <Link to="/app/discover" className="text-primary hover:text-primary/80">
-            Back to Discover
-          </Link>
+          <h2 className="text-h2 font-bold text-foreground mb-2">Event not found</h2>
+          <Link to="/app/discover" className="text-primary hover:underline">Back to Discover</Link>
         </div>
       </div>
     );
   }
 
+  const ref = booking?.bookingRef || `EVT-${event.id.toUpperCase().slice(0, 6)}`;
+  const qrPayload = JSON.stringify(booking?.qrData ?? { eventId: event.id, bookingRef: ref });
+
+  const handleDownloadIcs = () => {
+    const start = new Date(event.date);
+    const end = new Date(event.endDate || event.date);
+    const ics = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT',
+      `DTSTART:${start.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+      `DTEND:${end.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+      `SUMMARY:${event.title}`,
+      `LOCATION:${event.location.venue}`,
+      `DESCRIPTION:Booking ref ${ref}`,
+      'END:VEVENT', 'END:VCALENDAR',
+    ].join('\r\n');
+    downloadTextFile(`eventra-${ref}.ics`, ics);
+    demoToast('Calendar file', 'Downloaded .ics file — open it to add to your calendar.');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation */}
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/app/my-events" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back to My Events</span>
-            </Link>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
-                aria-label="Share booking"
-                onClick={() =>
-                  shareOrCopyLink(
-                    `Ticket: ${event.title}`,
-                    'Join me on Eventra',
-                    window.location.href
-                  )
-                }
-              >
-                <Share2 className="w-5 h-5 text-muted-foreground" />
-              </button>
-              <button
-                type="button"
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
-                aria-label="Download summary"
-                onClick={() => {
-                  const ref = booking?.bookingRef || `EVT-${event.id}`;
-                  downloadTextFile(
-                    `eventra-ticket-${ref}.txt`,
-                    `Event: ${event.title}\nDate: ${event.date}\nRef: ${ref}\n${booking ? `Total: ${booking.currency} ${booking.total}` : ''}`
-                  );
-                }}
-              >
-                <Download className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
+    <div className="min-h-screen bg-background">
+      <div className="surface-panel sticky top-0 z-10 border-b border-border">
+        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/app/my-events" className="btn-ghost inline-flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" /> My Events
+          </Link>
+          <div className="flex gap-2">
+            <button type="button" className="btn-ghost p-2" onClick={() => shareOrCopyLink(`Ticket: ${event.title}`, 'Join me on Eventra', window.location.href)}>
+              <Share2 className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              className="btn-ghost p-2"
+              onClick={() => downloadTextFile(`eventra-ticket-${ref}.txt`, `Event: ${event.title}\nRef: ${ref}\n${booking ? `Total: ${booking.currency} ${booking.total}` : ''}`)}
+            >
+              <Download className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Success Banner */}
-        <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6 mb-6 text-center">
+      <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+        <div className="bento-section border-green-500/20 bg-green-500/5 text-center py-8">
           <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <CheckCircle2 className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Booking Confirmed!</h2>
-          <p className="text-gray-600">
-            Your tickets have been reserved. Keep this summary for entry and support.
-          </p>
+          <h1 className="text-h1 font-bold text-foreground mb-2">Booking Confirmed</h1>
+          <p className="text-body text-muted-foreground">Reference: <span className="font-mono font-bold text-foreground">{ref}</span></p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Left Column - QR Code */}
+        <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
-              <h3 className="font-bold text-gray-900 mb-4 text-center">Your Ticket</h3>
-
-              {/* QR Code Placeholder */}
-              <div className="bg-gray-100 rounded-xl p-8 mb-4">
-                <QrCode className="w-full h-auto text-gray-400" />
+            <div className="bento-section sticky top-24 text-center">
+              <h3 className="text-h3 font-bold mb-4">Your Entry Ticket</h3>
+              <div className="bg-white p-4 rounded-2xl inline-block mb-4">
+                <QRCodeSVG value={qrPayload} size={180} level="M" />
               </div>
-
-              <div className="text-center mb-4">
-                <p className="text-sm text-gray-600 mb-1">Booking Reference</p>
-                <p className="font-mono font-bold text-lg text-gray-900">
-                  {booking?.bookingRef || `EVT-${event.id.toUpperCase().slice(0, 6)}`}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="btn-primary w-full"
-                onClick={() => {
-                  demoToast('Ticket saved', 'In this demo, use the header download for a text summary or screenshot the QR code.');
-                }}
-              >
-                <Download className="w-4 h-4" />
-                Download Ticket
+              <p className="text-micro text-muted-foreground mb-4">Show this QR code at the venue</p>
+              <button type="button" className="btn-primary w-full" onClick={() => window.print()}>
+                <Download className="w-4 h-4" /> Download / Print
               </button>
             </div>
           </div>
 
-          {/* Right Column - Event & Payment Details */}
           <div className="md:col-span-2 space-y-6">
-            {/* Event Details */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Event Details</h3>
-
-              <img
-                src={event.image}
-                alt={event.title}
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
-
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">{event.title}</h2>
-
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-[#6C4CF1] mt-1" />
+            <div className="bento-section">
+              <h3 className="text-h3 font-bold mb-4">Event Details</h3>
+              <img src={event.image} alt="" className="w-full h-48 object-cover rounded-xl mb-4" />
+              <h2 className="text-h2 font-bold mb-4">{event.title}</h2>
+              <div className="space-y-3 text-body-sm">
+                <div className="flex gap-3">
+                  <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
                   <div>
-                    <p className="font-semibold text-gray-900">Date & Time</p>
-                    <p className="text-gray-600">
-                      {new Date(event.date).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </p>
-                    <p className="text-gray-600">
-                      {new Date(event.date).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
+                    <p className="font-semibold">{new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                    <p className="text-muted-foreground">{new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 </div>
-
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-[#6C4CF1] mt-1" />
+                <div className="flex gap-3">
+                  <MapPin className="w-5 h-5 text-cyan-500 flex-shrink-0" />
                   <div>
-                    <p className="font-semibold text-gray-900">Location</p>
-                    <p className="text-gray-600">{event.location.venue}</p>
-                    <p className="text-gray-600">{event.location.address}</p>
+                    <p className="font-semibold">{event.location.venue}</p>
+                    <p className="text-muted-foreground">{event.location.address}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {booking ? (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Payment Summary</h3>
-
-                <div className="space-y-3 mb-4">
-                  {booking.tickets.map((ticket, index) => (
-                    <div key={index} className="flex justify-between">
-                      <span className="text-gray-600">
-                        {ticket.type} x {ticket.qty}
-                      </span>
-                      <span className="font-semibold">
-                        {booking.currency} {ticket.subtotal.toFixed(2)}
-                      </span>
+            {booking && (
+              <div className="bento-section">
+                <h3 className="text-h3 font-bold mb-4">Payment Summary</h3>
+                <div className="space-y-2 text-body-sm mb-4">
+                  {booking.tickets.map((t, i) => (
+                    <div key={i} className="flex justify-between">
+                      <span className="text-muted-foreground">{t.type} × {t.qty}</span>
+                      <span className="font-semibold">EGP {t.subtotal.toFixed(2)}</span>
                     </div>
                   ))}
-
                   {booking.serviceFee > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Service Fee</span>
-                      <span className="font-semibold">
-                        {booking.currency} {booking.serviceFee.toFixed(2)}
-                      </span>
+                      <span className="text-muted-foreground">Service fee</span>
+                      <span>EGP {booking.serviceFee.toFixed(2)}</span>
                     </div>
                   )}
-
                   {booking.discount > 0 && (
                     <div className="flex justify-between text-green-600">
-                      <span>Discount</span>
-                      <span className="font-semibold">
-                        -{booking.currency} {booking.discount.toFixed(2)}
+                      <span className="flex items-center gap-1">
+                        {booking.voucherCode ? <Gift className="w-3.5 h-3.5" /> : <Tag className="w-3.5 h-3.5" />}
+                        Discount {booking.voucherCode ? `(${booking.voucherCode})` : booking.promoCode ? `(${booking.promoCode})` : ''}
                       </span>
+                      <span>−EGP {booking.discount.toFixed(2)}</span>
                     </div>
                   )}
                 </div>
-
                 <div className="pt-4 border-t flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-900">Total Paid</span>
-                  <span className="text-2xl font-bold text-[#6C4CF1]">
-                    {booking.currency} {booking.total.toFixed(2)}
-                  </span>
+                  <span className="text-h4 font-bold">Total paid</span>
+                  <span className="text-h2 font-bold gradient-text">EGP {booking.total.toFixed(2)}</span>
                 </div>
-
                 {booking.paymentMethod?.brand === 'Wallet' ? (
-                  <div className="mt-4 pt-4 border-t flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                      <Wallet className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Paid with Eventra Wallet</p>
-                      <p className="text-sm text-gray-500">
-                        {new Date(booking.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                      </p>
-                    </div>
-                  </div>
+                  <p className="mt-4 text-body-sm text-muted-foreground flex items-center gap-2">
+                    <Wallet className="w-4 h-4" /> Paid with Eventra Wallet
+                  </p>
                 ) : booking.paymentMethod ? (
-                  <div className="mt-4 pt-4 border-t">
-                    <p className="text-sm text-gray-600">
-                      Paid with {booking.paymentMethod.brand} ending in{' '}
-                      {booking.paymentMethod.last4}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(booking.createdAt).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
+                  <p className="mt-4 text-body-sm text-muted-foreground">
+                    Paid with {booking.paymentMethod.brand} •••• {booking.paymentMethod.last4}
+                  </p>
+                ) : booking.total === 0 ? (
+                  <p className="mt-4 text-body-sm text-green-600">Free registration — no payment required</p>
                 ) : null}
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl shadow-sm p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Booking Details</h3>
-                <p className="text-gray-600 mb-4">
-                  We couldn’t find a stored booking for this event, but your ticket details can still be accessed through the event page.
-                </p>
-                <Link
-                  to={`/app/events/${event.id}`}
-                  className="inline-flex items-center gap-2 px-4 py-3 bg-[#6C4CF1] text-white rounded-lg hover:bg-[#5a3dd1] transition"
-                >
-                  View event details
-                </Link>
               </div>
             )}
 
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-              <h4 className="font-bold text-gray-900 mb-2">Need Help?</h4>
-              <p className="text-gray-600 mb-4">
-                Contact the event organizer or our support team if you have any questions.
-              </p>
-              <div className="flex gap-3">
-                <Link
-                  to="/app/messages"
-                  className="px-4 py-2 bg-white border-2 border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 font-semibold"
-                >
-                  Message Organizer
-                </Link>
-                <button
-                  type="button"
-                  className="btn-primary text-body-sm"
-                  onClick={() => demoToast('Support', 'Demo: email support@eventra.com or use in-app messages.')}
-                >
-                  Contact Support
-                </button>
-              </div>
+            <div className="flex flex-wrap gap-3">
+              <button onClick={handleDownloadIcs} className="btn-primary">Add to Calendar</button>
+              <Link to={`/app/community/${event.communityId}`} className="btn-secondary inline-flex items-center gap-2">
+                <Users className="w-4 h-4" /> Join Community
+              </Link>
+              <Link to="/app/messages" className="btn-ghost inline-flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" /> Message Organizer
+              </Link>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Bot, ChevronDown, Maximize2, Minimize2, Send, Sparkles, X } from 'lucide-react';
 import { useChatbot, type ChatMessage } from '../../hooks/useChatbot';
 import { formatRelativeTime } from '../../lib/utils';
+import { useAppStore } from '../../store/useAppStore';
 
 // ── Markdown-lite renderer ────────────────────────────────────────────────────
 // Handles **bold**, bullet lines, and newlines only (no external dep needed)
@@ -131,6 +132,7 @@ function MessageBubble({
 // ── Main chatbot component ────────────────────────────────────────────────────
 export default function AIChatbot() {
   const { getWelcomeMessage, processMessage, role, currentUser } = useChatbot();
+  const { systemConfig } = useAppStore();
   const cfg = ROLE_CONFIG[role] ?? ROLE_CONFIG.attendee;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -215,6 +217,8 @@ export default function AIChatbot() {
   };
 
   const unreadIndicator = !isOpen && messages.length === 0;
+
+  if (!systemConfig.aiChatEnabled) return null;
 
   return (
     <>

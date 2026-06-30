@@ -3,7 +3,10 @@ import { useBlocker, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, Image, DollarSign, CheckCircle, AlertTriangle, Move, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { categories } from '../../data/mockData';
+import type { Event } from '../../data/mockData';
 import { demoToast } from '../../lib/demoFeedback';
+import { forwardGeocode } from '../../lib/geocoding';
+import { useAppStore } from '../../store/useAppStore';
 import ConfirmationModal from '../../components/business/ConfirmationModal';
 
 const VIBE_OPTIONS = ['Chill', 'Energetic', 'Networking', 'Exclusive', 'Family-Friendly', 'Outdoor', 'Late Night', 'Creative', 'Educational'];
@@ -17,6 +20,7 @@ export default function CreateEvent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('editId');
+  const { currentUser, upsertEvent } = useAppStore();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -370,11 +374,80 @@ export default function CreateEvent() {
     setShowPublishReviewModal(true);
   };
 
-  const confirmPublish = () => {
+  const confirmPublish = async () => {
     setIsSubmitting(true);
     setIsDirty(false);
+
+    let lat = 30.0444;
+    let lng = 31.2357;
+    if (!formData.isVirtual && formData.venue && formData.city) {
+      const query = `${formData.venue}, ${formData.address}, ${formData.city}`;
+      const results = await forwardGeocode(query);
+      if (results[0]) {
+        lat = results[0].lat;
+        lng = results[0].lng;
+      }
+    }
+
+    const price = Number(formData.ticketPrice) || 0;
+    const capacity = Number(formData.capacity) || 100;
+    const startIso = formData.date && formData.time
+      ? new Date(`${formData.date}T${formData.time}`).toISOString()
+      : new Date().toISOString();
+
+    const event: Event = {
+      id: editId ?? `event-${Date.now()}`,
+      title: formData.title,
+      description: formData.description,
+      image: formData.image || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800',
+      category: formData.category,
+      date: startIso,
+      endDate: startIso,
+      location: {
+        venue: formData.venue || 'TBA',
+        address: formData.address || '',
+        city: formData.city || 'Cairo',
+        country: 'EG',
+        lat,
+        lng,
+        isVirtual: formData.isVirtual,
+        virtualLink: formData.isVirtual ? formData.virtualLink : null,
+      },
+      organizer: {
+        id: currentUser?.id ?? 'org-demo',
+        name: currentUser?.name ?? 'Organizer',
+        avatar: currentUser?.avatar ?? 'https://i.pravatar.cc/150?img=10',
+        verified: currentUser?.verified ?? false,
+        followerCount: 0,
+      },
+      price,
+      ticketTypes: [{ name: 'General Admission', price, available: capacity }],
+      capacity,
+      rsvpCount: 0,
+      tags: formData.vibeTags,
+      isRecommended: false,
+      relevanceScore: 0.5,
+      communityId: 'comm-001',
+      attendees: [],
+      engagement: {
+        momentumLabel: 'Just published',
+        atmosphereLabel: 'New event',
+        vibeTags: formData.vibeTags,
+        activitySignals: [],
+        recentAttendees: [],
+        sharedInterests: [],
+        discussionCount: 0,
+        bookmarkCount: 0,
+        reactionCount: 0,
+        xpReward: 50,
+        identityLabel: 'Explorer',
+        softActivityFeedback: 'Be the first to join',
+      },
+    };
+
+    upsertEvent(event);
     setTimeout(() => {
-      demoToast('Event published', 'In this demo, new events are not persisted to the catalog. Review flows on My Events.');
+      demoToast('Event published', editId ? 'Your event has been updated.' : 'Your event is now live in the catalog.');
       setIsSubmitting(false);
       localStorage.removeItem(DRAFT_KEY);
       setDraftSavedAt(null);

@@ -5,12 +5,9 @@ import { useAppStore } from '../../store/useAppStore';
 import { BADGE_DEFINITIONS } from '../../constants/badges';
 import XPProgressBar from '../../components/shared/XPProgressBar';
 
-const rewardsCatalog = [
-  { id: 'reward-001', title: 'Free Event Ticket', description: 'Redeem 1,000 points for a free ticket to any eligible event.', cost: 1000, badge: '🎟️', category: 'Event', code: 'EVTRA-FREE-TICKET' },
-  { id: 'reward-002', title: 'VIP Lounge Access', description: 'Unlock VIP event lounge access or priority seating for your next booking.', cost: 1800, badge: '✨', category: 'Premium', code: 'EVTRA-VIP-2026' },
-  { id: 'reward-003', title: 'Profile Highlight', description: 'Get featured in the community leaderboard and organizer network.', cost: 700, badge: '🌟', category: 'Community' },
-  { id: 'reward-004', title: 'Partner Discount Voucher', description: 'Redeem for a sponsored food/drink discount voucher at select events.', cost: 500, badge: '🍹', category: 'Partner', code: 'EVTRA-FOOD-500' },
-];
+import { REWARDS_CATALOG } from '../../constants/rewards';
+
+const rewardsCatalog = REWARDS_CATALOG;
 
 export default function RewardsHub() {
   const { currentUser, xp, level, earnedBadges, currentStreak, longestStreak, pointsBalance, rewardHistory, redeemReward } = useAppStore();
@@ -218,8 +215,9 @@ export default function RewardsHub() {
                     <div className="mt-4 flex items-center gap-3 rounded-3xl border border-border bg-background px-4 py-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-lg text-primary">#{reward.code.slice(-3)}</div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Offer code</p>
+                        <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Voucher code</p>
                         <p className="text-sm font-semibold text-foreground truncate">{reward.code}</p>
+                        <p className="text-[11px] text-muted-foreground">Apply at checkout → Reward Voucher tab</p>
                       </div>
                       <button
                         type="button"

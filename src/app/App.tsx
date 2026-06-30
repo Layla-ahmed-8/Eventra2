@@ -71,6 +71,7 @@ import AdminSettings from '../pages/admin/AdminSettings';
 import AdminModeration from '../pages/admin/AdminModeration';
 import AdminOnboarding from '../pages/admin/AdminOnboarding';
 import AdminAuditLogs from '../pages/admin/AdminAuditLogs';
+import AdminNotifications from '../pages/admin/AdminNotifications';
 import AdminMessages from '../pages/admin/AdminMessages';
 import AdminWallet from '../pages/admin/wallet/AdminWallet';
 import AdminWalletPayouts from '../pages/admin/wallet/AdminWalletPayouts';
@@ -208,6 +209,7 @@ const router = createBrowserRouter(
       <Route path="/admin/community" element={<RequireAuth role="admin"><AdminLayout><AdminCommunity /></AdminLayout></RequireAuth>} />
       <Route path="/admin/moderation" element={<RequireAuth role="admin"><AdminLayout><AdminModeration /></AdminLayout></RequireAuth>} />
       <Route path="/admin/analytics" element={<RequireAuth role="admin"><AdminLayout><AdminAnalytics /></AdminLayout></RequireAuth>} />
+      <Route path="/admin/notifications" element={<RequireAuth role="admin"><AdminLayout><AdminNotifications /></AdminLayout></RequireAuth>} />
       <Route path="/admin/settings" element={<RequireAuth role="admin"><AdminLayout><AdminSettings /></AdminLayout></RequireAuth>} />
       <Route path="/admin/audit-logs" element={<RequireAuth role="admin"><AdminLayout><AdminAuditLogs /></AdminLayout></RequireAuth>} />
       <Route path="/admin/messages" element={<RequireAuth role="admin"><AdminLayout><AdminMessages /></AdminLayout></RequireAuth>} />
