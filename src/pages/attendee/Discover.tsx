@@ -359,32 +359,6 @@ export default function Discover() {
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-border/50 bg-background/80 p-4 shadow-sm sm:p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-bold uppercase tracking-[0.25em] text-muted-foreground">Quick browse</p>
-                  <h2 className="text-h3 font-bold text-foreground">Start with one good signal</h2>
-                </div>
-                <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
-                  {recommended.length} picks
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                <div className="rounded-[1.15rem] border border-border/50 bg-background/90 p-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Nearby</p>
-                  <p className="mt-2 text-xl font-black text-foreground">{nearby.length}</p>
-                </div>
-                <div className="rounded-[1.15rem] border border-border/50 bg-background/90 p-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">This week</p>
-                  <p className="mt-2 text-xl font-black text-foreground">{filteredEvents.length}</p>
-                </div>
-                <div className="rounded-[1.15rem] border border-border/50 bg-background/90 p-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Saved</p>
-                  <p className="mt-2 text-xl font-black text-foreground">{bookmarkedEvents.length}</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {activeFilterCount > 0 && (
