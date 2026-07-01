@@ -72,11 +72,11 @@ export default function Login() {
           </div>
 
           <div className="rounded-[2rem] bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800/70 p-10 shadow-2xl shadow-slate-900/10">
-            <div className="flex flex-col gap-3 mb-8 text-center">
+            <div className="mb-8 flex flex-col gap-3 text-center">
               <Logo variant="horizontal" className="mx-auto h-10 w-auto" />
               <div>
                 <h1 className="text-3xl font-semibold text-slate-950 dark:text-white">Sign in to Eventra</h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Use your registered account credentials to continue.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Use your registered account credentials to continue. The experience stays personalized for attendees, organizers, and admins.</p>
               </div>
             </div>
 
@@ -116,6 +116,11 @@ export default function Login() {
                 Sign in
               </button>
             </form>
+
+            <div className="mt-6 rounded-[1.5rem] border border-slate-200/70 bg-slate-50/80 p-4 text-sm text-slate-600 dark:border-slate-800/70 dark:bg-slate-900/70 dark:text-slate-300">
+              <p className="font-semibold text-slate-900 dark:text-white">Need a quick preview?</p>
+              <p className="mt-1">Use the demo accounts from the project notes to explore the attendee, organizer, and admin flows instantly.</p>
+            </div>
 
             <div className="mt-6 flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400">
               <Link to="/forgot-password" className="text-center hover:text-slate-900 dark:hover:text-white transition-colors">

@@ -84,7 +84,7 @@ export default function Community() {
   return (
     <div className="space-y-6">
       {/* ── Hero Header ──────────────────────────────────────────────────── */}
-      <div className="hero-surface p-4 md:p-6 space-y-5">
+      <div className="rounded-[2rem] border border-border/60 bg-background/90 p-4 shadow-sm backdrop-blur-xl md:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-black uppercase tracking-wider">

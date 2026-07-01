@@ -48,8 +48,8 @@ export default function EventDetail() {
   return (
     <div className="min-h-screen">
       {/* Top Navigation */}
-      <div className="bg-background/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-xl shadow-sm">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <Link to="/app/discover" className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-all group">
             <div className="w-10 h-10 rounded-2xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
@@ -138,7 +138,7 @@ export default function EventDetail() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         {alreadyRsvped && (
           <div className="mb-8 bento-section border-green-500/20 bg-green-500/5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">

@@ -115,19 +115,19 @@ export default function Register() {
           </div>
 
           <div className="rounded-[2rem] bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800/70 p-10 shadow-2xl shadow-slate-900/10">
-            <div className="flex flex-col gap-4 mb-8 text-center">
+            <div className="mb-8 flex flex-col gap-4 text-center">
               <Logo variant="small" className="mx-auto h-12 w-12" />
               <div>
                 <h1 className="text-3xl font-semibold text-slate-950 dark:text-white">Create your Eventra account</h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Pick the experience you want and sign up in seconds.</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Choose the flow that fits your role and we’ll guide you into the right experience.</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+            <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
               <button
                 type="button"
                 onClick={() => selectRole('attendee')}
-                className="rounded-3xl border border-slate-200 bg-slate-50 px-6 py-6 text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/5"
+                className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-6 py-6 text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/5"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-purple-600 text-white mb-4">
                   <Users className="w-5 h-5" />
@@ -139,7 +139,7 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => selectRole('organizer')}
-                className="rounded-3xl border border-slate-200 bg-slate-50 px-6 py-6 text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/5"
+                className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-6 py-6 text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-900/5"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-cyan-500 text-white mb-4">
                   <Briefcase className="w-5 h-5" />
@@ -149,7 +149,12 @@ export default function Register() {
               </button>
             </div>
 
-            <div className="text-center text-sm text-slate-500">
+            <div className="rounded-[1.5rem] border border-slate-200/70 bg-slate-50/80 p-4 text-left text-sm text-slate-600 dark:border-slate-800/70 dark:bg-slate-900/70 dark:text-slate-300">
+              <p className="font-semibold text-slate-900 dark:text-white">What to expect next</p>
+              <p className="mt-1">Attendees get a personalized discovery feed, while organizers continue into onboarding and approval readiness.</p>
+            </div>
+
+            <div className="mt-4 text-center text-sm text-slate-500">
               Already have an account?{' '}
               <Link to="/login" className="font-semibold text-primary hover:underline">Sign in</Link>
             </div>

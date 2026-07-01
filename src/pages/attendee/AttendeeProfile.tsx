@@ -140,7 +140,7 @@ export default function AttendeeProfile() {
   const coverPreviewUrl = editCover !== null ? editCover : (currentUser.coverPhoto ?? '');
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(124,92,255,0.12),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.95),_rgba(248,250,252,0.98))] dark:bg-[radial-gradient(circle_at_top_left,_rgba(124,92,255,0.16),_transparent_34%),linear-gradient(180deg,_rgba(10,15,30,0.98),_rgba(15,23,42,1))]">
       {/* ── Email Verification Banner ── */}
       {showEmailBanner && (
         <div className="border-b border-amber-200/80 bg-amber-50/90 px-4 py-2.5 dark:border-amber-800 dark:bg-amber-900/20">

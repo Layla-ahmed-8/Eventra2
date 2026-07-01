@@ -288,83 +288,108 @@ export default function Discover() {
     <div className="min-h-screen">
       <AISearchModal isOpen={showAISearch} onClose={() => setShowAISearch(false)} />
 
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="space-y-4 rounded-[3rem] bg-background/90 p-5 md:p-7 shadow-2xl border border-border/40 backdrop-blur-xl">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-3 max-w-3xl">
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-caption font-bold uppercase tracking-widest">
+      <div className="page-shell space-y-8 py-4 sm:py-6">
+        <section className="overflow-hidden rounded-[2rem] border border-border/60 bg-background/90 p-5 shadow-2xl shadow-primary/10 backdrop-blur-xl sm:p-6 lg:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
+            <div className="space-y-5">
+              <div className="section-pill">
                 <Sparkles className="w-4 h-4" />
-                AI Powered Discovery
+                Guided discovery
               </div>
-              <div>
-                <h1 className="text-display font-bold text-foreground leading-[1.05] max-w-3xl">
-                  Find your next experience with <span className="gradient-text">smarter</span> search.
+              <div className="space-y-3">
+                <h1 className="max-w-3xl text-display font-bold leading-[1.05] text-foreground">
+                  Find the next event that feels <span className="gradient-text">made for you</span>.
                 </h1>
-                <p className="text-body-lg text-muted-foreground max-w-2xl">
-                  Search by venue, vibe, or interests, then refine with emotional, community-driven filters.
+                <p className="max-w-2xl text-body-lg text-muted-foreground">
+                  Start with a natural search, let the platform surface smart recommendations, and refine the experience in a few taps.
                 </p>
               </div>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                className="btn-primary px-6 py-3 h-auto text-body font-bold rounded-2xl shadow-lg shadow-primary/10"
-                onClick={() => setShowAISearch(true)}
-              >
-                <Sparkles className="w-5 h-5" />
-                Try AI Search
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-2xl bg-secondary/80 px-5 py-3 text-body font-bold text-foreground border border-border/50"
-                onClick={() => setShowFilterDrawer(true)}
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                Filters
-                {activeFilterCount > 0 && <span className="ml-2 rounded-full bg-primary text-white text-[11px] font-black px-2 py-0.5">{activeFilterCount}</span>}
-              </button>
-            </div>
-          </div>
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Find rooftop jazz events tonight"
+                  className="input-base h-16 w-full rounded-[1.5rem] border border-border/50 bg-white/90 pl-12 pr-4 text-body shadow-sm focus:border-primary/40"
+                />
+              </div>
 
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Find rooftop jazz events tonight"
-              className="input-base w-full pl-12 pr-4 text-body h-16 rounded-[2rem] border border-border/50 bg-white/90 shadow-sm focus:border-primary/40"
-            />
-          </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  ...(aiEnabled ? [{ label: 'AI Picks', value: showOnlyRecommended, action: () => setShowOnlyRecommended((prev) => !prev), icon: Sparkles }] : []),
+                  { label: 'Near me', value: showNearMeOnly, action: () => setShowNearMeOnly((prev) => !prev), icon: Compass, disabled: !locationEnabled },
+                  { label: 'This weekend', value: showThisWeekend, action: () => setShowThisWeekend((prev) => !prev), icon: Calendar },
+                  { label: 'Trending', value: showTrending, action: () => setShowTrending((prev) => !prev), icon: TrendingUp },
+                ].map((chip) => {
+                  const Icon = chip.icon;
+                  return (
+                    <button
+                      key={chip.label}
+                      onClick={chip.action}
+                      disabled={chip.disabled}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold transition-all ${chip.value ? 'border-primary/20 bg-primary/10 text-primary shadow-sm' : 'border-border/50 bg-white/80 text-muted-foreground hover:bg-secondary/70'} ${chip.disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {chip.label}
+                    </button>
+                  );
+                })}
+              </div>
 
-          <p className="text-caption text-muted-foreground">Try search examples like “Rooftop jazz tonight”, “Networking conference”, or “Creative workshops this weekend”.</p>
-
-          <div className="flex flex-wrap gap-2">
-            {[
-              ...(aiEnabled ? [{ label: 'AI Picks', value: showOnlyRecommended, action: () => setShowOnlyRecommended((prev) => !prev), icon: Sparkles }] : []),
-              { label: 'Near me', value: showNearMeOnly, action: () => setShowNearMeOnly((prev) => !prev), icon: Compass, disabled: !locationEnabled },
-              { label: 'This weekend', value: showThisWeekend, action: () => setShowThisWeekend((prev) => !prev), icon: Calendar },
-              { label: 'Trending', value: showTrending, action: () => setShowTrending((prev) => !prev), icon: TrendingUp },
-            ].map((chip) => {
-              const Icon = chip.icon;
-              return (
+              <div className="flex flex-wrap items-center gap-3">
                 <button
-                  key={chip.label}
-                  onClick={chip.action}
-                  disabled={chip.disabled}
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold transition-all ${chip.value ? 'bg-primary/10 border-primary/20 text-primary shadow-sm' : 'bg-white/80 border-border/50 text-muted-foreground hover:bg-secondary/70'} ${chip.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  type="button"
+                  className="btn-primary h-auto rounded-2xl px-6 py-3 text-body font-bold shadow-lg shadow-primary/10"
+                  onClick={() => setShowAISearch(true)}
                 >
-                  <Icon className="w-4 h-4" />
-                  {chip.label}
+                  <Sparkles className="w-5 h-5" />
+                  Try AI Search
                 </button>
-              );
-            })}
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-border/50 bg-secondary/80 px-5 py-3 text-body font-bold text-foreground"
+                  onClick={() => setShowFilterDrawer(true)}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filters
+                  {activeFilterCount > 0 && <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-[11px] font-black text-white">{activeFilterCount}</span>}
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-[1.75rem] border border-border/50 bg-background/80 p-4 shadow-sm sm:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.25em] text-muted-foreground">Quick browse</p>
+                  <h2 className="text-h3 font-bold text-foreground">Start with one good signal</h2>
+                </div>
+                <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.25em] text-primary">
+                  {recommended.length} picks
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-[1.15rem] border border-border/50 bg-background/90 p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Nearby</p>
+                  <p className="mt-2 text-xl font-black text-foreground">{nearby.length}</p>
+                </div>
+                <div className="rounded-[1.15rem] border border-border/50 bg-background/90 p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">This week</p>
+                  <p className="mt-2 text-xl font-black text-foreground">{filteredEvents.length}</p>
+                </div>
+                <div className="rounded-[1.15rem] border border-border/50 bg-background/90 p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">Saved</p>
+                  <p className="mt-2 text-xl font-black text-foreground">{bookmarkedEvents.length}</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {activeFilterCount > 0 && (
-            <div className="flex flex-wrap items-center gap-2 rounded-[2rem] bg-white/90 border border-border/50 p-3 shadow-sm">
-              <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground font-bold">Active filters</span>
+            <div className="mt-6 flex flex-wrap items-center gap-2 rounded-[2rem] border border-border/50 bg-white/90 p-3 shadow-sm">
+              <span className="text-xs font-bold uppercase tracking-[0.25em] text-muted-foreground">Active filters</span>
               {searchQuery && <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Search: {searchQuery}</span>}
               {selectedCategories.map((category) => (
                 <span key={category} className="rounded-full bg-secondary/80 px-3 py-1 text-xs font-semibold text-foreground">{category}</span>
@@ -381,7 +406,7 @@ export default function Discover() {
               <button onClick={clearAllFilters} className="ml-auto text-xs font-bold text-primary underline underline-offset-4">Clear all</button>
             </div>
           )}
-        </div>
+        </section>
 
         {showFilterDrawer && (
           <>

@@ -175,8 +175,8 @@ export default function Landing() {
                   </span>
                 </h1>
 
-                <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl">
-                  AI-powered matching, gamified engagement, live community connections, and organizer tools — all in one premium platform.
+                <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-300 max-w-xl">
+                  AI-powered matching, gamified engagement, live community connections, and organizer tools — all in one premium platform built to feel effortless from first click to final RSVP.
                 </p>
 
                 {/* Social proof avatars */}
@@ -203,6 +203,20 @@ export default function Landing() {
                   <StatPill value="3.4K+" label="Events matched / month" color="text-purple-600 dark:text-purple-400" />
                   <StatPill value="320+" label="Active communities" color="text-cyan-600 dark:text-cyan-400" />
                   <StatPill value="+28%" label="Avg RSVP uplift" color="text-green-600 dark:text-green-400" />
+                </div>
+
+                <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/70 p-5 shadow-sm backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-900/70">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-2xl bg-gradient-to-br from-purple-500/15 to-cyan-500/15 p-2 text-purple-600 dark:text-purple-300">
+                      <Brain className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Why it feels different</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                        The experience is designed as a guided journey: discover, filter, reserve, and keep momentum through every touchpoint.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 

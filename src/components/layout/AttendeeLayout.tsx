@@ -270,26 +270,28 @@ export default function AttendeeLayout({ children }: { children: React.ReactNode
         </div>
 
         {/* Page Content */}
-        <main id="main-content" className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-28 lg:pb-12 lg:p-10 xl:p-14">
-          {crumbs.length > 0 && (
-            <Breadcrumb className="mb-6">
-              <BreadcrumbList>
-                {crumbs.map((crumb, i) => (
-                  <span key={i} className="inline-flex items-center gap-2">
-                    <BreadcrumbItem>
-                      {crumb.path
-                        ? <BreadcrumbLink asChild><Link to={crumb.path} className="text-sm font-semibold">{crumb.label}</Link></BreadcrumbLink>
-                        : <BreadcrumbPage className="text-sm font-bold">{crumb.label}</BreadcrumbPage>
-                      }
-                    </BreadcrumbItem>
-                    {i < crumbs.length - 1 && <BreadcrumbSeparator />}
-                  </span>
-                ))}
-              </BreadcrumbList>
-            </Breadcrumb>
-          )}
-          <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
-            {children}
+        <main id="main-content" className="flex-1 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_top_left,_rgba(124,92,255,0.08),_transparent_36%),radial-gradient(circle_at_top_right,_rgba(0,212,255,0.08),_transparent_32%)] p-4 pb-28 sm:p-6 lg:p-8 xl:p-10">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+            {crumbs.length > 0 && (
+              <Breadcrumb className="rounded-full border border-border/60 bg-background/70 px-4 py-3 shadow-sm backdrop-blur-xl">
+                <BreadcrumbList>
+                  {crumbs.map((crumb, i) => (
+                    <span key={i} className="inline-flex items-center gap-2">
+                      <BreadcrumbItem>
+                        {crumb.path
+                          ? <BreadcrumbLink asChild><Link to={crumb.path} className="text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground">{crumb.label}</Link></BreadcrumbLink>
+                          : <BreadcrumbPage className="text-sm font-bold text-foreground">{crumb.label}</BreadcrumbPage>
+                        }
+                      </BreadcrumbItem>
+                      {i < crumbs.length - 1 && <BreadcrumbSeparator />}
+                    </span>
+                  ))}
+                </BreadcrumbList>
+              </Breadcrumb>
+            )}
+            <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
+              {children}
+            </div>
           </div>
         </main>
         <MobileBottomNav items={bottomNavItems} />

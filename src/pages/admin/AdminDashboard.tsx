@@ -107,7 +107,8 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="rounded-[2rem] border border-border/60 bg-background/90 p-5 shadow-sm backdrop-blur-xl">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-caption text-muted-foreground mb-0.5">{greeting()},</p>
           <h1 className="text-h1 font-bold text-foreground">{currentUser?.name ?? 'Admin'} 👋</h1>

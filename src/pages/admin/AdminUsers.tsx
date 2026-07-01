@@ -287,6 +287,18 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-[2rem] border border-border/60 bg-background/90 p-5 shadow-sm backdrop-blur-xl">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="section-pill">Administration</p>
+            <h1 className="mt-3 text-h1 font-bold text-foreground">User operations and trust controls.</h1>
+            <p className="mt-2 max-w-2xl text-body-sm text-muted-foreground">Review accounts, verify organizers, and manage moderation actions from one focused workspace.</p>
+          </div>
+          <div className="rounded-[1.25rem] border border-border/50 bg-secondary/70 px-4 py-3 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">{totalUsers}</span> managed users • <span className="font-semibold text-foreground">{pendingOrganizerRequests.length}</span> pending organizer requests
+          </div>
+        </div>
+      </div>
 
       {/* ── Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

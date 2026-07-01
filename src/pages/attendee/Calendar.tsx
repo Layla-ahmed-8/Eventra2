@@ -115,8 +115,8 @@ export default function Calendar() {
 
   return (
     <>
-    <div className="space-y-2.5">
-      <div className="hero-surface p-2 md:p-2.5 space-y-1.5">
+    <div className="space-y-3">
+      <div className="rounded-[2rem] border border-border/60 bg-background/90 p-4 shadow-sm backdrop-blur-xl md:p-5">
         <div className="flex flex-col gap-1.5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-body-sm font-bold uppercase tracking-wider">

@@ -50,18 +50,20 @@ export default function OrganizerEvents() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-h1 font-bold text-foreground">My Events</h1>
-          <p className="text-body text-muted-foreground mt-1">Manage and track all your events</p>
+      <div className="rounded-[2rem] border border-border/60 bg-background/90 p-5 shadow-sm backdrop-blur-xl">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-h1 font-bold text-foreground">My Events</h1>
+            <p className="text-body text-muted-foreground mt-1">Manage and track all your events</p>
+          </div>
+          <Link
+            to="/organizer/events/create"
+            className="btn-primary"
+          >
+            <Plus className="w-4 h-4" />
+            Create Event
+          </Link>
         </div>
-        <Link
-          to="/organizer/events/create"
-          className="btn-primary"
-        >
-          <Plus className="w-4 h-4" />
-          Create Event
-        </Link>
       </div>
 
       <div className="bento-section">
