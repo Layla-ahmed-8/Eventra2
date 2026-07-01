@@ -268,18 +268,18 @@ export default function RSVP() {
             <span className="font-medium hidden sm:inline">Back to Event</span>
           </Link>
           {!alreadyRsvped && step !== 'success' && step !== 'processing' && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {STEPS.slice(0, 3).map((s, i) => (
-                <div key={s.key} className="flex items-center gap-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                    i < stepIndex ? 'bg-green-500 text-white' : i === stepIndex ? 'bg-primary text-white' : 'bg-secondary text-muted-foreground'
+                <div key={s.key} className="flex items-center gap-1.5 sm:gap-2">
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${
+                    i < stepIndex ? 'step-dot--complete' : i === stepIndex ? 'step-dot--active' : 'step-dot--pending'
                   }`}>
                     {i < stepIndex ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
                   </div>
-                  <span className={`text-micro font-bold hidden md:inline ${i === stepIndex ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  <span className={`hidden text-xs font-bold md:inline ${i === stepIndex ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {s.label}
                   </span>
-                  {i < 2 && <ChevronRight className="w-4 h-4 text-muted-foreground hidden md:inline" />}
+                  {i < 2 && <ChevronRight className="hidden h-4 w-4 text-muted-foreground md:inline" />}
                 </div>
               ))}
             </div>

@@ -419,21 +419,21 @@ export default function AdminUsers() {
       )}
 
       {/* ── Users Table ── */}
-      <div className="surface-panel overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="table-surface min-w-[940px]">
-            <thead className="bg-secondary border-b border-border">
+      <div className="bento-section card-pad-0 overflow-hidden p-0">
+        <div className="data-table-wrap rounded-none border-0">
+          <table className="data-table min-w-[640px] sm:min-w-[940px]">
+            <thead>
               <tr>
-                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">User</th>
-                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Role</th>
-                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Status</th>
-                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Joined</th>
-                <th className="px-4 py-3 text-left text-caption font-semibold text-foreground">Last Login</th>
-                <th className="px-4 py-3 text-center text-caption font-semibold text-foreground">Events</th>
-                <th className="px-4 py-3 text-right text-caption font-semibold text-foreground">Actions</th>
+                <th className="px-3 py-3 sm:px-4 sm:py-3.5">User</th>
+                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Role</th>
+                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Status</th>
+                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Joined</th>
+                <th className="px-3 py-3 sm:px-4 sm:py-3.5">Last Login</th>
+                <th className="px-3 py-3 text-center sm:px-4 sm:py-3.5">Events</th>
+                <th className="px-3 py-3 text-right sm:px-4 sm:py-3.5">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
@@ -444,7 +444,7 @@ export default function AdminUsers() {
               ) : (
                 filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-secondary/40 transition-colors">
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3 sm:px-4 sm:py-4">
                       <div className="flex items-center gap-3">
                         <img
                           src={user.avatar || `https://i.pravatar.cc/40?u=${user.id}`}
@@ -460,14 +460,14 @@ export default function AdminUsers() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3"><RoleBadge role={user.role} /></td>
-                    <td className="px-4 py-3"><StatusBadge status={user.status} /></td>
+                    <td className="px-3 py-3 sm:px-4 sm:py-4"><RoleBadge role={user.role} /></td>
+                    <td className="px-3 py-3 sm:px-4 sm:py-4"><StatusBadge status={user.status} /></td>
                     <td className="px-4 py-3 text-caption text-muted-foreground whitespace-nowrap">{formatDate(user.joinDate)}</td>
                     <td className="px-4 py-3 text-caption text-muted-foreground whitespace-nowrap">
                       {user.lastLogin ? formatRelativeTime(user.lastLogin) : '—'}
                     </td>
                     <td className="px-4 py-3 text-center text-body-sm font-bold text-foreground">{user.eventsCount}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3 sm:px-4 sm:py-4">
                       <div className="flex items-center justify-end gap-1">
                         <button type="button" title="View User" className="btn-ghost p-2 rounded-xl"
                           onClick={() => { setViewUserId(user.id); setViewTab('profile'); }}>

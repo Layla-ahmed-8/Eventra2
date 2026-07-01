@@ -1,510 +1,482 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Users, Calendar, DollarSign, TrendingUp, Plus, Sparkles,
-  ArrowUpRight, ArrowDownRight, Activity, ChevronRight, Flame,
-  Download, Target, Repeat, MessageSquare, BarChart3, Wallet, Crown,
-} from 'lucide-react';
-import { useAppStore } from '../../store/useAppStore';
-import { demoToast, downloadTextFile } from '../../lib/demoFeedback';
-import { formatRelativeTime } from '../../lib/utils';
-import {
-  DashboardPage, DashboardHero, QuickActionGrid, PeriodTabs, LiveIndicator, CommandStrip,
-} from '../../components/business/DashboardPrimitives';
+  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Funnel, FunnelChart, LabelList, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from 'recharts';
+import { Activity, ArrowDown, ArrowUp, Calendar, ChevronDown, DollarSign, Download, Filter, Search, Star, TrendingUp, Users, X } from 'lucide-react';
 
-const PERIODS = ['7d', '30d', '90d', 'All'] as const;
-type Period = typeof PERIODS[number];
+const COLORS = ['#7C5CFF', '#00D4FF', '#FF9B3D', '#22C55E', '#FF4FD8', '#EF4444'];
 
-// ── Sparkline ─────────────────────────────────────────────────────────────────
-function Sparkline({ data, color = '#7C5CFF' }: { data: number[]; color?: string }) {
-  const max = Math.max(...data);
-  return (
-    <div className="flex items-end gap-0.5 h-8">
-      {data.map((v, i) => (
-        <div key={i} className="flex-1 rounded-sm opacity-80" style={{ height: `${(v / max) * 100}%`, background: color }} />
-      ))}
-    </div>
-  );
-}
-
-// ── Bar chart ─────────────────────────────────────────────────────────────────
-function BarChart({ data, labels, color = '#7C5CFF', height = 140 }: {
-  data: number[]; labels: string[]; color?: string; height?: number;
-}) {
-  const max = Math.max(...data);
-  return (
-    <div>
-      <div className="flex items-end gap-1.5" style={{ height }}>
-        {data.map((v, i) => (
-          <div key={i} className="flex-1 flex flex-col justify-end group relative">
-            <div className="rounded-t transition-all hover:opacity-75" style={{ height: `${(v / max) * 100}%`, background: color }} />
-            <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-caption px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-              {v.toLocaleString()}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-between mt-2">
-        {labels.map((l, i) => (
-          <span key={i} className="text-caption text-muted-foreground" style={{ width: `${100 / labels.length}%`, textAlign: 'center' }}>{l}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Static data ───────────────────────────────────────────────────────────────
-const kpiSparklines = {
-  revenue:  [12, 19, 8, 24, 18, 32, 28, 35, 22, 40, 38, 45],
-  attendees:[80,120, 95,160,140,200,180,220,195,260,240,280],
-  events:   [8, 10, 9, 12, 11, 14, 13, 15, 14, 16, 15, 17],
-  fillRate: [18, 22, 19, 25, 21, 28, 24, 30, 26, 32, 29, 35],
-};
-
-const regData: Record<Period, number[]> = {
-  '7d':  [18, 24, 21, 30, 27, 35, 32],
-  '30d': [80, 95, 88, 110, 102, 125, 118, 140, 132, 155, 148, 170],
-  '90d': [320, 380, 350, 420, 390, 460, 430, 500, 470, 540, 510, 580],
-  'All': [180, 240, 210, 310, 280, 390, 360, 450, 420, 540, 510, 620],
-};
-const regLabels: Record<Period, string[]> = {
-  '7d':  ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-  '30d': Array.from({ length: 12 }, (_, i) => `${i * 3 + 1}`),
-  '90d': ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-  'All': ['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'],
-};
-
-const activeEvents = [
-  { id: 'event-001', title: 'Cairo Jazz Night: Live at Sunset', date: 'May 15, 2026', attendees: 142, capacity: 200, revenue: 21300, category: 'Music' },
-  { id: 'event-002', title: 'AI & Machine Learning Summit 2026', date: 'May 20, 2026', attendees: 387, capacity: 500, revenue: 0, category: 'Tech' },
-  { id: 'event-005', title: 'Street Food Festival: Flavors of Cairo', date: 'May 18, 2026', attendees: 654, capacity: 1000, revenue: 49050, category: 'Food' },
+const MockOrganizerEvents = [
+  { id: '1', name: 'Cairo Tech Summit 2026', category: 'Tech', date: '2026-05-15', capacity: 500, attendees: 420, revenue: 84000 },
+  { id: '2', name: 'Alexandria Art Expo', category: 'Art', date: '2026-05-20', capacity: 200, attendees: 180, revenue: 45000 },
+  { id: '3', name: 'Giza Music Festival', category: 'Music', date: '2026-06-01', capacity: 1000, attendees: 950, revenue: 190000 },
+  { id: '4', name: 'Mansoura Sports Day', category: 'Sports', date: '2026-06-10', capacity: 300, attendees: 280, revenue: 42000 },
+  { id: '5', name: 'Cairo Business Workshop', category: 'Business', date: '2026-06-20', capacity: 100, attendees: 90, revenue: 27000 },
+  { id: '6', name: 'Aswan Photography Retreat', category: 'Workshop', date: '2026-06-25', capacity: 50, attendees: 45, revenue: 67500 },
 ];
 
-const recentActivity = [
-  { icon: '🎟️', text: 'New booking for Cairo Jazz Night', sub: 'General Admission × 2', timestamp: new Date(Date.now() - 3 * 60 * 1000).toISOString() },
-  { icon: '💬', text: 'New community discussion', sub: 'AI Summit — "What to expect"', timestamp: new Date(Date.now() - 18 * 60 * 1000).toISOString() },
-  { icon: '💰', text: 'Payment received', sub: 'Street Food Festival — EGP 150', timestamp: new Date(Date.now() - 42 * 60 * 1000).toISOString() },
-  { icon: '👤', text: 'New follower', sub: 'Nour Ibrahim started following you', timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString() },
-  { icon: '🎟️', text: 'New booking for AI Summit', sub: 'Free Admission × 1', timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+const MockTicketTypes = [
+  { eventId: '1', type: 'General', price: 150, count: 250, revenue: 37500 },
+  { eventId: '1', type: 'VIP', price: 350, count: 120, revenue: 42000 },
+  { eventId: '1', type: 'Early Bird', price: 100, count: 50, revenue: 5000 },
+  { eventId: '2', type: 'General', price: 200, count: 100, revenue: 20000 },
+  { eventId: '2', type: 'VIP', price: 400, count: 80, revenue: 32000 },
+  { eventId: '3', type: 'General', price: 180, count: 600, revenue: 108000 },
+  { eventId: '3', type: 'VIP', price: 350, count: 300, revenue: 105000 },
+  { eventId: '4', type: 'General', price: 150, count: 280, revenue: 42000 },
+  { eventId: '5', type: 'General', price: 300, count: 90, revenue: 27000 },
+  { eventId: '6', type: 'General', price: 1500, count: 45, revenue: 67500 },
 ];
 
-const aiInsights = [
-  { icon: '📈', title: 'Pricing opportunity', body: 'VIP tickets for Jazz Night are 94% sold. Raise price by 15% for remaining spots.', impact: 'High', bg: 'bg-primary/5 dark:bg-primary/10' },
-  { icon: '⏰', title: 'Best promotion window', body: 'Thursday 6–8 PM drives 3× more RSVPs for your audience. Schedule your next post now.', impact: 'Medium', bg: 'bg-primary/5 dark:bg-primary/10' },
-  { icon: '🔥', title: 'Trending category', body: 'Tech events are up 40% this month. Your AI Summit is perfectly timed.', impact: 'High', bg: 'bg-primary/5 dark:bg-primary/10' },
+const MockCheckIns = [
+  { time: '18:00', count: 15 },
+  { time: '18:30', count: 35 },
+  { time: '19:00', count: 80 },
+  { time: '19:30', count: 140 },
+  { time: '20:00', count: 95 },
+  { time: '20:30', count: 50 },
+  { time: '21:00', count: 30 },
+  { time: '21:30', count: 20 },
+  { time: '22:00', count: 10 },
+  { time: '22:30', count: 5 },
+  { time: '23:00', count: 3 },
+  { time: '23:30', count: 2 },
+  { time: '00:00', count: 0 },
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
+const MockFeedback = [
+  { id: '1', name: 'Mohamed Ali', rating: 5, date: '2026-05-16', text: 'Absolutely fantastic event! The speakers were incredible.', sentiment: 'Positive' },
+  { id: '2', name: 'Sarah Hassan', rating: 4, date: '2026-05-17', text: 'Great experience overall, but the venue was a bit crowded.', sentiment: 'Positive' },
+  { id: '3', name: 'Ahmed Khaled', rating: 3, date: '2026-05-18', text: 'It was okay. Food could have been better.', sentiment: 'Neutral' },
+  { id: '4', name: 'Fatma Mostafa', rating: 5, date: '2026-05-19', text: 'Best tech summit I’ve ever attended in Cairo!', sentiment: 'Positive' },
+  { id: '5', name: 'Omar Farouk', rating: 2, date: '2026-05-20', text: 'Disappointed with the organization.', sentiment: 'Negative' },
+];
+
+const MockFunnelData = [
+  { name: 'Page Views', value: 2500 },
+  { name: 'Started Checkout', value: 850 },
+  { name: 'Completed Booking', value: 520 },
+  { name: 'Attended', value: 480 },
+];
+
+const MockTimeSeriesData = (period: number) => {
+  const data: Array<{ date: string; revenue: number; attendees: number }> = [];
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - period);
+  let current = new Date(start);
+  while (current <= end) {
+    data.push({
+      date: current.toISOString().split('T')[0],
+      revenue: Math.floor(Math.random() * 5000) + 2000,
+      attendees: Math.floor(Math.random() * 100) + 20,
+    });
+    current.setDate(current.getDate() + 1);
+  }
+  return data;
+};
+
+const CardSkeleton = () => <div className="skeleton h-32 rounded-xl" />;
+const ChartSkeleton = ({ height = 300 }: { height?: number }) => <div className="skeleton rounded-xl" style={{ height: `${height}px` }} />;
+
 export default function OrganizerAnalytics() {
-  const { currentUser, events } = useAppStore();
-  const [period, setPeriod] = useState<Period>('30d');
-  const [activeInsight, setActiveInsight] = useState(0);
+  const [period, setPeriod] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [revenueFilter, setRevenueFilter] = useState<'all' | '100k' | '250k' | '500k'>('all');
+  const [lastUpdated, setLastUpdated] = useState('Just now');
+  const [visibleMetrics, setVisibleMetrics] = useState({ revenue: true, attendees: true });
+  const [selectedEventIds, setSelectedEventIds] = useState(['1', '3']);
+  const [sortKey, setSortKey] = useState<'name' | 'category' | 'attendees' | 'capacity' | 'revenue'>('revenue');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [loadingStates, setLoadingStates] = useState({ kpi1: true, kpi2: true, kpi3: true, kpi4: true, chart1: true, chart2: true, chart3: true, chart4: true });
 
-  const catalogStats = useMemo(() => {
-    const now = new Date();
-    const mine = events.filter((e) => e.organizerId === currentUser?.id);
-    const pool = mine.length > 0 ? mine : events;
-    const upcoming = pool.filter((e) => new Date(e.date) >= now).length;
-    const totalRsvp = pool.reduce((s, e) => s + e.rsvpCount, 0);
-    const estRevenue = pool.reduce((s, e) => s + e.rsvpCount * e.price, 0);
-    const avgFill = pool.length
-      ? Math.round(pool.reduce((s, e) => s + (e.capacity ? (e.rsvpCount / e.capacity) * 100 : 0), 0) / pool.length)
-      : 0;
-    return { upcoming, totalRsvp, estRevenue, total: pool.length, avgFill, pool };
-  }, [events, currentUser?.id]);
+  useEffect(() => {
+    const keys = Object.keys(loadingStates) as Array<keyof typeof loadingStates>;
+    keys.forEach((key, index) => {
+      window.setTimeout(() => setLoadingStates((prev) => ({ ...prev, [key]: false })), index * 250);
+    });
+  }, []);
 
-  const displayEvents = useMemo(() => {
-    const now = new Date();
-    const fromStore = catalogStats.pool
-      .filter((e) => new Date(e.date) >= now)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 3);
-    if (fromStore.length > 0) {
-      return fromStore.map((e) => ({
-        id: e.id,
-        title: e.title,
-        date: new Date(e.date).toLocaleDateString('en-EG', { month: 'short', day: 'numeric', year: 'numeric' }),
-        attendees: e.rsvpCount,
-        capacity: e.capacity,
-        revenue: e.rsvpCount * e.price,
-        category: e.category,
-        imageUrl: e.imageUrl,
-      }));
-    }
-    return activeEvents;
-  }, [catalogStats.pool]);
+  useEffect(() => {
+    const timer = window.setInterval(() => setLastUpdated(`${Math.floor(Math.random() * 5) + 1} minutes ago`), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
 
-  const exportCsv = () => {
-    const header = 'title,date,rsvp,capacity,price_egp,est_revenue_egp';
-    const lines = events.map((e) => `"${e.title.replace(/"/g, '""')}",${e.date},${e.rsvpCount},${e.capacity},${e.price},${e.rsvpCount * e.price}`);
-    downloadTextFile(`eventra-organizer-export-${Date.now()}.csv`, [header, ...lines].join('\n'));
-    demoToast('Report exported', 'CSV reflects the current demo event catalog.');
+  const periodDays = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : 365;
+  const timeSeriesData = useMemo(() => MockTimeSeriesData(periodDays), [periodDays]);
+
+  const filteredEvents = useMemo(() => {
+    return MockOrganizerEvents.filter((event) => {
+      const matchesSearch = !searchTerm || event.name.toLowerCase().includes(searchTerm.toLowerCase()) || event.category.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !categoryFilter || event.category === categoryFilter;
+      const matchesDate = (!startDate || event.date >= startDate) && (!endDate || event.date <= endDate);
+      const matchesRevenue = revenueFilter === 'all' ? true : event.revenue >= Number(revenueFilter.replace('k', '000'));
+      return matchesSearch && matchesCategory && matchesDate && matchesRevenue;
+    });
+  }, [categoryFilter, endDate, revenueFilter, searchTerm, startDate]);
+
+  const filteredTicketTypes = useMemo(() => {
+    return MockTicketTypes.filter((ticket) => filteredEvents.some((event) => event.id === ticket.eventId));
+  }, [filteredEvents]);
+
+  const filteredTimeSeriesData = useMemo(() => {
+    const scale = filteredEvents.length ? filteredEvents.length / MockOrganizerEvents.length : 0.2;
+    return timeSeriesData.map((point) => ({ ...point, revenue: Math.round(point.revenue * scale), attendees: Math.round(point.attendees * scale) }));
+  }, [filteredEvents.length, timeSeriesData]);
+
+  const filteredTicketRevenueData = useMemo(() => {
+    return filteredEvents.map((event) => ({
+      event: event.name,
+      General: filteredTicketTypes.find((t) => t.eventId === event.id && t.type === 'General')?.revenue || 0,
+      VIP: filteredTicketTypes.find((t) => t.eventId === event.id && t.type === 'VIP')?.revenue || 0,
+      'Early Bird': filteredTicketTypes.find((t) => t.eventId === event.id && t.type === 'Early Bird')?.revenue || 0,
+    }));
+  }, [filteredEvents, filteredTicketTypes]);
+
+  const kpiData = useMemo(() => {
+    const totalRevenue = filteredEvents.reduce((sum, event) => sum + event.revenue, 0);
+    const totalAttendees = filteredEvents.reduce((sum, event) => sum + event.attendees, 0);
+    const capacity = filteredEvents.reduce((sum, event) => sum + event.capacity, 0);
+    const avgFill = capacity ? Math.round((totalAttendees / capacity) * 100) : 0;
+    const repeatRate = filteredEvents.length ? Math.min(100, Math.round((totalAttendees / Math.max(1, filteredEvents.length * 120)) * 100)) : 0;
+    const changeRev = filteredEvents.length ? 8 + (filteredEvents.length % 5) * 2 : 0;
+    const changeAtt = filteredEvents.length ? 5 + (filteredEvents.length % 4) * 2 : 0;
+    const changeFill = filteredEvents.length ? 3 + (filteredEvents.length % 3) : 0;
+    const changeRepeat = filteredEvents.length ? 2 + (filteredEvents.length % 4) : 0;
+    return { revenue: { current: totalRevenue, change: changeRev }, attendees: { current: totalAttendees, change: changeAtt }, fill: { current: avgFill, change: changeFill }, repeat: { current: repeatRate, change: changeRepeat } };
+  }, [filteredEvents]);
+
+  const sortedEvents = useMemo(() => {
+    const data = [...filteredEvents];
+    data.sort((a, b) => {
+      const left = a[sortKey];
+      const right = b[sortKey];
+      const modifier = sortDirection === 'asc' ? 1 : -1;
+      if (typeof left === 'number' && typeof right === 'number') return (left - right) * modifier;
+      return String(left).localeCompare(String(right)) * modifier;
+    });
+    return data;
+  }, [sortDirection, sortKey]);
+
+  const handleExportCSV = () => {
+    const rows = [
+      ['Metric', 'Current Period', 'Change vs Previous'],
+      ['Total Revenue', `EGP ${kpiData.revenue.current.toLocaleString()}`, `${kpiData.revenue.change.toFixed(1)}%`],
+      ['Total Attendees', kpiData.attendees.current.toLocaleString(), `${kpiData.attendees.change.toFixed(1)}%`],
+      ['Avg Fill Rate', `${kpiData.fill.current}%`, `${kpiData.fill.change.toFixed(1)}%`],
+      ['Repeat Rate', `${kpiData.repeat.current}%`, `${kpiData.repeat.change.toFixed(1)}%`],
+    ];
+    const blob = new Blob([rows.map((row) => row.join(',')).join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `organizer-report-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  return (
-    <DashboardPage>
-      <DashboardHero
-        badge="Organizer"
-        badgeIcon={Crown}
-        name={currentUser?.name ?? 'Organizer'}
-        subtitle="Your event command center — track sales, fill rates, and AI-powered growth opportunities."
-        meta={<LiveIndicator label="Events syncing" />}
-        actions={
-          <>
-            <button type="button" onClick={exportCsv} className="btn-secondary flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Export</span>
-            </button>
-            <Link to="/organizer/wallet" className="btn-secondary flex items-center gap-2">
-              <Wallet className="w-4 h-4" />
-              <span className="hidden sm:inline">Wallet</span>
-            </Link>
-            <Link to="/organizer/events/create" className="btn-primary flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Create Event
-            </Link>
-          </>
-        }
-        stats={[
-          { label: 'Events', value: String(catalogStats.total), hint: 'In your catalog' },
-          { label: 'Upcoming', value: String(catalogStats.upcoming), hint: 'Scheduled ahead' },
-          { label: 'Total RSVPs', value: catalogStats.totalRsvp.toLocaleString(), hint: 'Across events' },
-          { label: 'Est. Revenue', value: `EGP ${catalogStats.estRevenue.toLocaleString()}`, hint: `${catalogStats.avgFill}% avg fill` },
-        ]}
-      />
+  const toggleMetric = (key: 'revenue' | 'attendees') => {
+    setVisibleMetrics((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
-      <QuickActionGrid
-        items={[
-          { to: '/organizer/events/create', icon: Plus, label: 'Create Event', grad: 'from-[#7C5CFF] to-[#9B8CFF]' },
-          { to: '/organizer/analytics', icon: BarChart3, label: 'Analytics', grad: 'from-[#7C5CFF] to-[#5B3FE0]' },
-          { to: '/organizer/messages', icon: MessageSquare, label: 'Messages', grad: 'from-[#9B8CFF] to-[#7C5CFF]' },
-          { to: '/organizer/events', icon: Calendar, label: 'My Events', grad: 'from-[#C4B5FD] to-[#9B8CFF]' },
-        ]}
-      />
+  const toggleEventSelection = (id: string) => {
+    setSelectedEventIds((prev) => {
+      if (prev.includes(id)) {
+        const next = prev.filter((item) => item !== id);
+        return next.length ? next : ['1'];
+      }
+      return [...prev, id];
+    });
+  };
 
-      <CommandStrip
-        title="Today's checklist"
-        description="Quick steps before your next event goes live."
-        actions={
-          <>
-            <Link to="/organizer/messages" className="btn-secondary text-body-sm">Reply to attendees</Link>
-            <Link to="/organizer/events" className="btn-secondary text-body-sm">Confirm run-of-show</Link>
-            <Link to="/organizer/analytics" className="btn-primary text-body-sm">Check sell-through</Link>
-          </>
-        }
-      />
+  const activeFilters = [searchTerm && `Search: ${searchTerm}`, categoryFilter && `Category: ${categoryFilter}`, revenueFilter !== 'all' && `Revenue ≥ ${revenueFilter}`].filter(Boolean) as string[];
 
-      <div className="dashboard-grid dashboard-grid-4">
-        {[
-          { label: 'Total Revenue', value: 'EGP 45.2K', change: '+18%', up: true, data: kpiSparklines.revenue, color: '#7C5CFF', icon: DollarSign, iconClass: 'icon-box-primary' },
-          { label: 'Total Attendees', value: '1,247', change: '+28%', up: true, data: kpiSparklines.attendees, color: '#9B8CFF', icon: Users, iconClass: 'icon-box-primary' },
-          { label: 'Active Events', value: '24', change: '+12%', up: true, data: kpiSparklines.events, color: '#C4B5FD', icon: Calendar, iconClass: 'icon-box-primary' },
-          { label: 'Avg Fill Rate', value: '87%', change: '+8%', up: true, data: kpiSparklines.fillRate, color: '#7C5CFF', icon: TrendingUp, iconClass: 'icon-box-primary' },
-        ].map((kpi) => (
-          <div key={kpi.label} className="kpi-card">
-            <div className="flex items-start justify-between mb-3">
-              <div className={`icon-box ${kpi.iconClass}`}>
-                <kpi.icon className="w-4 h-4" />
-              </div>
-              <span className={`kpi-trend ${kpi.up ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
-                {kpi.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {kpi.change}
-              </span>
-            </div>
-            <p className="kpi-value mb-0.5">{kpi.value}</p>
-            <p className="kpi-label mb-3">{kpi.label}</p>
-            <Sparkline data={kpi.data} color={kpi.color} />
+  const FilterChip = () => {
+    if (!selectedFilter && !activeFilters.length) return null;
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {selectedFilter && (
+          <div className="flex items-center gap-2 status-pill status-pill--info px-4 py-2 text-body-sm font-semibold">
+            <Filter className="w-4 h-4" />
+            {selectedFilter}
+            <button onClick={() => setSelectedFilter(null)} className="ml-1 hover:opacity-70 rounded-full p-0.5"><X className="w-4 h-4" /></button>
+          </div>
+        )}
+        {activeFilters.map((filter) => (
+          <div key={filter} className="flex items-center gap-2 status-pill status-pill--info px-4 py-2 text-body-sm font-semibold">
+            <Filter className="w-4 h-4" />
+            {filter}
           </div>
         ))}
       </div>
+    );
+  };
 
-      {/* Registration chart with period selector */}
-      <div className="bento-section">
-        <div className="bento-header">
-          <div className="bento-title-wrapper">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <h2 className="bento-title">Registrations Over Time</h2>
-          </div>
-          <PeriodTabs periods={PERIODS} value={period} onChange={setPeriod} />
+  const renderStars = (rating: number) => Array.from({ length: 5 }, (_, i) => <Star key={i} className={`w-4 h-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`} />);
+
+  return (
+    <div className="dashboard-page--organizer flex w-full min-w-0 flex-col gap-4 sm:gap-6">
+      <div className="mb-2 flex flex-col gap-4 sm:mb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <span className="dashboard-role-badge mb-3">Organizer</span>
+          <h1 className="text-h1 text-foreground">Organizer Dashboard</h1>
+          <p className="text-body-sm text-muted-foreground">Track your event performance and grow your audience</p>
         </div>
-        <BarChart data={regData[period]} labels={regLabels[period]} color="url(#orgGrad)" height={160} />
-        <svg width="0" height="0" aria-hidden>
-          <defs>
-            <linearGradient id="orgGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#7C5CFF" />
-              <stop offset="100%" stopColor="#9B8CFF" />
-            </linearGradient>
-          </defs>
-        </svg>
+        <div className="flex flex-col items-start gap-3 sm:items-end">
+          <span className="text-caption text-muted-foreground">Data as of {lastUpdated}</span>
+          <button onClick={handleExportCSV} className="btn-organizer btn-primary flex w-full items-center justify-center gap-2 sm:w-auto"><Download className="w-4 h-4" />Download Report</button>
+        </div>
       </div>
 
-      <div className="dashboard-grid dashboard-grid-3-lg">
-        {/* Active Events — 2 cols */}
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <Flame className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Active Events</h2>
-            </div>
-            <Link to="/organizer/events" className="flex items-center gap-1 text-caption font-semibold text-primary hover:underline">
-              View all <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
+      <div className="rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-5 lg:p-6">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-body-sm font-semibold text-foreground">Quick filter set</h3>
+            <p className="text-caption text-muted-foreground">Use these controls to narrow large event sets quickly.</p>
           </div>
-          <div className="space-y-3">
-            {displayEvents.map((event) => {
-              const fill = Math.round((event.attendees / event.capacity) * 100);
-              const fillColor = fill >= 80 ? '#7C5CFF' : fill >= 50 ? '#9B8CFF' : '#C4B5FD';
-              return (
-                <div key={event.id} className="card-surface hover:border-primary/30 transition-all group">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
-                    <div className="flex gap-3 flex-1 min-w-0">
-                      {'imageUrl' in event && event.imageUrl && (
-                        <img
-                          src={event.imageUrl}
-                          alt=""
-                          className="w-14 h-14 rounded-xl object-cover flex-shrink-0 ring-2 ring-primary/10 group-hover:ring-primary/25 transition-all"
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="status-pill bg-primary/10 text-primary text-caption">{event.category}</span>
-                          {fill >= 80 && (
-                            <span className="status-pill bg-primary/15 text-primary text-caption">Almost full</span>
-                          )}
-                        </div>
-                        <h3 className="text-body-sm font-bold text-foreground line-clamp-1">{event.title}</h3>
-                        <p className="text-caption text-muted-foreground mt-0.5">{event.date}</p>
-                      </div>
-                    </div>
-                    <Link to={`/organizer/events/${event.id}/manage`} className="btn-secondary text-caption self-start sm:self-auto flex-shrink-0">
-                      Manage
-                    </Link>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3 mb-3 text-caption">
-                    <div>
-                      <p className="text-muted-foreground">Attendees</p>
-                      <p className="font-bold text-foreground">{event.attendees.toLocaleString()} / {event.capacity.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Fill Rate</p>
-                      <p className="font-bold text-foreground">{fill}%</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Revenue</p>
-                      <p className="font-bold text-foreground">{event.revenue === 0 ? 'Free' : `EGP ${event.revenue.toLocaleString()}`}</p>
-                    </div>
-                  </div>
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${fill}%`, background: fillColor }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <span className="text-caption text-muted-foreground">Showing {filteredEvents.length} of {MockOrganizerEvents.length} events</span>
         </div>
-
-        {/* AI Insights — 1 col */}
-        <div className="bento-section flex flex-col">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-[#9B8CFF] flex items-center justify-center shadow-lg shadow-primary/20">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <h2 className="text-h3 font-bold text-foreground">AI Insights</h2>
-            <span className="badge-ai ml-auto">Powered by AI</span>
+        <div className="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-center">
+          <div className="flex w-full min-w-0 items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 xl:min-w-[220px] xl:max-w-[280px]">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search events" className="w-full border-0 bg-transparent text-sm outline-none" />
           </div>
-          <div className="flex gap-1 mb-4">
-            {aiInsights.map((_, i) => (
-              <button key={i} onClick={() => setActiveInsight(i)} className={`flex-1 h-1.5 rounded-full transition-all ${i === activeInsight ? 'bg-primary' : 'bg-muted'}`} />
-            ))}
-          </div>
-          <div className={`insight-card mb-4 ${aiInsights[activeInsight].bg}`}>
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{aiInsights[activeInsight].icon}</span>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-body-sm font-bold text-foreground">{aiInsights[activeInsight].title}</p>
-                  <span className="text-caption font-semibold text-primary">{aiInsights[activeInsight].impact}</span>
-                </div>
-                <p className="text-caption text-muted-foreground leading-relaxed">{aiInsights[activeInsight].body}</p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-2 flex-1">
-            {aiInsights.map((ins, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveInsight(i)}
-                className={`w-full flex items-center gap-3 insight-card text-left transition-all ${i === activeInsight ? 'bg-primary/8 border border-primary/20' : 'hover:bg-muted/50 border border-transparent'}`}
-              >
-                <span className="text-lg">{ins.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-caption font-semibold text-foreground truncate">{ins.title}</p>
-                  <p className="text-caption font-semibold text-primary">{ins.impact} impact</p>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="input-base h-10 w-full text-body-sm xl:min-w-[150px] xl:max-w-[180px]">
+            <option value="">All categories</option>
+            {[...new Set(MockOrganizerEvents.map((event) => event.category))].map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+          <select value={revenueFilter} onChange={(e) => setRevenueFilter(e.target.value as 'all' | '100k' | '250k' | '500k')} className="input-base h-10 w-full text-body-sm xl:min-w-[150px] xl:max-w-[180px]">
+            <option value="all">Any revenue</option>
+            <option value="100k">EGP 100k+</option>
+            <option value="250k">EGP 250k+</option>
+            <option value="500k">EGP 500k+</option>
+          </select>
+          <div className="period-tabs flex flex-wrap gap-1 p-1">
+            {(['7d', '30d', '90d', 'all'] as const).map((p) => (
+              <button key={p} onClick={() => { setPeriod(p); setStartDate(''); setEndDate(''); }} className={`period-tab ${period === p && !startDate && !endDate ? 'period-tab--active' : ''}`}>
+                {p.toUpperCase()}
               </button>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Charts row */}
-      <div className="dashboard-grid dashboard-grid-2">
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Sales Over Time</h2>
-            </div>
-          </div>
-          <div className="h-48 flex items-end justify-between gap-1.5 pt-4">
-            {Array.from({ length: 12 }, (_, i) => {
-              const h = 40 + ((i * 7 + 23) % 60);
-              return (
-                <div key={i} className="flex-1 flex flex-col justify-end group relative">
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-caption px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 font-semibold">
-                    EGP {(h * 1.2).toFixed(1)}K
-                  </div>
-                  <div className="w-full bg-primary/20 rounded-t-lg group-hover:bg-primary/40 transition-colors" style={{ height: `${h}%` }} />
-                  <p className="text-caption font-semibold text-muted-foreground mt-2 text-center">M{i + 1}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <Users className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Conversion Funnel</h2>
-            </div>
-          </div>
-          <div className="space-y-4 pt-2">
-            {[
-              { label: 'Page Views', value: '12,432', pct: 100, color: 'bg-primary' },
-              { label: 'Add to Cart', value: '3,108', pct: 25, color: 'bg-primary/70' },
-              { label: 'Checkout Started', value: '1,865', pct: 15, color: 'bg-primary/50' },
-              { label: 'Completed RSVPs', value: '1,247', pct: 10, color: 'bg-primary/35' },
-            ].map((step) => (
-              <div key={step.label} className="space-y-1.5">
-                <div className="flex justify-between text-caption font-bold">
-                  <span className="text-muted-foreground">{step.label}</span>
-                  <span className="text-foreground">{step.value} ({step.pct}%)</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className={`h-full ${step.color} rounded-full transition-all duration-1000`} style={{ width: `${step.pct}%` }} />
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col flex-wrap gap-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-muted-foreground" /><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-base h-10 w-full text-body-sm sm:w-auto" /></div>
+            <span className="hidden text-muted-foreground text-body-sm sm:block">to</span>
+            <div className="flex items-center gap-2"><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-base h-10 w-full text-body-sm sm:w-auto" /></div>
+            {(startDate || endDate || searchTerm || categoryFilter || revenueFilter !== 'all') && <button onClick={() => { setStartDate(''); setEndDate(''); setSearchTerm(''); setCategoryFilter(''); setRevenueFilter('all'); }} className="btn-ghost text-body-sm">Reset</button>}
           </div>
         </div>
       </div>
 
-      {/* Recent Activity + Top Performing */}
-      <div className="dashboard-grid dashboard-grid-2">
-        {/* Recent Activity */}
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <Activity className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Recent Activity</h2>
-            </div>
-            <LiveIndicator />
-          </div>
-          <div className="space-y-2">
-            {recentActivity.map((item, i) => (
-              <div key={i} className="activity-item">
-                <div className="activity-icon-wrapper">{item.icon}</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-body-sm font-semibold text-foreground">{item.text}</p>
-                  <p className="text-caption text-muted-foreground">{item.sub}</p>
-                </div>
-                <span className="text-caption text-muted-foreground whitespace-nowrap flex-shrink-0">{formatRelativeTime(item.timestamp)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      <FilterChip />
 
-        {/* Top Performing Events */}
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Top Performing Events</h2>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {[
-              { title: 'Cairo Jazz Night', rsvp: 142, revenue: 21300, fill: 94 },
-              { title: 'Street Food Festival', rsvp: 654, revenue: 49050, fill: 82 },
-              { title: 'AI Summit 2026', rsvp: 387, revenue: 0, fill: 77 },
-            ].map((e, i) => (
-              <div key={i} className="card-surface flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-body-sm font-bold text-foreground truncate">{e.title}</p>
-                  <p className="text-caption text-muted-foreground">{e.rsvp} attendees · {e.fill}% full</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-body-sm font-black text-foreground">{e.revenue === 0 ? 'FREE' : `EGP ${e.revenue.toLocaleString()}`}</p>
-                  <div className="flex items-center gap-1 text-primary font-semibold text-caption justify-end">
-                    <ArrowUpRight className="w-3 h-3" /> +12%
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Retention metrics */}
-      <div className="dashboard-grid dashboard-grid-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
         {[
-          { label: 'Repeat Attendees', value: '42%', icon: Repeat, desc: 'Attended 2+ events', bg: 'bg-primary/10', color: 'text-primary' },
-          { label: 'Avg Ticket Price', value: 'EGP 125', icon: DollarSign, desc: 'Across all events', bg: 'bg-primary/10', color: 'text-primary' },
-          { label: 'Upcoming Events', value: String(catalogStats.upcoming), icon: Calendar, desc: 'Scheduled this month', bg: 'bg-primary/10', color: 'text-primary' },
-        ].map((s) => (
-          <div key={s.label} className="bento-section flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl ${s.bg} flex items-center justify-center flex-shrink-0`}>
-              <s.icon className={`w-6 h-6 ${s.color}`} />
-            </div>
-            <div>
-              <p className="text-h2 font-bold text-foreground">{s.value}</p>
-              <p className="text-body-sm font-semibold text-foreground">{s.label}</p>
-              <p className="text-caption text-muted-foreground">{s.desc}</p>
-            </div>
+          { label: 'Total Revenue', value: `EGP ${kpiData.revenue.current.toLocaleString()}`, change: kpiData.revenue.change, icon: DollarSign, iconClass: 'icon-box-cyan', loadingKey: 'kpi1' as const },
+          { label: 'Total Attendees', value: kpiData.attendees.current.toLocaleString(), change: kpiData.attendees.change, icon: Users, iconClass: 'icon-box-primary', loadingKey: 'kpi2' as const },
+          { label: 'Avg Fill Rate', value: `${kpiData.fill.current}%`, change: kpiData.fill.change, icon: TrendingUp, iconClass: 'icon-box-green', loadingKey: 'kpi3' as const },
+          { label: 'Repeat Attendee Rate', value: `${kpiData.repeat.current}%`, change: kpiData.repeat.change, icon: Activity, iconClass: 'icon-box-orange', loadingKey: 'kpi4' as const },
+        ].map((kpi, index) => (
+          <div key={index} className="kpi-card h-full rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-6">
+            {loadingStates[kpi.loadingKey] ? <CardSkeleton /> : (
+              <>
+                <div className="flex items-center justify-between"><span className="kpi-label">{kpi.label}</span><div className={`icon-box ${kpi.iconClass}`}><kpi.icon className="w-5 h-5" /></div></div>
+                <p className="kpi-value">{kpi.value}</p>
+                <div className="kpi-trend">{kpi.change > 0 ? <ArrowUp className="w-4 h-4 text-green-600" /> : kpi.change < 0 ? <ArrowDown className="w-4 h-4 text-red-500" /> : null}<span className={kpi.change > 0 ? 'text-green-600' : kpi.change < 0 ? 'text-red-500' : 'text-muted-foreground'}>{Math.abs(kpi.change).toFixed(1)}% vs previous period</span></div>
+                {index === 3 && <div className="mt-2"><ResponsiveContainer width="100%" height={40}><AreaChart data={[{ name: 'P1', value: 30 }, { name: 'P2', value: 32 }, { name: 'P3', value: 31 }, { name: 'P4', value: 35 }, { name: 'P5', value: 33 }, { name: 'P6', value: 35 }]}><Area type="monotone" dataKey="value" stroke="#7C5CFF" fill="#7C5CFF" fillOpacity={0.12} strokeWidth={2} /></AreaChart></ResponsiveContainer></div>}
+              </>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Detailed AI insights grid */}
-      <div className="bento-section">
-        <div className="bento-header">
-          <div className="bento-title-wrapper">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <h2 className="bento-title">AI Deep Insights</h2>
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2">
+        <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-h3 font-bold text-foreground">Revenue & Attendance</h3>
+              <p className="text-body-sm text-muted-foreground">Interactive trend view with metric toggles and drill-down.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <label className="flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-sm text-muted-foreground"><input type="checkbox" checked={visibleMetrics.revenue} onChange={() => toggleMetric('revenue')} /> Revenue</label>
+              <label className="flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-sm text-muted-foreground"><input type="checkbox" checked={visibleMetrics.attendees} onChange={() => toggleMetric('attendees')} /> Registrations</label>
+            </div>
           </div>
-          <span className="badge-ai">Powered by AI</span>
+          {loadingStates.chart1 ? <ChartSkeleton height={300} /> : (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={filteredTimeSeriesData} onClick={() => setSelectedFilter('Clicked a day in the overview')}>
+                <defs>
+                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#7C5CFF" stopOpacity={0.32} /><stop offset="95%" stopColor="#7C5CFF" stopOpacity={0.03} /></linearGradient>
+                  <linearGradient id="attendeeGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#00D4FF" stopOpacity={0.28} /><stop offset="95%" stopColor="#00D4FF" stopOpacity={0.03} /></linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke="rgba(107,114,128,0.18)" strokeDasharray="4 4" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <Tooltip cursor={{ stroke: '#7C5CFF', strokeWidth: 1 }} contentStyle={{ borderRadius: 12, borderColor: 'rgba(124,92,255,0.18)', boxShadow: '0 12px 40px rgba(15,23,42,0.12)' }} />
+                {visibleMetrics.revenue && <Area type="monotone" dataKey="revenue" stroke="#7C5CFF" fill="url(#revenueGradient)" strokeWidth={2.5} activeDot={{ r: 5 }} onClick={() => setSelectedFilter('Revenue trend')} />}
+                {visibleMetrics.attendees && <Area type="monotone" dataKey="attendees" stroke="#00D4FF" fill="url(#attendeeGradient)" strokeWidth={2.5} activeDot={{ r: 5 }} onClick={() => setSelectedFilter('Attendance trend')} />}
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          {[
-            { icon: TrendingUp, bg: 'bg-primary/10', color: 'text-primary', title: 'Peak Booking Window', body: 'Your events get 3× more RSVPs when published on Thursday evenings. Schedule your next launch for 7–9 PM.' },
-            { icon: Target, bg: 'bg-primary/10', color: 'text-primary', title: 'Audience Fit Score', body: 'Street Food Festival had a 94% audience match. Replicating its category + vibe tags for future events could increase repeat attendance.' },
-            { icon: Users, bg: 'bg-primary/10', color: 'text-primary', title: 'Retention Opportunity', body: '38% of attendees who came to Jazz Night have not booked again. A targeted follow-up message could recover ~54 bookings.' },
-            { icon: DollarSign, bg: 'bg-primary/10', color: 'text-primary', title: 'Revenue Forecast', body: 'Based on your growth trend, projected revenue for next month is EGP 52–61K — up 15% if you add an early-bird tier.' },
-          ].map((insight) => (
-            <div key={insight.title} className="card-surface flex items-start gap-4">
-              <div className={`w-10 h-10 rounded-xl ${insight.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                <insight.icon className={`w-5 h-5 ${insight.color}`} />
-              </div>
-              <div>
-                <p className="text-body-sm font-bold text-foreground mb-1">{insight.title}</p>
-                <p className="text-caption text-muted-foreground leading-relaxed">{insight.body}</p>
-              </div>
+
+        <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+          <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">Revenue by Ticket Type</h3>
+          {loadingStates.chart2 ? <ChartSkeleton height={300} /> : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={filteredTicketRevenueData}>
+                <CartesianGrid vertical={false} stroke="rgba(107,114,128,0.18)" strokeDasharray="4 4" />
+                <XAxis dataKey="event" tick={{ fontSize: 11 }} stroke="#6b7280" angle={-8} textAnchor="end" height={60} />
+                <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <Tooltip cursor={{ fill: 'rgba(124,92,255,0.06)' }} contentStyle={{ borderRadius: 12, borderColor: 'rgba(124,92,255,0.18)', boxShadow: '0 12px 40px rgba(15,23,42,0.12)' }} />
+                <Legend />
+                <Bar dataKey="General" radius={[8, 8, 0, 0]} fill="#7C5CFF" onClick={() => setSelectedFilter('General')} />
+                <Bar dataKey="VIP" radius={[8, 8, 0, 0]} fill="#00D4FF" onClick={() => setSelectedFilter('VIP')} />
+                <Bar dataKey="Early Bird" radius={[8, 8, 0, 0]} fill="#FF8A00" onClick={() => setSelectedFilter('Early Bird')} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+          <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">Conversion Funnel</h3>
+          {loadingStates.chart3 ? <ChartSkeleton height={300} /> : (
+            <ResponsiveContainer width="100%" height={300}>
+              <FunnelChart>
+                <Tooltip contentStyle={{ borderRadius: 12, borderColor: 'rgba(124,92,255,0.18)', boxShadow: '0 12px 40px rgba(15,23,42,0.12)' }} />
+                <Funnel data={MockFunnelData} dataKey="value">
+                  <LabelList position="right" fill="#1f2937" stroke="none" dataKey="name" />
+                  <LabelList position="inside" fill="#fff" stroke="none" dataKey="value" />
+                  {MockFunnelData.map((entry, index) => <Cell key={`cell-${index}`} fill={['#7C5CFF', '#00D4FF', '#FF8A00', '#22C55E'][index % 4]} />)}
+                </Funnel>
+              </FunnelChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+          <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">Check-in Time Distribution</h3>
+          {loadingStates.chart4 ? <ChartSkeleton height={300} /> : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={MockCheckIns}>
+                <CartesianGrid vertical={false} stroke="rgba(107,114,128,0.18)" strokeDasharray="4 4" />
+                <XAxis dataKey="time" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <Tooltip cursor={{ fill: 'rgba(124,92,255,0.06)' }} contentStyle={{ borderRadius: 12, borderColor: 'rgba(124,92,255,0.18)', boxShadow: '0 12px 40px rgba(15,23,42,0.12)' }} />
+                <Bar dataKey="count" radius={[8, 8, 0, 0]} fill="#7C5CFF">{MockCheckIns.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.time === '19:30' ? '#EF4444' : '#7C5CFF'} />)}</Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <h3 className="text-h3 font-bold text-foreground">Per-event comparison</h3>
+            <p className="text-body-sm text-muted-foreground">Select two or more events to compare their registration momentum.</p>
+          </div>
+          <div className="flex max-w-full flex-wrap gap-2">
+            {MockOrganizerEvents.map((event) => (
+              <label key={event.id} className="flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 text-sm text-muted-foreground">
+                <input type="checkbox" checked={selectedEventIds.includes(event.id)} onChange={() => toggleEventSelection(event.id)} />
+                {event.name}
+              </label>
+            ))}
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={280}>
+          <AreaChart data={filteredEvents.filter((event) => selectedEventIds.includes(event.id)).map((event) => ({ name: event.name.split(' ')[0], attendees: Math.round(event.attendees * 0.8), revenue: Math.round(event.revenue / 1000) }))}>
+            <CartesianGrid vertical={false} stroke="rgba(107,114,128,0.18)" strokeDasharray="4 4" />
+            <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#6b7280" />
+            <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+            <Tooltip contentStyle={{ borderRadius: 12, borderColor: 'rgba(124,92,255,0.18)', boxShadow: '0 12px 40px rgba(15,23,42,0.12)' }} />
+            <Area type="monotone" dataKey="attendees" stroke="#7C5CFF" fill="#7C5CFF" fillOpacity={0.16} strokeWidth={2.2} />
+            <Area type="monotone" dataKey="revenue" stroke="#00D4FF" fill="#00D4FF" fillOpacity={0.16} strokeWidth={2.2} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-h3 font-bold text-foreground">Top-performing events</h3>
+            <p className="text-body-sm text-muted-foreground">Click a column to sort the table.</p>
+          </div>
+        </div>
+        <div className="data-table-wrap overflow-x-auto rounded-2xl border border-border/60 bg-background/80">
+          <table className="data-table min-w-[720px]">
+            <thead>
+              <tr>
+                {[
+                  { key: 'name', label: 'Event' },
+                  { key: 'category', label: 'Category' },
+                  { key: 'attendees', label: 'Attendees' },
+                  { key: 'capacity', label: 'Capacity' },
+                  { key: 'revenue', label: 'Revenue' },
+                ].map((column) => (
+                  <th key={column.key} className="px-3 py-3 sm:px-4 sm:py-3.5">
+                    <button className="flex items-center gap-2" onClick={() => { setSortKey(column.key as 'name' | 'category' | 'attendees' | 'capacity' | 'revenue'); setSortDirection((prev) => prev === 'asc' ? 'desc' : 'asc'); }}>
+                      {column.label}
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedEvents.map((event) => (
+                <tr key={event.id} className="cursor-pointer" onClick={() => setSelectedFilter(event.name)}>
+                  <td className="px-3 py-3 font-semibold sm:px-4 sm:py-4">{event.name}</td>
+                  <td className="px-3 py-3 sm:px-4 sm:py-4">{event.category}</td>
+                  <td className="px-3 py-3 sm:px-4 sm:py-4">{event.attendees}</td>
+                  <td className="px-3 py-3 sm:px-4 sm:py-4">{event.capacity}</td>
+                  <td className="px-3 py-3 sm:px-4 sm:py-4">EGP {event.revenue.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+        <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">Post-event Feedback</h3>
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)]">
+          <div className="kpi-card rounded-3xl border border-border/60 bg-background/80 p-4 shadow-sm sm:p-6">
+            <div className="kpi-value text-orange-500 mb-2">{(MockFeedback.reduce((sum, f) => sum + f.rating, 0) / MockFeedback.length).toFixed(1)}</div>
+            <div className="flex items-center justify-center gap-1">{renderStars(Math.round(MockFeedback.reduce((sum, f) => sum + f.rating, 0) / MockFeedback.length))}</div>
+            <p className="text-body-sm text-muted-foreground mt-2">Average Rating</p>
+          </div>
+          <div className="min-w-0">
+            <h4 className="text-body-sm font-semibold text-foreground mb-3">Sentiment Breakdown</h4>
+            <div className="space-y-3">
+              {[
+                { label: 'Positive', value: 65, color: 'bg-green-500' },
+                { label: 'Neutral', value: 25, color: 'bg-orange-500' },
+                { label: 'Negative', value: 10, color: 'bg-red-500' },
+              ].map((item, i) => (
+                <div key={i}>
+                  <div className="mb-1 flex items-center justify-between"><span className="text-body-sm font-medium text-foreground">{item.label}</span><span className="text-body-sm font-bold text-foreground">{item.value}%</span></div>
+                  <div className="h-3 overflow-hidden rounded-full bg-secondary"><div className={`h-full ${item.color}`} style={{ width: `${item.value}%` }} /></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {MockFeedback.slice(0, 3).map((review) => (
+            <div key={review.id} className="activity-item rounded-2xl border border-border/60 bg-background/80 p-4">
+              <div className="mb-3 flex w-full items-start justify-between gap-3"><div className="flex items-center gap-3"><span className="font-semibold text-foreground">{review.name}</span><span className="text-caption text-muted-foreground">{review.date}</span></div><div className="flex items-center gap-1">{renderStars(review.rating)}</div></div>
+              <p className="text-body-sm text-muted-foreground line-clamp-2">{review.text}</p>
             </div>
           ))}
         </div>
       </div>
-    </DashboardPage>
+    </div>
   );
 }
+

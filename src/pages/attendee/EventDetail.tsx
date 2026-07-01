@@ -514,6 +514,25 @@ export default function EventDetail() {
           </div>
         )}
       </div>
+
+      {/* Mobile sticky register bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-background/95 p-4 shadow-[0_-8px_32px_rgba(108,76,241,0.08)] backdrop-blur-xl pb-[max(1rem,env(safe-area-inset-bottom))] lg:hidden">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <p className="text-body-sm font-bold text-foreground truncate">{event.title}</p>
+            <p className="text-caption text-muted-foreground">
+              {event.price === 0 ? 'Free entry' : `From EGP ${event.price}`}
+            </p>
+          </div>
+          <Link
+            to={alreadyRsvped ? `/app/orders/${event.id}` : `/app/events/${event.id}/rsvp`}
+            className={alreadyRsvped ? 'btn-secondary flex-shrink-0' : 'btn-primary flex-shrink-0 shadow-lg'}
+          >
+            <Ticket className="w-4 h-4" />
+            {alreadyRsvped ? 'View Ticket' : 'Register'}
+          </Link>
+        </div>
+      </div>
       
       {showCalendarModal && event && (
         <CalendarAddEventModal

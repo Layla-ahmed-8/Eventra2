@@ -22,7 +22,8 @@ const bottomNavItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, theme, toggleTheme, logout, unreadCount } = useAppStore();
+  const { currentUser, theme, toggleTheme, logout, notifications } = useAppStore();
+  const unreadCount = notifications.filter((n) => n.userId === currentUser?.id && !n.isRead).length;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const crumbs = useBreadcrumbs();
@@ -42,54 +43,55 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <>
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50/30 to-orange-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 flex">
       {/* Sidebar - Desktop */}
       <aside
-        className={`hidden lg:flex flex-col bg-sidebar backdrop-blur-xl border-r border-sidebar-border transition-all duration-300 relative z-30 ${
-          sidebarOpen ? 'w-72' : 'w-24'
+        className={`hidden lg:flex flex-col bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-r border-red-100/70 dark:border-slate-800/70 transition-all duration-500 relative z-30 shadow-xl shadow-red-900/5 dark:shadow-black/40 ${
+          sidebarOpen ? 'w-72' : 'w-20'
         }`}
       >
         {/* Sidebar Header */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border/50">
+        <div className="h-24 flex items-center justify-between px-6 border-b border-red-100/50 dark:border-slate-800/50 bg-gradient-to-r from-white/80 to-red-50/50 dark:from-slate-900/80 dark:to-red-950/20">
           {sidebarOpen ? (
-            <Link to="/admin/analytics" className="flex items-center min-w-0 animate-in fade-in duration-500">
-              <Logo variant="horizontal" className="h-8 w-auto" />
+            <Link to="/admin/analytics" className="flex items-center min-w-0 animate-in fade-in duration-700">
+              <Logo variant="horizontal" className="h-9 w-auto" />
             </Link>
           ) : (
-            <Link to="/admin/analytics" className="flex items-center justify-center w-full animate-in zoom-in duration-500">
-              <Logo variant="small" className="h-10 w-auto" />
+            <Link to="/admin/analytics" className="flex items-center justify-center w-full animate-in zoom-in duration-700">
+              <Logo variant="small" className="h-11 w-auto" />
             </Link>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => {
+        <nav className="flex-1 px-5 py-8 space-y-3 overflow-y-auto custom-scrollbar">
+          {navItems.map((item, index) => {
             const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${
+                className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 group hover:scale-[1.02] ${
                   isActive
-                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/25 translate-x-1'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:translate-x-1'
+                    ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/30 translate-x-1'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-gradient-to-r from-red-50/50 to-orange-50/50 dark:hover:bg-red-900/20 hover:translate-x-1'
                 }`}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                {sidebarOpen && <span className="font-bold text-body-sm tracking-wide">{item.label}</span>}
-                {'badge' in item && (item.badge ?? 0) > 0 && (
-                  <span className="ml-auto min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center">
+                <item.icon className={`w-6 h-6 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                {sidebarOpen && <span className="font-bold text-base tracking-wide flex-1">{item.label}</span>}
+                {'badge' in item && (item.badge ?? 0) > 0 && sidebarOpen && (
+                  <span className="ml-auto min-w-[22px] h-5.5 px-2 bg-white text-red-500 text-[10px] font-black rounded-full flex items-center justify-center shadow-lg shadow-red-500/20">
                     {item.badge}
                   </span>
                 )}
                 {!sidebarOpen && (
-                  <div className="absolute left-full ml-4 px-3 py-2 bg-sidebar-accent border border-sidebar-border text-sidebar-foreground text-caption font-bold rounded-xl whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-xl">
+                  <div className="absolute left-full ml-4 px-4 py-2.5 bg-white dark:bg-slate-800 border border-red-100 dark:border-slate-700 text-slate-900 dark:text-white text-sm font-bold rounded-xl whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 z-50 shadow-2xl">
                     {item.label}
                   </div>
                 )}
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-full ml-1" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-white rounded-full ml-1.5 shadow-md" />
                 )}
               </Link>
             );
@@ -97,31 +99,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 space-y-4 border-t border-sidebar-border/50 bg-sidebar/50">
-          <div className="flex items-center gap-2">
+        <div className="p-5 space-y-4 border-t border-red-100/50 dark:border-slate-800/50 bg-gradient-to-t from-red-50/40 to-white/80 dark:from-red-950/20 dark:to-slate-900/80">
+          <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="flex-1 h-12 rounded-2xl bg-sidebar-accent flex items-center justify-center border border-sidebar-border/50 hover:bg-sidebar-accent/80 transition-all active:scale-95 group"
+              className="flex-1 h-14 rounded-2xl bg-gradient-to-br from-slate-100 to-red-100 dark:from-slate-800 dark:to-red-900/30 flex items-center justify-center border border-red-200/60 dark:border-red-800/40 hover:scale-[1.02] transition-all active:scale-[0.98] group shadow-sm"
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-sidebar-foreground group-hover:rotate-45 transition-transform" />
+                <Sun className="w-6 h-6 text-amber-400 group-hover:rotate-12 transition-transform" />
               ) : (
-                <Moon className="w-5 h-5 text-sidebar-foreground group-hover:-rotate-12 transition-transform" />
+                <Moon className="w-6 h-6 text-slate-700 dark:text-slate-300 group-hover:-rotate-12 transition-transform" />
               )}
             </button>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="w-12 h-12 rounded-2xl bg-sidebar-accent flex items-center justify-center border border-sidebar-border/50 hover:bg-sidebar-accent/80 transition-all active:scale-95"
+              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-100 to-red-100 dark:from-slate-800 dark:to-red-900/30 flex items-center justify-center border border-red-200/60 dark:border-red-800/40 hover:scale-[1.02] transition-all active:scale-[0.98] shadow-sm"
               aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             >
-              <ChevronLeft className={`w-5 h-5 text-sidebar-foreground transition-transform duration-500 ${!sidebarOpen ? 'rotate-180' : ''}`} />
+              <ChevronLeft className={`w-6 h-6 text-slate-700 dark:text-slate-300 transition-transform duration-500 ${!sidebarOpen ? 'rotate-180' : ''}`} />
             </button>
           </div>
 
           <Link
             to="/admin/profile"
-            className={`flex items-center gap-3 p-3 rounded-2xl hover:bg-sidebar-accent transition-all group ${
+            className={`flex items-center gap-4 p-4 rounded-2xl hover:bg-gradient-to-r from-red-50/60 to-orange-50/60 dark:hover:bg-red-900/20 transition-all group ${
               !sidebarOpen ? 'justify-center' : ''
             }`}
           >
@@ -129,16 +131,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <img
                 src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
                 alt={currentUser?.name}
-                className="w-11 h-11 rounded-xl ring-2 ring-red-500/20 group-hover:ring-red-500/40 transition-all object-cover"
+                className="w-14 h-14 rounded-2xl ring-4 ring-red-400/20 dark:ring-red-500/20 group-hover:ring-red-400/40 dark:group-hover:ring-red-500/40 transition-all object-cover"
               />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center shadow-lg">
-                <Shield className="w-3 h-3 text-white" />
+              <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center shadow-xl shadow-red-500/30">
+                <Shield className="w-4 h-4 text-white" />
               </div>
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-body-sm font-bold text-sidebar-foreground truncate">{currentUser?.name}</p>
-                <p className="text-micro font-bold text-muted-foreground uppercase tracking-widest">Administrator</p>
+                <p className="text-base font-bold text-slate-900 dark:text-white truncate">{currentUser?.name}</p>
+                <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Administrator</p>
               </div>
             )}
           </Link>
@@ -149,12 +151,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               logout();
               navigate('/login');
             }}
-            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-all group ${
+            className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-slate-600 dark:text-slate-400 hover:bg-gradient-to-r from-red-500/10 to-orange-500/10 hover:text-red-600 dark:hover:text-red-400 transition-all group ${
               !sidebarOpen ? 'justify-center' : ''
             }`}
           >
-            <LogOut className="w-5 h-5 flex-shrink-0 group-hover:-translate-x-0.5 transition-transform" />
-            {sidebarOpen && <span className="text-body-sm font-bold">Sign Out</span>}
+            <LogOut className="w-6 h-6 flex-shrink-0 group-hover:-translate-x-1 transition-transform" />
+            {sidebarOpen && <span className="text-base font-bold">Sign Out</span>}
           </button>
         </div>
       </aside>
@@ -162,62 +164,68 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Mobile Sidebar */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-[100]">
-          <div className="absolute inset-0 bg-night-0/80 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)}></div>
-          <aside className="absolute left-0 top-0 bottom-0 w-80 bg-sidebar shadow-2xl animate-in slide-in-from-left duration-300">
-            <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border/50">
-              <Logo variant="horizontal" className="h-7 w-auto" />
-              <button onClick={() => setMobileMenuOpen(false)} className="w-10 h-10 rounded-xl bg-sidebar-accent flex items-center justify-center text-sidebar-foreground">
-                <X className="w-5 h-5" />
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)}></div>
+          <aside className="absolute left-0 top-0 bottom-0 w-80 bg-gradient-to-br from-white to-red-50 dark:from-slate-900 dark:to-slate-900 shadow-2xl animate-in slide-in-from-left duration-500">
+            <div className="h-24 flex items-center justify-between px-7 border-b border-red-100/60 dark:border-slate-800/60 bg-gradient-to-r from-white to-red-50 dark:from-slate-900 dark:to-red-950/20">
+              <Logo variant="horizontal" className="h-8 w-auto" />
+              <button onClick={() => setMobileMenuOpen(false)} className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:scale-105 transition-transform">
+                <X className="w-6 h-6" />
               </button>
             </div>
-            <nav className="p-4 space-y-2 pb-20 overflow-y-auto max-h-[calc(100vh-200px)]">
-              {navItems.map((item) => {
+            <nav className="p-5 space-y-3 pb-24 overflow-y-auto max-h-[calc(100vh-240px)]">
+              {navItems.map((item, index) => {
                 const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${
+                    className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 hover:scale-[1.01] ${
                       isActive
-                        ? 'bg-red-500 text-white shadow-lg shadow-red-500/25'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                        ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/30'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r from-red-50/60 to-orange-50/60 dark:hover:bg-red-900/20'
                     }`}
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-bold text-body tracking-wide">{item.label}</span>
+                    <item.icon className="w-6 h-6" />
+                    <span className="font-bold text-lg tracking-wide">{item.label}</span>
+                    {'badge' in item && (item.badge ?? 0) > 0 && (
+                      <span className="ml-auto min-w-[22px] h-5.5 px-2 bg-white text-red-500 text-[10px] font-black rounded-full flex items-center justify-center shadow-lg shadow-red-500/20">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
             </nav>
 
-            <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-sidebar-border/50 bg-sidebar/95 backdrop-blur-md">
+            <div className="absolute bottom-0 left-0 right-0 p-7 border-t border-red-100/60 dark:border-slate-800/60 bg-gradient-to-t from-red-50/60 to-white/80 dark:from-red-950/20 dark:to-slate-900/80 backdrop-blur-xl">
               <div className="flex items-center gap-4 mb-6">
                 <img
                   src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
                   alt={currentUser?.name}
-                  className="w-12 h-12 rounded-xl object-cover ring-2 ring-red-500/20"
+                  className="w-14 h-14 rounded-2xl object-cover ring-4 ring-red-400/20 dark:ring-red-500/20"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-body font-bold text-sidebar-foreground truncate">{currentUser?.name}</p>
-                  <p className="text-caption font-bold text-muted-foreground uppercase tracking-widest">Administrator</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white truncate">{currentUser?.name}</p>
+                  <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Administrator</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={toggleTheme}
-                  className="flex-1 h-12 rounded-xl bg-sidebar-accent flex items-center justify-center border border-sidebar-border/50"
+                  className="flex-1 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-red-200/50 dark:border-slate-700"
                 >
-                  {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  {theme === 'dark' ? <Sun className="w-6 h-6 text-amber-400" /> : <Moon className="w-6 h-6 text-slate-700" />}
                 </button>
                 <button
                   onClick={() => {
                     logout();
                     navigate('/login');
                   }}
-                  className="flex-[2] h-12 rounded-xl bg-red-500/10 text-red-500 font-bold flex items-center justify-center gap-2"
+                  className="flex-[2] h-14 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-black flex items-center justify-center gap-3 shadow-lg shadow-red-500/20 hover:scale-[1.02] transition-transform"
                 >
-                  <LogOut className="w-5 h-5" />
+                  <LogOut className="w-6 h-6" />
                   Sign Out
                 </button>
               </div>
@@ -229,34 +237,44 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Top Bar - Mobile */}
-        <div className="lg:hidden h-16 bg-sidebar/80 backdrop-blur-md border-b border-sidebar-border/50 flex items-center justify-between px-4 sticky top-0 z-40">
+        <div className="lg:hidden h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-b border-red-100/60 dark:border-slate-800/60 flex items-center justify-between px-6 sticky top-0 z-40 shadow-lg shadow-red-900/5 dark:shadow-black/30">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="w-11 h-11 rounded-xl bg-sidebar-accent flex items-center justify-center text-sidebar-foreground border border-sidebar-border/50"
+            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-100 to-red-100 dark:from-slate-800 dark:to-red-900/30 flex items-center justify-center text-slate-700 dark:text-slate-300 border border-red-200/60 dark:border-slate-700 hover:scale-105 transition-transform"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-7 h-7" />
           </button>
-          <Logo variant="horizontal" className="h-6 w-auto" />
-          <Link to="/admin/profile">
-            <img
-              src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
-              alt={currentUser?.name}
-              className="w-10 h-10 rounded-xl object-cover ring-2 ring-red-500/20"
-            />
-          </Link>
+          <Logo variant="horizontal" className="h-7 w-auto" />
+          <div className="flex items-center gap-3">
+            <Link to="/admin/notifications" className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-100 to-red-100 dark:from-slate-800 dark:to-red-900/30 flex items-center justify-center border border-red-200/60 dark:border-slate-700 hover:scale-105 transition-transform">
+              <Bell className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center leading-none shadow-lg shadow-red-500/30">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Link>
+            <Link to="/admin/profile">
+              <img
+                src={currentUser?.avatar || 'https://i.pravatar.cc/150?img=33'}
+                alt={currentUser?.name}
+                className="w-12 h-12 rounded-2xl object-cover ring-4 ring-red-400/20 dark:ring-red-500/20 hover:scale-105 transition-transform"
+              />
+            </Link>
+          </div>
         </div>
 
         {/* Page Content */}
-        <main id="main-content" className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-24 lg:pb-10 lg:p-10 xl:p-12">
+        <main id="main-content" className="flex-1 overflow-y-auto custom-scrollbar p-6 pb-28 lg:pb-12 lg:p-10 xl:p-14">
           {crumbs.length > 0 && (
-            <Breadcrumb className="mb-4">
+            <Breadcrumb className="mb-6">
               <BreadcrumbList>
                 {crumbs.map((crumb, i) => (
-                  <span key={i} className="inline-flex items-center gap-1.5">
+                  <span key={i} className="inline-flex items-center gap-2">
                     <BreadcrumbItem>
                       {crumb.path
-                        ? <BreadcrumbLink asChild><Link to={crumb.path}>{crumb.label}</Link></BreadcrumbLink>
-                        : <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                        ? <BreadcrumbLink asChild><Link to={crumb.path} className="text-sm font-semibold">{crumb.label}</Link></BreadcrumbLink>
+                        : <BreadcrumbPage className="text-sm font-bold">{crumb.label}</BreadcrumbPage>
                       }
                     </BreadcrumbItem>
                     {i < crumbs.length - 1 && <BreadcrumbSeparator />}
@@ -265,7 +283,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </BreadcrumbList>
             </Breadcrumb>
           )}
-          {children}
+          <div className="animate-in fade-in duration-500 slide-in-from-bottom-4">
+            {children}
+          </div>
         </main>
         <MobileBottomNav items={bottomNavItems} />
       </div>

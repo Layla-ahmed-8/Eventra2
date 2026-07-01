@@ -4,7 +4,6 @@ import {
   Search,
   Calendar,
   MapPin,
-  Clock,
   Heart,
   Sparkles,
   TrendingUp,
@@ -12,6 +11,7 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   X,
+  Ticket,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { categories } from '../../data/mockData';
@@ -567,7 +567,7 @@ export default function Discover() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="card-surface p-4 space-y-3">
@@ -629,7 +629,7 @@ export default function Discover() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
               {nearby.map((event) => (
                 <EventCard
                   key={event.id}
@@ -659,7 +659,7 @@ export default function Discover() {
               </div>
               <button className="btn-ghost text-primary font-bold">View All</button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
               {recommended.map((event) => (
                 <EventCard
                   key={event.id}
@@ -689,7 +689,7 @@ export default function Discover() {
               </div>
               <button className="btn-ghost text-cyan-500 font-bold">Explore Trends</button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
               {trending.map((event) => (
                 <EventCard
                   key={event.id}
@@ -714,108 +714,124 @@ function EventCard({ event, bookmarkedEvents, toggleBookmark, distanceKm, aiReas
   const aiEnabled = useAppStore((s) => s.systemConfig.aiRecommendationsEnabled);
   const isBookmarked = bookmarkedEvents.includes(event.id);
   const isTopPick = aiEnabled && aiScore !== null && aiScore >= 55;
+  const eventDate = new Date(event.date);
+  const formattedDate = eventDate.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+  const formattedTime = eventDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 
   return (
-    <div className="group card-surface overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:scale-[1.02]">
-      <Link to={`/app/events/${event.id}`}>
-        <div className="relative h-64 overflow-hidden">
-          <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-60" />
+    <article className="group event-card flex flex-col">
+      <Link to={`/app/events/${event.id}`} className="block">
+        <div className="event-card-media relative h-52 shrink-0 overflow-hidden sm:h-56 md:h-60">
+          <img src={event.image} alt={event.title} loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-transparent" />
 
-          <div className="absolute top-4 left-4">
-            <span className="px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-white/20 dark:border-white/10 text-slate-900 dark:text-white text-xs font-bold shadow-lg">
+          <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 sm:p-4">
+            <span className="rounded-lg bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary shadow-sm backdrop-blur-sm dark:bg-slate-900/90 dark:text-purple-300">
               {event.category}
             </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                toggleBookmark(event.id);
+              }}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg backdrop-blur-md transition-all ${
+                isBookmarked
+                  ? 'bg-red-500/90 text-white shadow-md'
+                  : 'bg-white/90 text-slate-500 hover:bg-white hover:text-red-500 dark:bg-slate-900/80 dark:text-slate-400 dark:hover:text-red-400'
+              }`}
+              aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark event'}
+            >
+              <Heart className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
+            </button>
           </div>
 
-          {distanceKm !== null && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2">
-              <span className="px-3 py-1.5 rounded-full bg-cyan-500/95 text-white text-[10px] font-black uppercase tracking-wider shadow-xl">
-                {distanceKm.toFixed(1)} km away
-              </span>
-            </div>
-          )}
-
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              toggleBookmark(event.id);
-            }}
-            className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-white/20 dark:border-white/10 flex items-center justify-center transition-all hover:scale-110 shadow-lg group/bookmark"
-          >
-            <Heart className={`w-5 h-5 transition-colors ${isBookmarked ? 'fill-red-500 text-red-500' : 'text-slate-600 dark:text-slate-400 group-hover/bookmark:text-red-400'}`} />
-          </button>
-
           {isTopPick && (
-            <div className="absolute bottom-4 left-4">
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xl animate-pulse-slow">
-                <Sparkles className="w-3 h-3" />
-                AI Pick
+            <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-primary/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-sm">
+                <Sparkles className="h-3 w-3" />
+                For you
               </span>
             </div>
           )}
+
+          <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4">
+            <span
+              className={`rounded-lg px-2.5 py-1 text-sm font-bold shadow-md backdrop-blur-sm ${
+                event.price === 0
+                  ? 'bg-emerald-500/95 text-white'
+                  : 'bg-white/95 text-foreground dark:bg-slate-900/95 dark:text-white'
+              }`}
+            >
+              {event.price === 0 ? 'Free' : `EGP ${event.price}`}
+            </span>
+          </div>
         </div>
       </Link>
 
-      <div className="p-5">
-        <Link to={`/app/events/${event.id}`}>
-          <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">{event.title}</h3>
-        </Link>
-
-        {aiReason && isTopPick && (
-          <p className="text-[11px] text-primary font-semibold mb-2 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 flex-shrink-0" />
-            {aiReason}
-          </p>
-        )}
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          {isTopPick && <span className="filter-chip active text-[11px]">AI Pick</span>}
-          {event.location.isVirtual ? (
-            <span className="filter-chip inactive text-[11px]">Virtual</span>
-          ) : (
-            <span className="filter-chip inactive text-[11px]">In person</span>
+      <div className="flex flex-1 flex-col gap-3 p-4 sm:gap-4 sm:p-5">
+        <div className="flex flex-col gap-1.5">
+          <Link to={`/app/events/${event.id}`}>
+            <h3 className="line-clamp-2 text-base font-bold leading-snug text-foreground transition-colors group-hover:text-primary sm:text-lg">
+              {event.title}
+            </h3>
+          </Link>
+          {aiReason && isTopPick && (
+            <p className="line-clamp-1 text-xs font-medium text-primary/80">{aiReason}</p>
           )}
         </div>
 
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-caption text-muted-foreground">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>
-              {new Date(event.date).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary dark:bg-primary/15">
+              <Calendar className="h-3.5 w-3.5" />
             </span>
-          </div>
-          <div className="flex items-center gap-2 text-caption text-muted-foreground">
-            <MapPin className="w-3.5 h-3.5" />
-            <span className="truncate">{event.location.venue}</span>
-          </div>
-          {event.schedule?.length ? (
-            <div className="flex items-center gap-2 text-caption text-muted-foreground">
-              <Clock className="w-3.5 h-3.5" />
-              <span className="truncate font-semibold">{event.schedule[0].time} — {event.schedule[0].title}</span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">{formattedDate}</p>
+              <p className="text-xs text-muted-foreground">{formattedTime}</p>
             </div>
-          ) : null}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+              <MapPin className="h-3.5 w-3.5" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">{event.location.venue}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {event.location.isVirtual ? 'Online event' : event.location.city}
+                {distanceKm !== null && !event.location.isVirtual && (
+                  <span className="text-cyan-600 dark:text-cyan-400"> · {distanceKm.toFixed(1)} km</span>
+                )}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-border/50">
-          <div className="flex items-center gap-1.5">
-            <div className="flex -space-x-2">
-              {[1, 2, 3].map((i) => (
-                <img key={i} src={`https://i.pravatar.cc/24?img=${i + 10}`} className="w-6 h-6 rounded-full border-2 border-background" alt="" />
-              ))}
-            </div>
-            <span className="text-[11px] font-bold text-muted-foreground">+{event.rsvpCount} going</span>
-          </div>
-          <p className="text-lg font-black text-foreground">
-            {event.price === 0 ? <span className="text-green-600 dark:text-green-400">FREE</span> : `EGP ${event.price}`}
-          </p>
+        <div className="mt-auto border-t border-border/50 pt-4">
+          <Link
+            to={`/app/events/${event.id}/rsvp`}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold no-underline transition-all duration-200 sm:w-auto
+              border-primary/25 bg-primary text-primary-foreground
+              shadow-[0_4px_14px_rgba(108,76,241,0.22)]
+              hover:border-primary/40 hover:bg-[#5B3FE0] hover:shadow-[0_6px_20px_rgba(108,76,241,0.32)] hover:-translate-y-0.5
+              active:translate-y-0 active:shadow-[0_2px_8px_rgba(108,76,241,0.2)]
+              dark:border-primary/35 dark:bg-[#8B7CFF] dark:text-white
+              dark:shadow-[0_4px_18px_rgba(139,124,255,0.28)]
+              dark:hover:border-primary/50 dark:hover:bg-[#9B8CFF] dark:hover:shadow-[0_6px_24px_rgba(155,140,255,0.38)]
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <Ticket className="h-4 w-4 shrink-0" />
+            View & Register
+          </Link>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

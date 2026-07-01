@@ -259,7 +259,7 @@ export default function ManageEvent() {
                   return (
                     <div
                       key={attendee.id}
-                      className={`flex items-center gap-4 rounded-2xl border p-4 transition-all ${done ? 'border-green-400/40 bg-green-50/70 dark:bg-green-900/10' : 'border-border bg-background hover:border-primary/30'}`}
+                      className={`activity-item flex items-center gap-3 p-3 sm:gap-4 sm:p-4 ${done ? 'border-green-400/40 bg-green-500/5' : ''}`}
                     >
                       <input
                         type="checkbox"
@@ -272,8 +272,8 @@ export default function ManageEvent() {
                         <p className="truncate text-body-sm font-bold text-foreground">{attendee.name}</p>
                         <p className="truncate text-caption text-muted-foreground">{attendee.email}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          <span className="status-pill bg-primary/10 text-primary">{attendee.ticketType}</span>
-                          <span className="status-pill bg-muted text-muted-foreground">{attendee.status}</span>
+                          <span className="status-pill status-pill--info">{attendee.ticketType}</span>
+                          <span className="status-pill status-pill--neutral">{attendee.status}</span>
                         </div>
                       </div>
                       {done ? (
@@ -282,7 +282,7 @@ export default function ManageEvent() {
                           Checked in
                         </span>
                       ) : (
-                        <button onClick={() => handleCheckIn(attendee.id, attendee.name)} className="btn-primary shrink-0 px-4 py-2 text-body-sm">
+                        <button onClick={() => handleCheckIn(attendee.id, attendee.name)} className="btn-organizer btn-primary shrink-0 px-4 py-2 text-body-sm">
                           Check in
                         </button>
                       )}

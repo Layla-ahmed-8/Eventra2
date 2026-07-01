@@ -580,12 +580,10 @@ export default function CreateEvent() {
         </div>
       )}
 
-      <div className="bento-section grid gap-3 lg:grid-cols-2 2xl:grid-cols-2 p-3 sm:p-4">
-        <section className="space-y-2 rounded-2xl border border-border/60 p-3">
-          <div>
-            <h2 className="text-h3 font-bold text-foreground">Event Details</h2>
-            <p className="text-caption text-muted-foreground">Core information that attendees see first.</p>
-          </div>
+      <div className="flex flex-col gap-4 sm:gap-6">
+        <section className="form-section flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
+          <h2 className="text-h3 font-bold text-foreground border-b border-purple-500/10 pb-3 sm:pb-4">Event Details</h2>
+          <p className="-mt-2 text-caption text-muted-foreground sm:-mt-3">Core information that attendees see first.</p>
 
           <div className="space-y-1.5">
             <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">Event Title *</label>
@@ -642,11 +640,9 @@ export default function CreateEvent() {
           </div>
         </section>
 
-        <section className="space-y-2 rounded-2xl border border-border/60 p-3">
-          <div>
-            <h2 className="text-h3 font-bold text-foreground">Location</h2>
-            <p className="text-caption text-muted-foreground">Where the event takes place.</p>
-          </div>
+        <section className="form-section flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
+          <h2 className="text-h3 font-bold text-foreground border-b border-purple-500/10 pb-3 sm:pb-4">Location</h2>
+          <p className="-mt-2 text-caption text-muted-foreground sm:-mt-3">Where the event takes place.</p>
 
           <div className="space-y-1.5">
             <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">Event Type *</label>
@@ -731,11 +727,9 @@ export default function CreateEvent() {
           </div>
         </section>
 
-        <section className="space-y-2 rounded-2xl border border-border/60 p-3">
-          <div>
-            <h2 className="text-h3 font-bold text-foreground">Description & Media</h2>
-            <p className="text-caption text-muted-foreground">Explain the event and add imagery.</p>
-          </div>
+        <section className="form-section flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
+          <h2 className="text-h3 font-bold text-foreground border-b border-purple-500/10 pb-3 sm:pb-4">Description & Media</h2>
+          <p className="-mt-2 text-caption text-muted-foreground sm:-mt-3">Explain the event and add imagery.</p>
 
           <div className="space-y-1.5">
             <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">Event Description *</label>
@@ -839,11 +833,9 @@ export default function CreateEvent() {
           </div>
         </section>
 
-        <section className="space-y-2 rounded-2xl border border-border/60 p-3">
-          <div>
-            <h2 className="text-h3 font-bold text-foreground">Ticketing</h2>
-            <p className="text-caption text-muted-foreground">Set capacity and pricing.</p>
-          </div>
+        <section className="form-section flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
+          <h2 className="text-h3 font-bold text-foreground border-b border-purple-500/10 pb-3 sm:pb-4">Ticketing</h2>
+          <p className="-mt-2 text-caption text-muted-foreground sm:-mt-3">Set capacity and pricing.</p>
 
           <div className="space-y-1.5">
             <label className="text-caption font-black uppercase tracking-widest text-muted-foreground">Event Capacity *</label>
@@ -902,7 +894,7 @@ export default function CreateEvent() {
           </div>
         </section>
 
-        <div className="mt-2 flex flex-col gap-3 border-t border-border pt-4 md:flex-row md:items-center md:justify-between 2xl:col-span-2 lg:col-span-2">
+        <div className="mt-2 flex flex-col gap-3 border-t border-border pt-4 md:flex-row md:items-center md:justify-between">
           <div className="text-caption text-muted-foreground">
             {isFormComplete() ? 'Ready to review and publish' : 'Complete required fields before publishing'}
           </div>

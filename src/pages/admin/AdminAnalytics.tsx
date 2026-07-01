@@ -1,567 +1,357 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Skeleton } from '../../app/components/ui/skeleton';
-import { demoToast } from '../../lib/demoFeedback';
-import { formatRelativeTime } from '../../lib/utils';
-import {
-  Users, Calendar, TrendingUp, AlertCircle, Activity, DollarSign,
-  ArrowUpRight, ArrowDownRight, Globe, Repeat, Target, Zap, Sparkles,
-  ChevronRight, Cpu, ArrowRight, RefreshCw, ShieldAlert, Settings, Eye, Shield, UserCheck,
-} from 'lucide-react';
-import { useAppStore } from '../../store/useAppStore';
-import {
-  DashboardPage, DashboardHero, QuickActionGrid, PeriodTabs, LiveIndicator,
-} from '../../components/business/DashboardPrimitives';
 
-const PERIODS = ['7d', '30d', '6m', '1y'] as const;
-type Period = typeof PERIODS[number];
+import React, { useEffect, useMemo, useState } from 'react';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, RadialBar, RadialBarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Activity, AlertTriangle, ArrowUp, CheckCircle, ChevronDown, ChevronUp, Clock, Filter, Search, Star, TrendingUp, Users, X } from 'lucide-react';
 
-// ── Sparkline ─────────────────────────────────────────────────────────────────
-function Sparkline({ data, color = '#7C5CFF' }: { data: number[]; color?: string }) {
-  const max = Math.max(...data);
-  return (
-    <div className="flex items-end gap-0.5 h-8">
-      {data.map((v, i) => (
-        <div key={i} className="flex-1 rounded-sm opacity-80" style={{ height: `${(v / max) * 100}%`, background: color }} />
-      ))}
-    </div>
-  );
-}
+const ADMIN_COLORS = ['#7C5CFF', '#00D4FF', '#FF9B3D', '#22C55E', '#EF4444'];
 
-// ── Donut chart ───────────────────────────────────────────────────────────────
-function DonutChart({ segments }: { segments: { value: number; color: string; label: string }[] }) {
-  const total = segments.reduce((s, x) => s + x.value, 0);
-  let offset = 0;
-  const r = 28; const circ = 2 * Math.PI * r;
-  return (
-    <div className="flex items-center gap-4">
-      <svg width={72} height={72} className="-rotate-90">
-        <circle cx={36} cy={36} r={r} fill="none" stroke="currentColor" strokeWidth={10} className="text-muted/20" />
-        {segments.map((seg, i) => {
-          const dash = (seg.value / total) * circ;
-          const el = <circle key={i} cx={36} cy={36} r={r} fill="none" stroke={seg.color} strokeWidth={10} strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-offset} strokeLinecap="butt" />;
-          offset += dash;
-          return el;
-        })}
-      </svg>
-      <div className="space-y-1.5">
-        {segments.map((s) => (
-          <div key={s.label} className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.color }} />
-            <span className="text-caption text-muted-foreground">{s.label}</span>
-            <span className="text-caption font-bold text-foreground ml-auto">{s.value.toLocaleString()}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Bar chart ─────────────────────────────────────────────────────────────────
-function BarChart({ data, labels, color = '#7C5CFF', height = 140 }: {
-  data: number[]; labels: string[]; color?: string; height?: number;
-}) {
-  const max = Math.max(...data);
-  return (
-    <div>
-      <div className="flex items-end gap-1" style={{ height }}>
-        {data.map((v, i) => (
-          <div key={i} className="flex-1 flex flex-col justify-end group relative">
-            <div className="rounded-t transition-all hover:opacity-75" style={{ height: `${(v / max) * 100}%`, background: color }} />
-            <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-caption px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-              {v.toLocaleString()}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-between mt-2">
-        {labels.map((l, i) => (
-          <span key={i} className="text-caption text-muted-foreground" style={{ width: `${100 / labels.length}%`, textAlign: 'center' }}>{l}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Horizontal bar ────────────────────────────────────────────────────────────
-function HBar({ label, value, max, color, suffix = '' }: { label: string; value: number; max: number; color: string; suffix?: string }) {
-  return (
-    <div>
-      <div className="flex justify-between text-body-sm mb-1.5">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-bold text-foreground">{value > 999 ? value.toLocaleString() : value}{suffix}</span>
-      </div>
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(value / max) * 100}%`, background: color }} />
-      </div>
-    </div>
-  );
-}
-
-// ── Static data ───────────────────────────────────────────────────────────────
-const kpiSparklines = {
-  users:   [320, 410, 380, 520, 490, 610, 580, 720, 690, 840, 810, 950],
-  revenue: [180, 240, 210, 310, 280, 390, 360, 450, 420, 540, 510, 620],
-  events:  [28, 35, 31, 42, 38, 48, 44, 55, 51, 62, 58, 70],
-  flags:   [45, 38, 42, 30, 35, 28, 24],
-};
-
-const chartUserGrowth: Record<Period, { data: number[]; labels: string[] }> = {
-  '7d':  { data: [1820, 1950, 1880, 2100, 2050, 2280, 2200], labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] },
-  '30d': { data: [8200, 8800, 8500, 9400, 9100, 10200, 9800, 10800, 10400, 11500, 11100, 12400], labels: Array.from({length:12},(_,i)=>`${i*3+1}`) },
-  '6m':  { data: [6200, 7400, 8100, 9300, 10800, 12400], labels: ['Dec','Jan','Feb','Mar','Apr','May'] },
-  '1y':  { data: [3200, 4100, 3800, 5200, 4900, 6100, 5800, 7200, 6900, 8400, 8100, 9500], labels: ['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'] },
-};
-
-const chartRevenue: Record<Period, { data: number[]; labels: string[] }> = {
-  '7d':  { data: [42, 58, 51, 74, 68, 95, 88], labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] },
-  '30d': { data: [180, 240, 210, 310, 280, 390, 360, 450, 420, 540, 510, 620], labels: Array.from({length:12},(_,i)=>`${i*3+1}`) },
-  '6m':  { data: [320, 410, 480, 560, 640, 720], labels: ['Dec','Jan','Feb','Mar','Apr','May'] },
-  '1y':  { data: [120, 180, 150, 240, 210, 310, 280, 390, 360, 450, 420, 540], labels: ['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'] },
-};
-
-const realtimeActivity = [
-  { icon: '👤', action: 'New user registration', user: 'Sarah Ahmed', timestamp: new Date(Date.now() - 0.5 * 60 * 1000).toISOString(), type: 'user' },
-  { icon: '📅', action: 'Event published', user: 'Tech Cairo', timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(), type: 'event' },
-  { icon: '💰', action: 'Payment processed', user: 'Mohamed Ali', timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(), type: 'payment' },
-  { icon: '🚩', action: 'Event flagged for review', user: 'System AI', timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(), type: 'flag' },
-  { icon: '🏢', action: 'New organizer account', user: 'Cairo Events Co', timestamp: new Date(Date.now() - 12 * 60 * 1000).toISOString(), type: 'organizer' },
-  { icon: '🎟️', action: 'Bulk ticket purchase', user: 'Yasmine K.', timestamp: new Date(Date.now() - 18 * 60 * 1000).toISOString(), type: 'payment' },
+const MockOrganizers = [
+  { id: '1', name: 'Nile Events', category: 'Tech', eventsHosted: 12, avgAttendance: 85, avgRating: 4.8, revenue: 1200000, cancellationRate: 5 },
+  { id: '2', name: 'Cairo Music', category: 'Music', eventsHosted: 25, avgAttendance: 90, avgRating: 4.6, revenue: 2500000, cancellationRate: 8 },
+  { id: '3', name: 'Tech Summit EG', category: 'Tech', eventsHosted: 8, avgAttendance: 95, avgRating: 4.9, revenue: 1800000, cancellationRate: 3 },
+  { id: '4', name: 'Alexandria Arts', category: 'Culture', eventsHosted: 15, avgAttendance: 75, avgRating: 4.5, revenue: 900000, cancellationRate: 10 },
+  { id: '5', name: 'Giza Sports', category: 'Sports', eventsHosted: 10, avgAttendance: 88, avgRating: 4.7, revenue: 1100000, cancellationRate: 6 },
 ];
 
-const pendingItems = [
-  { label: 'Events awaiting approval', count: 5, link: '/admin/events' },
-  { label: 'User reports', count: 3, link: '/admin/moderation' },
-  { label: 'Flagged posts', count: 8, link: '/admin/community' },
-  { label: 'Organizer requests', count: 2, link: '/admin/users' },
+const MockCategoryTrends = [
+  { month: 'Jan', Tech: 12, Art: 8, Music: 20, Sports: 10, Business: 5, Workshop: 4 },
+  { month: 'Feb', Tech: 15, Art: 10, Music: 25, Sports: 12, Business: 6, Workshop: 5 },
+  { month: 'Mar', Tech: 18, Art: 12, Music: 22, Sports: 15, Business: 8, Workshop: 6 },
+  { month: 'Apr', Tech: 20, Art: 15, Music: 28, Sports: 18, Business: 10, Workshop: 8 },
+  { month: 'May', Tech: 25, Art: 18, Music: 30, Sports: 20, Business: 12, Workshop: 10 },
+  { month: 'Jun', Tech: 28, Art: 20, Music: 32, Sports: 22, Business: 15, Workshop: 12 },
 ];
 
-const systemHealth = [
-  { label: 'API Gateway', status: 'Healthy', pct: 100, color: '#22C55E' },
-  { label: 'Database', status: '98%', pct: 98, color: '#22C55E' },
-  { label: 'AI Engine', status: '95%', pct: 95, color: '#7C5CFF' },
-  { label: 'Storage', status: '72%', pct: 72, color: '#F59E0B' },
-  { label: 'CDN', status: '99%', pct: 99, color: '#22C55E' },
+const MockRetentionCohorts = [
+  { cohort: 'Week 1', W0: 100, W1: 75, W2: 60, W3: 50, W4: 45, W5: 40 },
+  { cohort: 'Week 2', W0: 100, W1: 72, W2: 58, W3: 48, W4: 42, W5: 38 },
+  { cohort: 'Week 3', W0: 100, W1: 78, W2: 65, W3: 55, W4: 50, W5: 45 },
+  { cohort: 'Week 4', W0: 100, W1: 70, W2: 55, W3: 45, W4: 40, W5: 35 },
+  { cohort: 'Week 5', W0: 100, W1: 80, W2: 68, W3: 58, W4: 52, W5: 48 },
+  { cohort: 'Week 6', W0: 100, W1: 85, W2: 72, W3: 65, W4: 60, W5: 55 },
 ];
 
-const categoryData = [
-  { category: 'Music', events: 145, growth: '+28%', attendees: 18400, color: '#7C5CFF' },
-  { category: 'Tech', events: 128, growth: '+42%', attendees: 24600, color: '#00D4FF' },
-  { category: 'Food & Drink', events: 98, growth: '+15%', attendees: 12800, color: '#FF9B3D' },
-  { category: 'Sports', events: 87, growth: '+12%', attendees: 9200, color: '#22C55E' },
-  { category: 'Art', events: 76, growth: '+8%', attendees: 7400, color: '#FF4FD8' },
-  { category: 'Business', events: 65, growth: '+22%', attendees: 8100, color: '#F59E0B' },
+const MockRejectionReasons = [
+  { name: 'Incomplete Info', count: 45 },
+  { name: 'Policy Violation', count: 25 },
+  { name: 'Duplicate Event', count: 15 },
+  { name: 'Low Quality', count: 10 },
+  { name: 'Other', count: 5 },
 ];
 
-const topOrganizers = [
-  { name: 'Cairo Food Collective', events: 12, revenue: 'EGP 89K', avatar: 'https://i.pravatar.cc/40?img=50' },
-  { name: 'Tech Cairo', events: 8, revenue: 'EGP 0', avatar: 'https://i.pravatar.cc/40?img=20' },
-  { name: 'Cairo Jazz Club', events: 6, revenue: 'EGP 45K', avatar: 'https://i.pravatar.cc/40?img=10' },
-  { name: 'Townhouse Gallery', events: 5, revenue: 'EGP 12K', avatar: 'https://i.pravatar.cc/40?img=40' },
+const MockAdminTimeSeries = [
+  { month: 'Jan', users: 1200, revenue: 50000 },
+  { month: 'Feb', users: 1400, revenue: 60000 },
+  { month: 'Mar', users: 1600, revenue: 75000 },
+  { month: 'Apr', users: 1900, revenue: 85000 },
+  { month: 'May', users: 2200, revenue: 100000 },
+  { month: 'Jun', users: 2500, revenue: 120000 },
 ];
 
-const userDonutSegments = [
-  { value: 10200, color: '#7C5CFF', label: 'Attendees' },
-  { value: 1840, color: '#9B8CFF', label: 'Organizers' },
-  { value: 360, color: '#C4B5FD', label: 'Admins' },
+const MockAnomalies = [
+  { id: '1', type: 'high_cancellation', organizer: 'Alexandria Arts', message: 'Cancellation rate > 30%', icon: AlertTriangle },
+  { id: '2', type: 'low_bookings', event: 'Desert Safari', message: '0 bookings within 48h of start', icon: AlertTriangle },
+  { id: '3', type: 'pending_review', count: 5, message: 'Events pending review >24h', icon: Clock },
 ];
 
-const topCities = [
-  { city: 'Cairo', events: 520, users: 8400, color: '#7C5CFF' },
-  { city: 'Alexandria', events: 180, users: 2800, color: '#9B8CFF' },
-  { city: 'Giza', events: 95, users: 1400, color: '#C4B5FD' },
-  { city: 'Sharm El-Sheikh', events: 52, users: 820, color: '#DDD6FE' },
-];
+const AdminCardSkeleton = () => <div className="skeleton h-32 rounded-xl" />;
+const AdminChartSkeleton = ({ height = 300 }: { height?: number }) => <div className="skeleton rounded-xl" style={{ height: `${height}px` }} />;
 
-// ── Component ─────────────────────────────────────────────────────────────────
 export default function AdminAnalytics() {
-  const { currentUser, organizerRequests } = useAppStore();
-  const pendingRequests = organizerRequests.filter((r) => r.status === 'pending').length;
-  const [period, setPeriod] = useState<Period>('30d');
-  const [chartLoading, setChartLoading] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState(() => new Date().toLocaleTimeString());
+  const [period, setPeriod] = useState<'7d' | '30d' | '90d' | 'all'>('90d');
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [revenueFilter, setRevenueFilter] = useState<'all' | '250k' | '1M' | '2M'>('all');
+  const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
+  const [sortBy, setSortBy] = useState('revenue');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [lastUpdated, setLastUpdated] = useState('Just now');
+  const [loadingStates, setLoadingStates] = useState({ health: true, kpi1: true, kpi2: true, kpi3: true, chart1: true, chart2: true, chart3: true, chart4: true });
 
-  const handlePeriodChange = (p: Period) => {
-    setChartLoading(true);
-    setPeriod(p);
-    setTimeout(() => setChartLoading(false), 500);
+  useEffect(() => {
+    const keys = Object.keys(loadingStates) as Array<keyof typeof loadingStates>;
+    keys.forEach((key, index) => {
+      window.setTimeout(() => setLoadingStates((prev) => ({ ...prev, [key]: false })), index * 250);
+    });
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setLastUpdated(`${Math.floor(Math.random() * 5) + 1} minutes ago`), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const filteredOrganizers = useMemo(() => {
+    return MockOrganizers.filter((organizer) => {
+      const matchesSearch = !searchTerm || organizer.name.toLowerCase().includes(searchTerm.toLowerCase()) || organizer.category.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !categoryFilter || organizer.category === categoryFilter;
+      const matchesRevenue = revenueFilter === 'all' ? true : organizer.revenue >= Number(revenueFilter.replace('k', '000').replace('M', '000000'));
+      const matchesFlag = !showFlaggedOnly || organizer.cancellationRate > 8 || organizer.avgAttendance < 80;
+      return matchesSearch && matchesCategory && matchesRevenue && matchesFlag;
+    });
+  }, [categoryFilter, revenueFilter, searchTerm, showFlaggedOnly]);
+
+  const sortedOrganizers = useMemo(() => [...filteredOrganizers].sort((a, b) => {
+    const aVal = a[sortBy as keyof typeof a];
+    const bVal = b[sortBy as keyof typeof b];
+    if (sortOrder === 'asc') return aVal > bVal ? 1 : -1;
+    return aVal < bVal ? 1 : -1;
+  }), [filteredOrganizers, sortBy, sortOrder]);
+
+  const healthScore = useMemo(() => {
+    if (!filteredOrganizers.length) return 0;
+    const avgAttendance = filteredOrganizers.reduce((sum, organizer) => sum + organizer.avgAttendance, 0) / filteredOrganizers.length;
+    const avgRating = filteredOrganizers.reduce((sum, organizer) => sum + organizer.avgRating, 0) / filteredOrganizers.length;
+    const approval = Math.max(0, 100 - filteredOrganizers.reduce((sum, organizer) => sum + organizer.cancellationRate, 0) / filteredOrganizers.length);
+    const score = (avgAttendance / 100) * 30 + (avgRating / 5) * 25 + (approval / 100) * 25 + (filteredOrganizers.length / MockOrganizers.length) * 20;
+    return Math.min(100, Math.max(0, Math.round(score * 100)));
+  }, [filteredOrganizers]);
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(column);
+      setSortOrder('desc');
+    }
   };
 
-  const totalPending = pendingItems.reduce((s, i) => s + i.count, 0) + pendingRequests;
+  const activeFilters = [searchTerm && `Search: ${searchTerm}`, categoryFilter && `Category: ${categoryFilter}`, revenueFilter !== 'all' && `Revenue ≥ ${revenueFilter}`, showFlaggedOnly && 'Flagged only'].filter(Boolean) as string[];
 
-  return (
-    <DashboardPage>
-      <DashboardHero
-        badge="Administrator"
-        badgeIcon={Shield}
-        name={currentUser?.name ?? 'Admin'}
-        subtitle="Platform command center — monitor health, review actions, and track growth in real time."
-        meta={<LiveIndicator label="All systems operational" />}
-        actions={
-          <>
-            <button
-              type="button"
-              onClick={() => {
-                setLastRefresh(new Date().toLocaleTimeString());
-                demoToast('Refreshed', 'Dashboard data updated.');
-              }}
-              className="btn-secondary flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-            <Link to="/admin/settings" className="btn-secondary flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">Settings</span>
-            </Link>
-            <span className="hidden md:inline text-caption text-muted-foreground">
-              Updated {lastRefresh}
-            </span>
-          </>
-        }
-        stats={[
-          { label: 'Total Users', value: '12.4K', hint: '+12% this month' },
-          { label: 'Active Events', value: '847', hint: '+24% growth' },
-          { label: 'Revenue', value: 'EGP 2.4M', hint: 'Platform-wide' },
-          { label: 'Pending Reviews', value: String(totalPending), hint: 'Needs attention' },
-        ]}
-      />
-
-      <QuickActionGrid
-        items={[
-          { to: '/admin/users', icon: Users, label: 'Manage Users', grad: 'from-[#7C5CFF] to-[#9B8CFF]' },
-          { to: '/admin/events', icon: Eye, label: 'Review Events', grad: 'from-[#7C5CFF] to-[#5B3FE0]' },
-          { to: '/admin/moderation', icon: ShieldAlert, label: 'Moderation', grad: 'from-[#9B8CFF] to-[#7C5CFF]' },
-          { to: '/admin/settings', icon: Settings, label: 'Settings', grad: 'from-[#C4B5FD] to-[#9B8CFF]' },
-        ]}
-      />
-
-      <div className="dashboard-grid dashboard-grid-4">
-        {[
-          { label: 'Total Users', value: '12.4K', change: '+12%', up: true, data: kpiSparklines.users, color: '#7C5CFF', icon: Users, iconClass: 'icon-box-primary' },
-          { label: 'Active Events', value: '847', change: '+24%', up: true, data: kpiSparklines.events, color: '#9B8CFF', icon: Calendar, iconClass: 'icon-box-primary' },
-          { label: 'Platform Revenue', value: 'EGP 2.4M', change: '+32%', up: true, data: kpiSparklines.revenue, color: '#7C5CFF', icon: DollarSign, iconClass: 'icon-box-primary' },
-          { label: 'System Flags', value: '24', change: '-5%', up: false, data: kpiSparklines.flags, color: '#C4B5FD', icon: AlertCircle, iconClass: 'icon-box-primary' },
-        ].map((kpi) => (
-          <div key={kpi.label} className="kpi-card">
-            <div className="flex items-center justify-between">
-              <div className={`icon-box ${kpi.iconClass}`}>
-                <kpi.icon className="w-5 h-5" />
-              </div>
-              <div className={`kpi-trend ${kpi.up ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
-                {kpi.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {kpi.change}
-              </div>
-            </div>
-            <div>
-              <p className="kpi-value">{kpi.value}</p>
-              <p className="kpi-label">{kpi.label}</p>
-            </div>
-            <Sparkline data={kpi.data} color={kpi.color} />
+  const FilterChip = () => {
+    if (!selectedFilter && !activeFilters.length) return null;
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {selectedFilter && (
+          <div className="flex items-center gap-2 status-pill status-pill--danger px-4 py-2 text-body-sm font-semibold">
+            <Filter className="w-4 h-4" />
+            {selectedFilter}
+            <button onClick={() => setSelectedFilter(null)} className="ml-1 hover:opacity-70 rounded-full p-0.5"><X className="w-4 h-4" /></button>
+          </div>
+        )}
+        {activeFilters.map((filter) => (
+          <div key={filter} className="flex items-center gap-2 status-pill status-pill--danger px-4 py-2 text-body-sm font-semibold">
+            <Filter className="w-4 h-4" />
+            {filter}
           </div>
         ))}
       </div>
+    );
+  };
 
-      {/* Period selector + charts */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  const renderStars = (rating: number) => Array.from({ length: 5 }, (_, i) => <Star key={i} className={`w-4 h-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`} />);
+
+  return (
+    <div className="dashboard-page--admin flex w-full min-w-0 flex-col gap-4 sm:gap-6">
+      <div className="mb-2 flex flex-col gap-4 sm:mb-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-h3 font-bold text-foreground">Platform Metrics</h2>
-          <p className="text-caption text-muted-foreground mt-0.5">User growth and revenue trends</p>
+          <span className="dashboard-role-badge mb-3">Administrator</span>
+          <h1 className="text-h1 text-foreground">Admin Dashboard</h1>
+          <p className="text-body-sm text-muted-foreground">Platform-wide analytics and insights</p>
         </div>
-        <PeriodTabs periods={PERIODS} value={period} onChange={handlePeriodChange} />
-      </div>
-
-      <div className="dashboard-grid dashboard-grid-2">
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <Users className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">User Growth</h2>
-            </div>
-            <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">{period}</span>
-          </div>
-          {chartLoading
-            ? <Skeleton className="rounded-xl" style={{ height: 140 }} />
-            : <BarChart data={chartUserGrowth[period].data} labels={chartUserGrowth[period].labels} color="url(#adminGrad1)" height={140} />
-          }
-          <svg width="0" height="0">
-            <defs>
-              <linearGradient id="adminGrad1" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#7C5CFF" />
-                <stop offset="100%" stopColor="#9B8CFF" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <DollarSign className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Revenue (EGP K)</h2>
-            </div>
-            <span className="text-caption font-bold text-muted-foreground uppercase tracking-widest">{period}</span>
-          </div>
-          {chartLoading
-            ? <Skeleton className="rounded-xl" style={{ height: 140 }} />
-            : <BarChart data={chartRevenue[period].data} labels={chartRevenue[period].labels} color="url(#adminGrad2)" height={140} />
-          }
-          <svg width="0" height="0">
-            <defs>
-              <linearGradient id="adminGrad2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FF9B3D" />
-                <stop offset="100%" stopColor="#FFD56A" />
-              </linearGradient>
-            </defs>
-          </svg>
+        <div className="flex flex-col items-start gap-3 sm:items-end">
+          <span className="live-indicator"><span className="live-dot" /> Data as of {lastUpdated}</span>
         </div>
       </div>
 
-      {/* Real-time Activity + System Health + Pending Reviews */}
-      <div className="dashboard-grid dashboard-grid-3-lg">
-        {/* Activity feed — 2 cols */}
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <Activity className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Real-time Activity</h2>
-            </div>
-            <LiveIndicator />
+      <div className="rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-5 lg:p-6">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-body-sm font-semibold text-foreground">Advanced filters</h3>
+            <p className="text-caption text-muted-foreground">Refine the leaderboard and risk views without losing context.</p>
           </div>
-          <div className="space-y-3">
-            {realtimeActivity.map((activity, index) => (
-              <div key={index} className="activity-item">
-                <div className="activity-icon-wrapper">{activity.icon}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-body-sm font-semibold text-foreground truncate">{activity.action}</p>
-                    <span className="text-caption text-muted-foreground whitespace-nowrap">{formatRelativeTime(activity.timestamp)}</span>
-                  </div>
-                  <p className="text-caption text-muted-foreground">{activity.user}</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
-              </div>
+          <span className="text-caption text-muted-foreground">Showing {filteredOrganizers.length} of {MockOrganizers.length} organizers</span>
+        </div>
+        <div className="flex flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-center">
+          <div className="flex w-full min-w-0 items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-2 xl:min-w-[220px] xl:max-w-[280px]">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search organizers" className="w-full border-0 bg-transparent text-sm outline-none" />
+          </div>
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="input-base h-10 w-full text-body-sm xl:min-w-[150px] xl:max-w-[180px]">
+            <option value="">All segments</option>
+            {[...new Set(MockOrganizers.map((organizer) => organizer.category))].map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+          <select value={revenueFilter} onChange={(e) => setRevenueFilter(e.target.value as 'all' | '250k' | '1M' | '2M')} className="input-base h-10 w-full text-body-sm xl:min-w-[150px] xl:max-w-[180px]">
+            <option value="all">Any revenue</option>
+            <option value="250k">EGP 250k+</option>
+            <option value="1M">EGP 1M+</option>
+            <option value="2M">EGP 2M+</option>
+          </select>
+          <label className="flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-2 text-sm text-muted-foreground">
+            <input type="checkbox" checked={showFlaggedOnly} onChange={() => setShowFlaggedOnly((prev) => !prev)} />
+            Flagged only
+          </label>
+          <div className="period-tabs flex flex-wrap gap-1 p-1">
+            {['7d', '30d', '90d', 'all'].map((p) => (
+              <button key={p} onClick={() => setPeriod(p as '7d' | '30d' | '90d' | 'all')} className={`period-tab ${period === p ? 'period-tab--active' : ''}`}>
+                {p.toUpperCase()}
+              </button>
             ))}
           </div>
-          <Link to="/admin/audit-logs" className="w-full mt-4 py-2.5 text-caption font-semibold text-primary hover:bg-primary/5 rounded-xl transition-colors border border-dashed border-primary/20 flex items-center justify-center gap-2">
-            View system audit log <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="space-y-5">
-          <div className="bento-section">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-body-sm font-semibold text-foreground flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-primary" />
-                Action required
-              </h3>
-              <span className="status-pill bg-primary/10 text-primary">{totalPending} total</span>
-            </div>
-            <div className="grid grid-cols-1 gap-2">
-              {pendingItems.map((item) => (
-                <Link key={item.label} to={item.link} className="pending-action-card group">
-                  <span className="text-caption font-semibold text-foreground">{item.label}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-body-sm font-bold text-primary">{item.count}</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-primary group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                </Link>
-              ))}
-              {pendingRequests > 0 && (
-                <Link to="/admin/users" className="pending-action-card group">
-                  <span className="text-caption font-semibold text-foreground">Organizer requests (live)</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-body-sm font-bold text-primary">{pendingRequests}</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-primary group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                </Link>
-              )}
-            </div>
-          </div>
-
-          <div className="bento-section">
-            <div className="bento-header !mb-3">
-              <h3 className="text-body-sm font-semibold text-foreground flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-primary" />
-                System Health
-              </h3>
-              <Globe className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div className="space-y-3">
-              {systemHealth.map((s) => (
-                <div key={s.label} className="space-y-1">
-                  <div className="flex justify-between text-caption font-semibold uppercase tracking-wide text-muted-foreground">
-                    <span>{s.label}</span>
-                    <span className="text-primary">{s.status}</span>
-                  </div>
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${s.pct}%`, background: s.color }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          {(searchTerm || categoryFilter || revenueFilter !== 'all' || showFlaggedOnly) && <button onClick={() => { setSearchTerm(''); setCategoryFilter(''); setRevenueFilter('all'); setShowFlaggedOnly(false); }} className="btn-ghost w-full text-body-sm sm:w-auto">Reset</button>}
         </div>
       </div>
 
-      <div className="dashboard-grid dashboard-grid-2">
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <Users className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">User Distribution</h2>
-            </div>
-          </div>
-          <DonutChart segments={userDonutSegments} />
-        </div>
+      <FilterChip />
 
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <UserCheck className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Top Organizers</h2>
+      <div className="rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6 lg:p-8">
+        {loadingStates.health ? <div className="skeleton h-64 rounded-xl" /> : (
+          <div className="flex flex-col items-center gap-6 xl:flex-row xl:gap-8">
+            <div className="w-full flex-1 min-w-0">
+              <h2 className="text-h2 text-foreground mb-2">Platform Health Score</h2>
+              <p className="text-body-sm text-muted-foreground mb-4 sm:mb-6">Composite score of platform health metrics</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+                {[
+                  { label: 'DAU/MAU Ratio', value: '45%', weight: '30%' },
+                  { label: 'Booking Conversion', value: '32%', weight: '25%' },
+                  { label: 'Avg Event Rating', value: '4.4/5', weight: '25%' },
+                  { label: 'Organizer Approval', value: '88%', weight: '20%' },
+                ].map((item, i) => (
+                  <div key={i} className="dashboard-stat-item flex min-h-[6.5rem] flex-col justify-center gap-2 rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm sm:p-6">
+                    <p className="dashboard-stat-label">{item.label}</p>
+                    <p className="dashboard-stat-value">{item.value}</p>
+                    <p className="dashboard-stat-hint">Weight: {item.weight}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="relative h-56 w-full max-w-[16rem] sm:h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart innerRadius="60%" outerRadius="100%" data={[{ value: healthScore }]} startAngle={180} endAngle={0}>
+                  <RadialBar background dataKey="value" cornerRadius={10} fill="url(#healthGradient)" />
+                  <defs>
+                    <linearGradient id="healthGradient" x1="0" y1="0" x2="100%" y2="0%">
+                      {healthScore >= 70 ? <><stop offset="0%" stopColor="#10b981" /><stop offset="100%" stopColor="#059669" /></> : healthScore >= 40 ? <><stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#d97706" /></> : <><stop offset="0%" stopColor="#ef4444" /><stop offset="100%" stopColor="#dc2626" /></>}
+                    </linearGradient>
+                  </defs>
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                <p className="text-h1 font-black text-foreground">{healthScore}</p>
+                <p className="text-caption text-muted-foreground">out of 100</p>
+              </div>
             </div>
           </div>
-          <div className="space-y-3">
-            {topOrganizers.map((org) => (
-              <div key={org.name} className="card-surface flex items-center gap-3">
-                <img src={org.avatar} alt="" className="w-10 h-10 rounded-xl object-cover ring-2 ring-primary/10" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-body-sm font-semibold text-foreground truncate">{org.name}</p>
-                  <p className="text-caption text-muted-foreground">{org.events} events</p>
-                </div>
-                <p className="text-body-sm font-bold text-primary flex-shrink-0">{org.revenue}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Category performance */}
-      <div className="bento-section">
-        <div className="bento-header">
-          <div className="bento-title-wrapper">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <h2 className="bento-title">Category Performance</h2>
-          </div>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categoryData.map((cat) => (
-            <div key={cat.category} className="card-surface hover:border-primary/20 transition-all">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
-                  <p className="text-body-sm font-black text-foreground uppercase tracking-tight">{cat.category}</p>
-                </div>
-                <span className="text-caption font-black text-green-600 dark:text-green-400">{cat.growth}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                  <p className="text-h3 font-black text-foreground">{cat.events}</p>
-                  <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground">Events</p>
-                </div>
-                <div>
-                  <p className="text-h3 font-black text-foreground">{(cat.attendees / 1000).toFixed(1)}K</p>
-                  <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground">Attendees</p>
-                </div>
-              </div>
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${(cat.events / 145) * 100}%`, background: cat.color }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Geographic + engagement */}
-      <div className="dashboard-grid dashboard-grid-2">
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <Globe className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Top Cities</h2>
-            </div>
-          </div>
-          <div className="space-y-4">
-            {topCities.map((city) => (
-              <HBar key={city.city} label={city.city} value={city.events} max={520} color={city.color} suffix=" events" />
-            ))}
-          </div>
-          <div className="mt-6 pt-6 border-t border-border/50 space-y-3">
-            {topCities.map((city) => (
-              <div key={city.city} className="flex items-center justify-between text-caption">
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: city.color }} />
-                  <span className="font-bold text-muted-foreground">{city.city}</span>
-                </div>
-                <span className="font-black text-foreground uppercase">{city.users.toLocaleString()} users</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bento-section">
-          <div className="bento-header">
-            <div className="bento-title-wrapper">
-              <Activity className="w-5 h-5 text-primary" />
-              <h2 className="bento-title">Engagement Metrics</h2>
-            </div>
-          </div>
-          <div className="space-y-5 mb-6">
-            <HBar label="Daily Active Users" value={4200} max={12400} color="#7C5CFF" />
-            <HBar label="Weekly Active Users" value={8900} max={12400} color="#9B8CFF" />
-            <HBar label="Monthly Active Users" value={12400} max={12400} color="#7C5CFF" />
-          </div>
-          <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border/50">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3">
+        <div className="space-y-4 sm:space-y-6 xl:col-span-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
             {[
-              { label: 'Avg Session', value: '8m 34s', icon: Zap },
-              { label: 'Bounce Rate', value: '24%', icon: Target },
-              { label: 'Repeat Users', value: '42%', icon: Repeat },
-              { label: 'NPS Score', value: '72', icon: TrendingUp },
-            ].map((m) => (
-              <div key={m.label} className="flex items-center gap-3">
-                <div className="icon-box icon-box-primary scale-90">
-                  <m.icon className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-body-sm font-semibold text-foreground leading-none">{m.value}</p>
-                  <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground mt-1">{m.label}</p>
-                </div>
+              { label: 'Total Users', value: '2,547', change: 12, icon: Users, iconClass: 'icon-box-primary', loadingKey: 'kpi1' as const },
+              { label: 'Total Revenue', value: 'EGP 4,900,000', change: 18, icon: TrendingUp, iconClass: 'icon-box-green', loadingKey: 'kpi2' as const },
+              { label: 'Events Hosted', value: '128', change: 22, icon: Activity, iconClass: 'icon-box-cyan', loadingKey: 'kpi3' as const },
+            ].map((kpi, index) => (
+              <div key={index} className="kpi-card h-full rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-6">
+                {loadingStates[kpi.loadingKey] ? <AdminCardSkeleton /> : (
+                  <>
+                    <div className="flex items-center justify-between"><span className="kpi-label">{kpi.label}</span><div className={`icon-box ${kpi.iconClass}`}><kpi.icon className="w-5 h-5" /></div></div>
+                    <p className="kpi-value">{kpi.value}</p>
+                    <div className="kpi-trend text-green-600"><ArrowUp className="w-4 h-4" /><span>+{kpi.change}% vs previous period</span></div>
+                  </>
+                )}
               </div>
             ))}
           </div>
-        </div>
-      </div>
 
-      {/* Revenue breakdown */}
-      <div className="bento-section">
-        <div className="bento-header">
-          <div className="bento-title-wrapper">
-            <DollarSign className="w-5 h-5 text-primary" />
-            <h2 className="bento-title">Revenue Breakdown</h2>
+          <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+            <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">User Growth & Revenue</h3>
+            {loadingStates.chart1 ? <AdminChartSkeleton height={300} /> : (
+              <ResponsiveContainer width="100%" height={300}><LineChart data={MockAdminTimeSeries}><CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /><XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" /><YAxis yAxisId="left" tick={{ fontSize: 12 }} stroke="#6b7280" /><YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} stroke="#6b7280" /><Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} itemStyle={{ color: '#1f2937' }} /><Legend /><Line yAxisId="left" type="monotone" dataKey="users" stroke="#7C5CFF" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} name="Total Users" /><Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#00D4FF" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} name="Revenue (EGP)" /></LineChart></ResponsiveContainer>
+            )}
+          </div>
+
+          <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+            <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">Category Trends</h3>
+            {loadingStates.chart2 ? <AdminChartSkeleton height={300} /> : (
+              <ResponsiveContainer width="100%" height={300}><LineChart data={MockCategoryTrends}><CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /><XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" /><YAxis tick={{ fontSize: 12 }} stroke="#6b7280" /><Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} itemStyle={{ color: '#1f2937' }} /><Legend />{['Tech', 'Art', 'Music', 'Sports', 'Business'].map((category, index) => <Line key={category} type="monotone" dataKey={category} stroke={ADMIN_COLORS[index % ADMIN_COLORS.length]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} onClick={() => setSelectedFilter(category)} />)}</LineChart></ResponsiveContainer>
+            )}
+          </div>
+
+          <div className="chart-panel rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+            <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">Organizer Performance Leaderboard</h3>
+            <div className="data-table-wrap overflow-x-auto rounded-2xl border border-border/60 bg-background/80">
+              <table className="data-table min-w-[640px] sm:min-w-[800px]">
+                <thead>
+                  <tr>
+                    {[
+                      { key: 'rank', label: 'Rank', sortable: false },
+                      { key: 'name', label: 'Organizer Name', sortable: true },
+                      { key: 'eventsHosted', label: 'Events Hosted', sortable: true },
+                      { key: 'avgAttendance', label: 'Avg Attendance', sortable: true },
+                      { key: 'avgRating', label: 'Avg Rating', sortable: true },
+                      { key: 'revenue', label: 'Revenue Generated', sortable: true },
+                      { key: 'cancellationRate', label: 'Cancellation Rate', sortable: true },
+                    ].map((col) => (
+                      <th key={col.key} className="whitespace-nowrap px-3 py-3 sm:px-4 sm:py-3.5">
+                        {col.sortable ? <button onClick={() => handleSort(col.key)} className="flex items-center gap-2">{col.label}{sortBy === col.key && (sortOrder === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />)}</button> : col.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedOrganizers.map((org, index) => (
+                    <tr key={org.id} className="cursor-pointer" onClick={() => setSelectedFilter(org.name)}>
+                      <td className="px-3 py-3 font-semibold sm:px-4 sm:py-4">#{index + 1}</td>
+                      <td className="px-3 py-3 font-medium sm:px-4 sm:py-4">{org.name}</td>
+                      <td className="px-3 py-3 sm:px-4 sm:py-4">{org.eventsHosted}</td>
+                      <td className="px-3 py-3 sm:px-4 sm:py-4">{org.avgAttendance}%</td>
+                      <td className="px-3 py-3 sm:px-4 sm:py-4">{renderStars(org.avgRating)}</td>
+                      <td className="px-3 py-3 sm:px-4 sm:py-4">EGP {org.revenue.toLocaleString()}</td>
+                      <td className="px-3 py-3 sm:px-4 sm:py-4"><span className={`font-semibold ${org.cancellationRate > 10 ? 'text-red-500' : 'text-green-600'}`}>{org.cancellationRate}%</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'Ticket Sales', value: 'EGP 1.8M', pct: 75, color: '#7C5CFF' },
-            { label: 'Service Fees', value: 'EGP 420K', pct: 17.5, color: '#9B8CFF' },
-            { label: 'VIP Upgrades', value: 'EGP 140K', pct: 5.8, color: '#C4B5FD' },
-            { label: 'Partnerships', value: 'EGP 40K', pct: 1.7, color: '#DDD6FE' },
-          ].map((r) => (
-            <div key={r.label} className="card-surface hover:border-primary/20 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: r.color }} />
-                <span className="text-caption font-semibold text-muted-foreground uppercase">{r.pct}%</span>
-              </div>
-              <p className="text-h3 font-black text-foreground">{r.value}</p>
-              <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground mt-1">{r.label}</p>
-              <div className="mt-4 h-1 bg-muted rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${r.pct}%`, background: r.color }} />
-              </div>
+
+        <div className="space-y-4 sm:space-y-6">
+          <div className="chart-panel overflow-hidden rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+            <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">Event Approval Funnel</h3>
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:mb-6 sm:grid-cols-3 sm:gap-4">
+              <div className="dashboard-stat-item flex flex-col items-center justify-center gap-1 p-4 text-center sm:p-6"><p className="dashboard-stat-value">12</p><p className="dashboard-stat-hint">Avg Approval (hrs)</p></div>
+              <div className="dashboard-stat-item flex flex-col items-center justify-center gap-1 p-4 text-center sm:p-6"><p className="dashboard-stat-value">88%</p><p className="dashboard-stat-hint">Approval Rate</p></div>
+              <div className="dashboard-stat-item flex flex-col items-center justify-center gap-1 p-4 text-center sm:p-6"><p className="dashboard-stat-value text-base">Incomplete Info</p><p className="dashboard-stat-hint">Top Rejection</p></div>
             </div>
-          ))}
+            <ResponsiveContainer width="100%" height={200}><BarChart data={MockRejectionReasons} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /><XAxis type="number" tick={{ fontSize: 12 }} stroke="#6b7280" /><YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={120} stroke="#6b7280" /><Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} itemStyle={{ color: '#1f2937' }} /><Bar dataKey="count" fill="#7C5CFF" /></BarChart></ResponsiveContainer>
+          </div>
+
+          <div className="chart-panel overflow-hidden rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+            <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">Needs Attention</h3>
+            {MockAnomalies.length === 0 ? <div className="py-12 text-center"><CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-500" /><p className="text-h3 font-semibold text-green-600">All systems healthy</p></div> : <div className="space-y-4">{MockAnomalies.map((anomaly) => <div key={anomaly.id} className="pending-action-card flex flex-col gap-3 rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5"><div className="flex flex-1 items-start gap-3"><div className="icon-box icon-box-red"><anomaly.icon className="w-5 h-5" /></div><div className="flex-1"><p className="font-semibold text-foreground">{anomaly.message}</p><p className="mt-1 text-body-sm text-muted-foreground">{anomaly.organizer && `Organizer: ${anomaly.organizer}`}{anomaly.event && `Event: ${anomaly.event}`}{anomaly.count && `Count: ${anomaly.count}`}</p></div></div><button className="btn-destructive px-4 py-2 text-body-sm">Review</button></div>)}</div>}
+          </div>
+
+          <div className="chart-panel overflow-hidden rounded-3xl border border-border/60 bg-background/90 p-4 shadow-sm sm:p-6">
+            <h3 className="text-h3 font-bold text-foreground mb-4 sm:mb-6">Cohort Retention</h3>
+            <div className="data-table-wrap overflow-x-auto rounded-2xl border border-border/60 bg-background/80">
+              <table className="data-table min-w-[480px]">
+                <thead>
+                  <tr>
+                    <th className="px-3 py-3 sm:px-4 sm:py-3.5">Cohort</th>
+                    {['W0', 'W1', 'W2', 'W3', 'W4', 'W5'].map((week) => <th key={week} className="px-2 py-3 text-center sm:px-3 sm:py-3.5">{week}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {MockRetentionCohorts.map((cohort) => (
+                    <tr key={cohort.cohort}>
+                      <td className="px-3 py-3 font-semibold sm:px-4 sm:py-3">{cohort.cohort}</td>
+                      {['W0', 'W1', 'W2', 'W3', 'W4', 'W5'].map((week) => {
+                        const val = cohort[week as keyof typeof cohort];
+                        const opacity = Math.max(0.1, val / 100);
+                        return <td key={week} className="px-1 py-2 text-center sm:px-2 sm:py-3"><div className="rounded-lg px-1 py-2 text-xs font-semibold sm:text-sm" style={{ backgroundColor: `rgba(124, 92, 255, ${opacity})`, color: val > 70 ? '#fff' : 'var(--foreground)' }}>{val}%</div></td>;
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-    </DashboardPage>
+    </div>
   );
 }
+
