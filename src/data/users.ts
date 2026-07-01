@@ -34,6 +34,29 @@ export interface User {
     newAttendeeBooking: boolean;
     flaggedContentAlerts: boolean;
   };
+  // Email verification
+  emailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationTokenExpiresAt?: string;
+  // Admin OTP
+  otpEnabled?: boolean;
+  otpSecret?: string;
+  // Organizer detailed verification for account acceptance
+  phoneVerified?: boolean;
+  idVerified?: boolean;
+  idNumber?: string;
+  idDocumentUrl?: string;
+  businessRegistrationNumber?: string;
+  businessAddress?: string;
+  yearsExperience?: number;
+  bio?: string;
+  websiteUrl?: string;
+  socialLinks?: {
+    twitter?: string;
+    instagram?: string;
+    linkedin?: string;
+    facebook?: string;
+  };
 }
 
 // Demo Account 1: Attendee (Sarah)
